@@ -22,6 +22,13 @@ output "vpc_3_id" {
   value = module.vpc_3.vpc_id
 }
 
+output "core_subnet_ids" {
+  value = concat(module.vpc_1.private_subnets[*].id, module.vpc_1.public_subnets[*].id)
+}
+
+output "public_subnets_1" {
+  value = module.vpc_1.public_subnets
+}
 output "private_subnets_1" {
   value = module.vpc_1.private_subnets
 }

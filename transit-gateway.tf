@@ -15,7 +15,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "stub_attachment" {
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "core_attachment" {
   count              = length(local.core_vpc_ids)
-  subnet_ids         = local.core_subnet_ids[count.index]
+  subnet_ids         = local.core_private_subnet_ids
   transit_gateway_id = aws_ec2_transit_gateway.this.id
   vpc_id             = local.core_vpc_ids[count.index]
 }
