@@ -1,6 +1,6 @@
 This deploys the infrastructure depicted in this diagram.
 
-[![Transit Gateway Deployment](https://staging.yandy.io/images/aws-transit-gateway-demo-800.png)](https://staging.yandy.io/images/aws-transit-gateway-demo.png)
+[![Transit Gateway Deployment](images/aws-transit-gateway-demo-800.png)](images/aws-transit-gateway-demo.png)
 
 ## Terraform
 
