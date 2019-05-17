@@ -19,6 +19,7 @@ Make sure you have an AWS environment setup, the AWS CLI configured or environme
 ```shell
 cd aws-transit-gateway-demo
 
+terraform init
 terraform plan -o plan.tfplan
 terraform apply plan.tfplan
 ```
