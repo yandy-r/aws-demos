@@ -1,6 +1,6 @@
 module "vpc_3" {
-  # source = "../../../../../Terraform/modules/aws/vpc"
-  source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
+  source = "../modules/aws/vpc"
+  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
 
   ### VPC
   create_vpc = true
@@ -35,8 +35,13 @@ module "vpc_3" {
   ### IPv4 SUBNETS
   #############################################################################
 
-  num_pub_subnets   = 0
-  num_priv_subnets  = 1
+  num_pub_subnets  = 0
+  num_priv_subnets = 1
+  priv_subnet_tags = [
+    {
+      Name = "Stub-2-VPC-Private-Subnet-1"
+    }
+  ]
   ipv4_priv_newbits = 8
   ipv4_priv_netnum  = 128
 
