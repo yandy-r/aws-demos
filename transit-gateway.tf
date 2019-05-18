@@ -2,6 +2,7 @@ module "transit_gateway" {
   # Transit Gateway
   source = "../modules/aws/transit-gateway"
   # source                          = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//transit-gateway?ref=terraform-0.12"
+
   create_transit_gateway          = true
   transit_gateway_description     = "Transit Gateway Demo"
   amazon_side_asn                 = 65100
