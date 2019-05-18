@@ -57,6 +57,8 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "stubs_to_core" {
   transit_gateway_route_table_id = module.transit_gateway.route_table_ids[0]
 }
 
+# create static default route on transit gateway from stub routing tables to core routing table
+# attachment[0] is core vpc attachment
 resource "aws_ec2_transit_gateway_route" "default_routes" {
   count                          = 3
   destination_cidr_block         = "0.0.0.0/0"

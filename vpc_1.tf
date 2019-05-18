@@ -2,8 +2,8 @@ provider "aws" {}
 
 ### VPC
 module "vpc_1" {
-  # source = "../../../../../Terraform/modules/aws/vpc"
-  source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
+  source = "../modules/aws/vpc"
+  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
 
   ### VPC
   create_vpc = true
@@ -38,9 +38,22 @@ module "vpc_1" {
   ### IPv4 SUBNETS
   #############################################################################
 
-  map_public        = true
-  num_pub_subnets   = 1
-  num_priv_subnets  = 1
+  map_public      = true
+  num_pub_subnets = 1
+  pub_subnet_tags = [
+    {
+      Name = "Core-VPC-Public-Subnet"
+    }
+  ]
+  num_priv_subnets = 2
+  priv_subnet_tags = [
+    {
+      Name = "Core-VPC-Private-Subnet-1"
+    },
+    {
+      Name = "Core-VPC-Private-Subnet-2"
+    }
+  ]
   ipv4_priv_newbits = 8
   ipv4_priv_netnum  = 128
 
