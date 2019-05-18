@@ -24,13 +24,13 @@ module "transit_gateway" {
   vpc_default_route_table_propagation = false
   vpc_attachment_tags = [
     {
-      Name = "Core VPC Attachment"
+      Name = "Core-VPC-Attachment"
     },
     {
-      Name = "Stub-1 VPC Attachment"
+      Name = "Stub-1-VPC-Attachment"
     },
     {
-      Name = "Stub-2 VPC Attachment"
+      Name = "Stub-2-VPC-Attachment"
     }
   ]
 
@@ -39,13 +39,13 @@ module "transit_gateway" {
   route_table_count          = length(concat(local.core_vpc_ids, local.stub_vpc_ids))
   route_table_tags = [
     {
-      Name = "Core VPC Route Table"
+      Name = "Core-VPC-Route-Table"
     },
     {
-      Name = "Stub-1 VPC Route Table"
+      Name = "Stub-1-VPC-Route-Table"
     },
     {
-      Name = "Stub-2 VPC Route Table"
+      Name = "Stub-2-VPC-Route-Table"
     }
   ]
 }
