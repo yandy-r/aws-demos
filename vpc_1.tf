@@ -67,7 +67,7 @@ module "vpc_1" {
 }
 
 resource "aws_instance" "ec2_1a" {
-  ami                         = "ami-0c6b1d09930fac512"
+  ami                         = data.aws_ami.amzn-linux2.id
   instance_type               = "t2.micro"
   key_name                    = "aws-dev-key"
   associate_public_ip_address = "true"
@@ -82,12 +82,13 @@ resource "aws_instance" "ec2_1a" {
 }
 
 resource "aws_instance" "ec2_1b" {
-  ami = "ami-0c6b1d09930fac512"
+  ami = data.aws_ami.amzn-linux2.id
   instance_type = "t2.micro"
   key_name = "aws-dev-key"
   associate_public_ip_address = "false"
   subnet_id = module.vpc_1.private_subnets[0].id
   vpc_security_group_ids = [aws_security_group.this[0].id]
+
   user_data = <<EOF
   #!/bin/bash -xe
 

@@ -63,7 +63,7 @@ module "vpc_2" {
 }
 
 resource "aws_instance" "ec2_2" {
-  ami                         = "ami-0c6b1d09930fac512"
+  ami                         = data.aws_ami.amzn-linux2.id
   instance_type               = "t2.micro"
   key_name                    = "aws-dev-key"
   associate_public_ip_address = "false"
