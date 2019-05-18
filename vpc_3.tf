@@ -68,7 +68,7 @@ module "vpc_3" {
 }
 
 resource "aws_instance" "ec2_3" {
-  ami                         = data.aws_ami.amzn-linux2.id
+  ami                         = data.aws_ami.latest-ubuntu.id
   instance_type               = "t2.micro"
   key_name                    = "aws-dev-key"
   associate_public_ip_address = "false"

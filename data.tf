@@ -1,4 +1,7 @@
 data "aws_ami" "amzn-linux2" {
+  most_recent = true
+  owners      = ["amazon"]
+
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm*"]
@@ -13,7 +16,14 @@ data "aws_ami" "amzn-linux2" {
     name   = "architecture"
     values = ["x86_64"]
   }
+}
 
+data "aws_ami" "latest-ubuntu" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-disco-19.04-amd64*"]
+  }
 }
