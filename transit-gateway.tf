@@ -50,13 +50,6 @@ resource "aws_route" "core_routes" {
   transit_gateway_id     = module.transit_gateway.transit_gateway_id
 }
 
-resource "aws_route" "stub_routes" {
-  count                  = length(local.stub_priv_route_table_ids)
-  route_table_id         = local.stub_priv_route_table_ids[count.index]
-  destination_cidr_block = "10.244.0.0/14"
-  transit_gateway_id     = module.transit_gateway.transit_gateway_id
-}
-
 resource "aws_route" "stub_default_routes" {
   count                  = length(local.stub_priv_route_table_ids)
   route_table_id         = local.stub_priv_route_table_ids[count.index]
