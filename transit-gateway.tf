@@ -35,12 +35,10 @@ module "transit_gateway" {
   ]
 }
 
-module "transit_gateway_default_route" {
-  source = "../modules/aws/transit-gateway-routing"
-
-  route_cidr_blocks = ["0.0.0.0/0"]
-  attachment_ids    = [module.transit_gateway.vpc_attachment_ids[0]]
-  route_table_ids   = [module.transit_gateway.default_route_table_id]
+resource "aws_ec2_transit_gateway_route" "default_route" {
+  destination_cidr_block         = "0.0.0.0/0"
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.core_attachment[0].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway.this.association_default_route_table_id
 }
 
 resource "aws_route" "core_routes" {
