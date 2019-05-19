@@ -80,7 +80,7 @@ resource "aws_instance" "ec2_2" {
 
   set -o xtrace
   sudo hostname ec2-2
-
+  sudo echo "ec2-2" > /etc/hostname
 EOF
 
 }

@@ -93,7 +93,7 @@ resource "aws_instance" "ec2_1a" {
 
   set -o xtrace
   sudo hostname ec2-1a-ssh-bastion
-
+  sudo echo "ec2-1a-ssh-bastion" > /etc/hostname
 EOF
 
 }
@@ -111,7 +111,7 @@ resource "aws_instance" "ec2_1b" {
 
   set -o xtrace
   sudo hostname ec2-1b
-
+  sudo echo "ec2-1b" > /etc/hostname
 EOF
 
 }
