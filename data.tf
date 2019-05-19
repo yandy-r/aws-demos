@@ -1,4 +1,4 @@
-data "aws_ami" "amzn-linux2" {
+data "aws_ami" "amzn2_linux" {
   most_recent = true
   owners      = ["amazon"]
 
@@ -18,7 +18,7 @@ data "aws_ami" "amzn-linux2" {
   }
 }
 
-data "aws_ami" "latest-ubuntu" {
+data "aws_ami" "latest_ubuntu" {
   most_recent = true
   owners      = ["099720109477"]
 

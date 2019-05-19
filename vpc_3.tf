@@ -69,14 +69,14 @@ module "vpc_3" {
 }
 
 resource "aws_instance" "ec2_3" {
-  ami                         = data.aws_ami.latest-ubuntu.id
+  ami                         = data.aws_ami.amzn2_linux.id
   instance_type               = "t2.micro"
   key_name                    = "aws-dev-key"
   associate_public_ip_address = "false"
   subnet_id                   = element(module.vpc_3.private_subnets.*.id, 0)
   vpc_security_group_ids      = [element(aws_security_group.this.*.id, 2)]
   user_data                   = <<EOF
-  #!/usr/bin/bash -xe
+  #!/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-3

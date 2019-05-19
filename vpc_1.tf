@@ -82,14 +82,14 @@ module "vpc_1" {
 }
 
 resource "aws_instance" "ec2_1a" {
-  ami                         = data.aws_ami.latest-ubuntu.id
+  ami                         = data.aws_ami.amzn2_linux.id
   instance_type               = "t2.micro"
   key_name                    = "aws-dev-key"
   associate_public_ip_address = "true"
-  subnet_id                   = element(module.vpc_1.private_subnets.*.id, 0)
+  subnet_id                   = element(module.vpc_1.public_subnets.*.id, 0)
   vpc_security_group_ids      = [element(aws_security_group.this.*.id, 0)]
   user_data                   = <<EOF
-  #!/usr/bin/bash -xe
+  #!/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-1a-ssh-bastion
@@ -99,7 +99,7 @@ EOF
 }
 
 resource "aws_instance" "ec2_1b" {
-  ami = data.aws_ami.latest-ubuntu.id
+  ami = data.aws_ami.amzn2_linux.id
   instance_type = "t2.micro"
   key_name = "aws-dev-key"
   associate_public_ip_address = "false"
@@ -107,7 +107,7 @@ resource "aws_instance" "ec2_1b" {
   vpc_security_group_ids = [element(aws_security_group.this.*.id, 0)]
 
   user_data = <<EOF
-  #!/usr/bin/bash -xe
+  #!/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-1b
