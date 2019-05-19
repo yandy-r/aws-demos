@@ -13,3 +13,4 @@ variable "pub_ssh_key_path" {
 variable "domain_name" {
   default = "domain.local"
 }
+

@@ -1,8 +1,10 @@
-provider "aws" {}
+provider "aws" {
+}
 
 ### VPC
 module "vpc_1" {
   source = "../modules/aws/vpc"
+
   # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
 
   ### VPC
@@ -23,7 +25,7 @@ module "vpc_1" {
 
   ### DHCP OPTIONS
   create_dhcp_options      = true
-  dhcp_domain_name         = "yandy.aws.local"
+  dhcp_domain_name         = var.domain_name
   dhcp_domain_name_servers = ["AmazonProvidedDNS"]
 
   dhcp_ntp_servers = [
@@ -43,7 +45,7 @@ module "vpc_1" {
   pub_subnet_tags = [
     {
       Name = "Core-VPC-Public-Subnet"
-    }
+    },
   ]
   num_priv_subnets = 2
   priv_subnet_tags = [
@@ -52,7 +54,7 @@ module "vpc_1" {
     },
     {
       Name = "Core-VPC-Private-Subnet-2"
-    }
+    },
   ]
   ipv4_priv_newbits = 8
   ipv4_priv_netnum  = 128
@@ -84,14 +86,16 @@ resource "aws_instance" "ec2_1a" {
   instance_type               = "t2.micro"
   key_name                    = "aws-dev-key"
   associate_public_ip_address = "true"
-  subnet_id                   = module.vpc_1.public_subnets[0].id
-  vpc_security_group_ids      = [aws_security_group.this[0].id]
+  subnet_id                   = element(module.vpc_1.private_subnets.*.id, 0)
+  vpc_security_group_ids      = [element(aws_security_group.this.*.id, 0)]
   user_data                   = <<EOF
   #!/usr/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-1a-ssh-bastion
-  EOF
+
+EOF
+
 }
 
 resource "aws_instance" "ec2_1b" {
@@ -99,25 +103,27 @@ resource "aws_instance" "ec2_1b" {
   instance_type = "t2.micro"
   key_name = "aws-dev-key"
   associate_public_ip_address = "false"
-  subnet_id = module.vpc_1.private_subnets[0].id
-  vpc_security_group_ids = [aws_security_group.this[0].id]
+  subnet_id = element(module.vpc_1.private_subnets.*.id, 0)
+  vpc_security_group_ids = [element(aws_security_group.this.*.id, 0)]
 
   user_data = <<EOF
   #!/usr/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-1b
-  EOF
+
+EOF
+
 }
 
 output "ec2_1a_public_ip" {
-  value = aws_instance.ec2_1a.public_ip
+value = aws_instance.ec2_1a.public_ip
 }
 
 output "ec2_1a_private_ip" {
-  value = aws_instance.ec2_1a.private_ip
+value = aws_instance.ec2_1a.private_ip
 }
 
 output "ec2_1b_private_ip" {
-  value = aws_instance.ec2_1b.private_ip
+value = aws_instance.ec2_1b.private_ip
 }

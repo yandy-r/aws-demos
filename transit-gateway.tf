@@ -1,6 +1,7 @@
 module "transit_gateway" {
   # Transit Gateway
   source = "../modules/aws/transit-gateway"
+
   # source                          = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//transit-gateway?ref=terraform-0.12"
 
   create_transit_gateway          = true
@@ -17,8 +18,12 @@ module "transit_gateway" {
   }
 
   # VPC Attachments
-  vpc_ids                             = concat(local.core_vpc_ids, local.stub_vpc_ids)
-  subnet_ids                          = [local.core_private_subnet_ids, local.stub1_subnet_ids, local.stub2_subnet_ids]
+  vpc_ids = concat(local.core_vpc_ids, local.stub_vpc_ids)
+  subnet_ids = [
+    local.core_private_subnet_ids,
+    local.stub1_subnet_ids,
+    local.stub2_subnet_ids,
+  ]
   ipv6_support                        = "disable"
   associate_default_route_table       = false
   vpc_default_route_table_propagation = false
@@ -31,7 +36,7 @@ module "transit_gateway" {
     },
     {
       Name = "Stub-2-VPC-Attachment"
-    }
+    },
   ]
 
   # stub route tables
@@ -46,7 +51,7 @@ module "transit_gateway" {
     },
     {
       Name = "Stub-2-VPC-Route-Table"
-    }
+    },
   ]
 }
 

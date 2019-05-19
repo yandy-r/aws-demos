@@ -1,5 +1,6 @@
 module "vpc_2" {
   source = "../modules/aws/vpc"
+
   # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
 
   ### VPC
@@ -40,7 +41,7 @@ module "vpc_2" {
   priv_subnet_tags = [
     {
       Name = "Stub-1-VPC-Private-Subnet-1"
-    }
+    },
   ]
   ipv4_priv_newbits = 8
   ipv4_priv_netnum  = 128
@@ -72,14 +73,16 @@ resource "aws_instance" "ec2_2" {
   instance_type               = "t2.micro"
   key_name                    = "aws-dev-key"
   associate_public_ip_address = "false"
-  subnet_id                   = module.vpc_2.private_subnets[0].id
-  vpc_security_group_ids      = [aws_security_group.this[1].id]
+  subnet_id                   = element(module.vpc_2.private_subnets.*.id, 0)
+  vpc_security_group_ids      = [element(aws_security_group.this.*.id, 1)]
   user_data                   = <<EOF
   #!/usr/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-2
-  EOF
+
+EOF
+
 }
 
 output "ec2_2_private_ip" {
