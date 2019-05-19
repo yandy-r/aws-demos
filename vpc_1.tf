@@ -87,7 +87,7 @@ resource "aws_instance" "ec2_1a" {
   subnet_id                   = module.vpc_1.public_subnets[0].id
   vpc_security_group_ids      = [aws_security_group.this[0].id]
   user_data                   = <<EOF
-  #!/bin/bash -xe
+  #!/usr/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-1a-ssh-bastion
@@ -103,50 +103,10 @@ resource "aws_instance" "ec2_1b" {
   vpc_security_group_ids = [aws_security_group.this[0].id]
 
   user_data = <<EOF
-  #!/bin/bash -xe
+  #!/usr/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-1b
-  EOF
-}
-
-resource "aws_network_interface" "hub_router" {
-  count             = 2
-  subnet_id         = module.vpc_1.private_subnets[count.index].id
-  private_ips       = ([["10.244.128.10"], ["10.244.129.10"]])[count.index]
-  security_groups   = [aws_security_group.this[0].id]
-  source_dest_check = false
-  tags = ([
-   {
-    Name = "Hub-Router-Subnet-1"
-   },
-   {
-    Name = "Hub-Router-Subnet-2"
-   }
-  ])[count.index]
-}
-
-resource "aws_instance" "hub_router" {
-  ami           = data.aws_ami.latest-ubuntu.id
-  instance_type = "t2.micro"
-  key_name      = "aws-dev-key"
-  subnet_id     = module.vpc_1.private_subnets[1].id
-
-  network_interface {
-    network_interface_id = aws_network_interface.hub_router[0].id
-    device_index         = 0
-  }
-
-  network_interface {
-    network_interface_id = aws_network_interface.hub_router[1].id
-    device_index         = 1
-  }
-
-  user_data = <<EOF
-  #!/bin/bash -xe
-
-  set -o xtrace
-  sudo hostname hub-router
   EOF
 }
 

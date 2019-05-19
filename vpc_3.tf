@@ -75,7 +75,7 @@ resource "aws_instance" "ec2_3" {
   subnet_id                   = module.vpc_3.private_subnets[0].id
   vpc_security_group_ids      = [aws_security_group.this[2].id]
   user_data                   = <<EOF
-  #!/bin/bash -xe
+  #!/usr/bin/bash -xe
 
   set -o xtrace
   sudo hostname ec2-3
