@@ -14,6 +14,8 @@ For the below deployment, where the **Transit Gateway** acts as a *core router* 
 
 In this deployment, all the Core VPC is the exit point for all VPCs as well, though the spoke (stub) VPCs cannot speak to each other. They are isolated and only traffic from **Core to Spoke** is allowed or routed. For that code [click here][2].
 
+The diagrams are very similar as the architecture overall is relatively the same, it's only the logical routing design that changes. Follow the <span style="color:purple">purple lines</span> connected at the stub VPCs heading to the Core VPC for traffic flow.
+
 ### Hub-and-Spoke Diagram
 
 [![Hub and Spoke Transit Gateway Diagram](images/aws-transit-gateway-demo-hub-spoke-800.png)](images/aws-transit-gateway-demo-hub-spoke.png)
