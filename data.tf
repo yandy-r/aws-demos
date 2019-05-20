@@ -34,5 +34,10 @@ data "template_file" "cloud_config" {
 
   vars = {
     hostname = var.hostnames[count.index]
+    ssh_key  = data.local_file.ssh_key.content
   }
+}
+
+data "local_file" "ssh_key" {
+  filename = pathexpand(var.priv_ssh_key_path)
 }
