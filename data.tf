@@ -27,3 +27,12 @@ data "aws_ami" "latest_ubuntu" {
     values = ["ubuntu/images/hvm-ssd/ubuntu-disco-19.04-amd64*"]
   }
 }
+
+data "template_file" "cloud_config" {
+  count    = length(var.hostnames)
+  template = "${file("${path.module}/cloud-config.tpl")}"
+
+  vars = {
+    hostname = var.hostnames[count.index]
+  }
+}

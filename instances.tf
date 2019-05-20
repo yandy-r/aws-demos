@@ -16,7 +16,7 @@ resource "aws_network_interface" "core" {
   ], 0)
 }
 
-resource "aws_network_interface" spokes {
+resource "aws_network_interface" "spokes" {
   count             = length(local.spoke_subnet_ids)
   subnet_id         = element(local.spoke_subnet_ids, count.index)
   security_groups   = list(element(aws_security_group.this.*.id, count.index + 1))
@@ -35,77 +35,53 @@ resource "aws_network_interface" spokes {
 ## Core VPC Instances
 
 resource "aws_instance" "ec2_1a" {
-  ami           = data.aws_ami.amzn2_linux.id
-  instance_type = "t2.micro"
-  key_name      = "aws-dev-key"
+  ami              = data.aws_ami.amzn2_linux.id
+  instance_type    = "t2.micro"
+  key_name         = "aws-dev-key"
+  user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.core[1].id
     device_index         = 0
   }
-
-  user_data = <<EOF
-  #!/bin/bash -xe
-
-  set -o xtrace
-  sudo hostname ec2-1a-ssh-bastion
-  sudo echo "ec2-1a-ssh-bastion" > /etc/hostname
-EOF
-
 }
 
 resource "aws_instance" "ec2_1b" {
-  ami = data.aws_ami.amzn2_linux.id
-  instance_type = "t2.micro"
-  key_name = "aws-dev-key"
+  ami              = data.aws_ami.amzn2_linux.id
+  instance_type    = "t2.micro"
+  key_name         = "aws-dev-key"
+  user_data_base64 = base64encode(data.template_file.cloud_config[1].rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.core[0].id
-    device_index = 0
+    device_index         = 0
   }
-
-  user_data = <<EOF
-  #!/bin/bash -xe
-
-  set -o xtrace
-  sudo hostname ec2-1b
-  sudo echo "ec2-1b" > /etc/hostname
-EOF
-
 }
 
 output "ec2_1a_public_ip" {
-value = aws_instance.ec2_1a.public_ip
+  value = aws_instance.ec2_1a.public_ip
 }
 
 output "ec2_1a_private_ip" {
-value = aws_instance.ec2_1a.private_ip
+  value = aws_instance.ec2_1a.private_ip
 }
 
 output "ec2_1b_private_ip" {
-value = aws_instance.ec2_1b.private_ip
+  value = aws_instance.ec2_1b.private_ip
 }
 
 ## Spoke VPC Instances
 
 resource "aws_instance" "ec2_2" {
-  ami           = data.aws_ami.amzn2_linux.id
-  instance_type = "t2.micro"
-  key_name      = "aws-dev-key"
+  ami              = data.aws_ami.amzn2_linux.id
+  instance_type    = "t2.micro"
+  key_name         = "aws-dev-key"
+  user_data_base64 = base64encode(data.template_file.cloud_config[2].rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.spokes[0].id
     device_index         = 0
   }
-
-  user_data = <<EOF
-  #!/bin/bash -xe
-
-  set -o xtrace
-  sudo hostname ec2-2
-  sudo echo "ec2-2" > /etc/hostname
-EOF
-
 }
 
 output "ec2_2_private_ip" {
@@ -113,23 +89,15 @@ output "ec2_2_private_ip" {
 }
 
 resource "aws_instance" "ec2_3" {
-  ami = data.aws_ami.amzn2_linux.id
-  instance_type = "t2.micro"
-  key_name = "aws-dev-key"
+  ami              = data.aws_ami.amzn2_linux.id
+  instance_type    = "t2.micro"
+  key_name         = "aws-dev-key"
+  user_data_base64 = base64encode(data.template_file.cloud_config[3].rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.spokes[1].id
-    device_index = 0
+    device_index         = 0
   }
-
-  user_data = <<EOF
-  #!/bin/bash -xe
-
-  set -o xtrace
-  sudo hostname ec2-3
-  sudo echo "ec2-3" > /etc/hostname
-EOF
-
 }
 
 output "ec2_3_private_ip" {
