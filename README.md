@@ -1,6 +1,6 @@
 This deploys the infrastructure depicted in this diagram.
 
-[![Transit Gateway Deployment](images/aws-transit-gateway-demo-800.png)](images/aws-transit-gateway-demo.png)
+[![Transit Gateway Deployment](images/aws-transit-gateway-demo-hub-spoke-800.png)](images/aws-transit-gateway-demo-hub-spoke.png)
 
 ## Terraform
 
