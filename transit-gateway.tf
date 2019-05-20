@@ -42,7 +42,7 @@ module "transit_gateway" {
     },
   ]
 
-  ### spoke route tables
+  ### SPOKE ROUTE TABLES
 
   ### create_custom_route_tables is set to true to prevent the transit gateway
   ### from setting default atachments as well
@@ -61,15 +61,19 @@ module "transit_gateway" {
   ]
 }
 
-# propagate from source VPC (attachments) to core route table
+## These settings propagate from source VPC (attachments) to core route table
+## in other words. The spoke vpc transit gateway route tables get propagated
+## into the core vpc route table so the core has visibility into the spokes.
+## The spoke route tables are not propagated to each other.
 resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_to_core" {
   count                          = 2
   transit_gateway_attachment_id  = module.transit_gateway.vpc_attachment_ids[count.index + 1]
   transit_gateway_route_table_id = module.transit_gateway.route_table_ids[0]
 }
 
-# create static default route on transit gateway from spoke routing tables to core routing table
-# attachment[0] is core vpc attachment
+## create static default route on transit gateway from spoke routing tables
+## to core routing table attachment[0] is core vpc attachment. This ensures
+## that the transit gateway can send internet bound traffic from spokes out.
 resource "aws_ec2_transit_gateway_route" "default_routes" {
   count                          = 3
   destination_cidr_block         = "0.0.0.0/0"
@@ -84,6 +88,8 @@ resource "aws_route" "core_route_spokes" {
   transit_gateway_id     = module.transit_gateway.transit_gateway_id
 }
 
+## This route ensures that all traffic from the spokes go out
+## to the transit gateway and internet is sent to the core vpc.
 resource "aws_route" "spoke_default_routes" {
   count                  = length(local.spoke_priv_route_table_ids)
   route_table_id         = local.spoke_priv_route_table_ids[count.index]
