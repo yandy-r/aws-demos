@@ -1,8 +1,6 @@
 module "transit_gateway" {
-  # Transit Gateway
-  source = "../modules/aws/transit-gateway"
-
-  # source                          = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//transit-gateway?ref=terraform-0.12"
+  ## Transit Gateway
+  source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//transit-gateway?ref=terraform-0.12"
 
   create_transit_gateway          = true
   transit_gateway_description     = "Transit Gateway Demo"
@@ -17,14 +15,19 @@ module "transit_gateway" {
     Name = "Transit-Gateway-01"
   }
 
-  # VPC Attachments
+  ## VPC Attachments
   vpc_ids = concat(local.core_vpc_ids, local.spoke_vpc_ids)
   subnet_ids = [
     local.core_private_subnet_ids,
     local.spoke_1_subnet_ids,
     local.spoke_2_subnet_ids,
   ]
-  ipv6_support                        = "disable"
+  ipv6_support = "disable"
+
+  ### Note that since we're using custom transit gateway route tables the
+  ### defautl route table attachment and default route table propagation
+  ### needs to be disabled, otherwise conflics when the custom attachments
+  ### are created will prevent ths from completing deployment.
   associate_default_route_table       = false
   vpc_default_route_table_propagation = false
   vpc_attachment_tags = [
@@ -39,7 +42,10 @@ module "transit_gateway" {
     },
   ]
 
-  # spoke route tables
+  ### spoke route tables
+
+  ### create_custom_route_tables is set to true to prevent the transit gateway
+  ### from setting default atachments as well
   create_custom_route_tables = true
   route_table_count          = length(concat(local.core_vpc_ids, local.spoke_vpc_ids))
   route_table_tags = [
