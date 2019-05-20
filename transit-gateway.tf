@@ -18,11 +18,11 @@ module "transit_gateway" {
   }
 
   # VPC Attachments
-  vpc_ids = concat(local.core_vpc_ids, local.stub_vpc_ids)
+  vpc_ids = concat(local.core_vpc_ids, local.spoke_vpc_ids)
   subnet_ids = [
     local.core_private_subnet_ids,
-    local.stub1_subnet_ids,
-    local.stub2_subnet_ids,
+    local.spoke_1_subnet_ids,
+    local.spoke_2_subnet_ids,
   ]
   ipv6_support                        = "disable"
   associate_default_route_table       = false
@@ -32,37 +32,37 @@ module "transit_gateway" {
       Name = "Core-VPC-Attachment"
     },
     {
-      Name = "Stub-1-VPC-Attachment"
+      Name = "Spoke-1-VPC-Attachment"
     },
     {
-      Name = "Stub-2-VPC-Attachment"
+      Name = "Spoke-2-VPC-Attachment"
     },
   ]
 
-  # stub route tables
+  # spoke route tables
   create_custom_route_tables = true
-  route_table_count          = length(concat(local.core_vpc_ids, local.stub_vpc_ids))
+  route_table_count          = length(concat(local.core_vpc_ids, local.spoke_vpc_ids))
   route_table_tags = [
     {
       Name = "Core-VPC-Route-Table"
     },
     {
-      Name = "Stub-1-VPC-Route-Table"
+      Name = "Spoke-1-VPC-Route-Table"
     },
     {
-      Name = "Stub-2-VPC-Route-Table"
+      Name = "Spoke-2-VPC-Route-Table"
     },
   ]
 }
 
 # propagate from source VPC (attachments) to core route table
-resource "aws_ec2_transit_gateway_route_table_propagation" "stubs_to_core" {
+resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_to_core" {
   count                          = 2
   transit_gateway_attachment_id  = module.transit_gateway.vpc_attachment_ids[count.index + 1]
   transit_gateway_route_table_id = module.transit_gateway.route_table_ids[0]
 }
 
-# create static default route on transit gateway from stub routing tables to core routing table
+# create static default route on transit gateway from spoke routing tables to core routing table
 # attachment[0] is core vpc attachment
 resource "aws_ec2_transit_gateway_route" "default_routes" {
   count                          = 3
@@ -71,16 +71,16 @@ resource "aws_ec2_transit_gateway_route" "default_routes" {
   transit_gateway_route_table_id = module.transit_gateway.route_table_ids[count.index]
 }
 
-resource "aws_route" "core_route_stubs" {
+resource "aws_route" "core_route_spokes" {
   count                  = length(local.core_route_table_ids)
   route_table_id         = local.core_route_table_ids[count.index]
   destination_cidr_block = "10.244.0.0/14"
   transit_gateway_id     = module.transit_gateway.transit_gateway_id
 }
 
-resource "aws_route" "stub_default_routes" {
-  count                  = length(local.stub_priv_route_table_ids)
-  route_table_id         = local.stub_priv_route_table_ids[count.index]
+resource "aws_route" "spoke_default_routes" {
+  count                  = length(local.spoke_priv_route_table_ids)
+  route_table_id         = local.spoke_priv_route_table_ids[count.index]
   destination_cidr_block = "0.0.0.0/0"
   transit_gateway_id     = module.transit_gateway.transit_gateway_id
 }
