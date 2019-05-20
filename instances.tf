@@ -37,7 +37,7 @@ resource "aws_network_interface" "spokes" {
 resource "aws_instance" "ec2_1a" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
-  key_name         = "aws-dev-key"
+  key_name         = var.ssh_key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
 
   network_interface {
@@ -49,7 +49,7 @@ resource "aws_instance" "ec2_1a" {
 resource "aws_instance" "ec2_1b" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
-  key_name         = "aws-dev-key"
+  key_name         = var.ssh_key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[1].rendered)
 
   network_interface {
@@ -75,7 +75,7 @@ output "ec2_1b_private_ip" {
 resource "aws_instance" "ec2_2" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
-  key_name         = "aws-dev-key"
+  key_name         = var.ssh_key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[2].rendered)
 
   network_interface {
@@ -91,7 +91,7 @@ output "ec2_2_private_ip" {
 resource "aws_instance" "ec2_3" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
-  key_name         = "aws-dev-key"
+  key_name         = var.ssh_key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[3].rendered)
 
   network_interface {

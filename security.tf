@@ -28,7 +28,7 @@ resource "aws_security_group_rule" "allow_home_ssh" {
   to_port           = 22
   protocol          = "TCP"
   security_group_id = element(aws_security_group.this.*.id, 0)
-  cidr_blocks       = [var.home_ip]
+  cidr_blocks       = [var.self_public_ip]
 }
 
 resource "aws_security_group_rule" "allow_home_icmp" {
@@ -37,5 +37,5 @@ resource "aws_security_group_rule" "allow_home_icmp" {
   to_port           = -1
   protocol          = "ICMP"
   security_group_id = element(aws_security_group.this.*.id, 0)
-  cidr_blocks       = [var.home_ip]
+  cidr_blocks       = [var.self_public_ip]
 }
