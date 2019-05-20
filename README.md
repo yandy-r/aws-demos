@@ -4,7 +4,15 @@ This deploys the infrastructure depicted in this diagram.
 
 ## Terraform
 
-Make sure you have `Terraform version 0.12.[x]` installed, at the time of this writting `0.12` is at release candidate 1.
+Make sure you have `Terraform version 0.12.[x]` installed, at the time of this writting `0.12` is at release candidate 1. You need to have a `terraform.tfvars` or `*.auto.tfvars` file with the following keys set...
+
+```hcl
+domain_name = "YOUR-DOMAIN-NAME"
+ssh_key_name = "AWS-SSH-KEY" # this key needs to exist in the AWS console
+self_public_ip = "your-public-ip" # this is used for the security group rule to allow SSH
+```
+
+These variables can also be passed in at `apply` or `plan` time with the command `terraform apply -var 'domain_name=test.domain`.
 
 ## Deploy
 
@@ -23,3 +31,7 @@ terraform init
 terraform plan -o plan.tfplan
 terraform apply plan.tfplan
 ```
+
+## Connect to Bastion Host
+
+After **terraform** successfully deploys, there are outputs for each host public and private addresses. The only public address belongs to the bastion host.
