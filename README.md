@@ -16,7 +16,7 @@ In this deployment, all the Core VPC is the exit point for all VPCs as well, tho
 
 ### Hub-and-Spoke Diagram
 
-[![Hub and Spoke Transit Gateway Diagram](aws-transit-gateway-demo-hub-spoke-800.png)](images/aws-transit-gateway-demo-hub-spoke.png)
+[![Hub and Spoke Transit Gateway Diagram](images/aws-transit-gateway-demo-hub-spoke-800.png)](images/aws-transit-gateway-demo-hub-spoke.png)
 
 [1]: https://github.com/IPyandy/aws-transit-gateway-demo/tree/any-to-any
 [2]: https://github.com/IPyandy/aws-transit-gateway-demo/tree/hub-spoke
