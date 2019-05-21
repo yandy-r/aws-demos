@@ -13,7 +13,7 @@ resource "aws_network_interface" "core" {
     {
       Name = "ec2-1b-eni"
     },
-  ], 0)
+  ], count.index)
 }
 
 resource "aws_network_interface" "spokes" {
@@ -29,7 +29,7 @@ resource "aws_network_interface" "spokes" {
     {
       Name = "ec2-3-eni"
     }
-  ], 0)
+  ], count.index)
 }
 
 ## Core VPC Instances
@@ -45,6 +45,15 @@ resource "aws_instance" "core_instances" {
     network_interface_id = aws_network_interface.core[count.index].id
     device_index         = 0
   }
+
+  tags = element([
+    {
+      Name = "ec2-1a-ssh-bastion"
+    },
+    {
+      Name = "ec2-1b"
+    },
+  ], count.index)
 }
 
 output "ec2_core_private_ips" {
@@ -69,12 +78,21 @@ resource "aws_instance" "spoke_instances" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = var.ssh_key_name
-  user_data_base64 = base64encode(data.template_file.cloud_config[count.index].rendered)
+  user_data_base64 = base64encode(data.template_file.cloud_config[count.index + 2].rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.spokes[count.index].id
     device_index         = 0
   }
+
+  tags = element([
+    {
+      Name = "ec2-2"
+    },
+    {
+      Name = "ec2-3"
+    },
+  ], count.index)
 }
 
 output "ec2_spoke_private_ips" {
