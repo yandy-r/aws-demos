@@ -41,11 +41,17 @@ Here's what some of the terraform output looks like and what to look for.
 
 ```shell
 ...
-ec2_1a_private_ip = 10.244.0.10
-ec2_1a_public_ip = 54.90.146.3
-ec2_1b_private_ip = 10.244.128.10
-ec2_2_private_ip = 10.245.128.10
-ec2_3_private_ip = 10.246.128.10
+ec2_core_private_ips = {
+  "i-007352efa5e5c6a6c" = "10.244.128.10"
+  "i-01a6870275133ddf6" = "10.244.0.10"
+}
+ec2_core_public_ips = {
+  "i-01a6870275133ddf6" = "34.230.84.132"
+}
+ec2_spoke_private_ips = {
+  "i-0317f033eb27c5e78" = "10.245.128.10"
+  "i-0f68d441b2805b12a" = "10.246.128.10"
+}0
 ...
 ```
 

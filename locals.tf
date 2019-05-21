@@ -26,13 +26,13 @@ locals {
   )
 
   core_subnet_ids = concat(
-    module.core_vpc.private_subnets.*.id,
     module.core_vpc.public_subnets.*.id,
+    module.core_vpc.private_subnets.*.id,
   )
 
   subnet_ids = concat(
-    module.core_vpc.private_subnets.*.id,
     module.core_vpc.public_subnets.*.id,
+    module.core_vpc.private_subnets.*.id,
     module.spoke_1_vpc.private_subnets.*.id,
     module.spoke_2_vpc.private_subnets.*.id,
   )
@@ -51,4 +51,14 @@ locals {
     module.spoke_1_vpc.private_route_tables.*.id,
     module.spoke_2_vpc.private_route_tables.*.id,
   )
+
+  core_sg_ids = [
+    aws_security_group.core_public_sg.id,
+    aws_security_group.core_private_sg.id,
+  ]
+
+  spoke_sg_ids = [
+    aws_security_group.spoke_1_private_sg.id,
+    aws_security_group.spoke_2_private_sg.id,
+  ]
 }

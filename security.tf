@@ -1,8 +1,59 @@
-resource "aws_security_group" "this" {
-  count       = length(local.vpc_ids)
-  description = "Security group that allows inter-vpc communication"
+resource "aws_security_group" "core_public_sg" {
+  description = "Core VPC Public Subnet Security Groups - Based on Subnet count not instance"
+  vpc_id      = local.core_vpc_ids[0]
 
-  vpc_id = local.vpc_ids[count.index]
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ### Allow home from remote network to SSH and ICMP
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "TCP"
+    cidr_blocks = [var.self_public_ip]
+  }
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "ICMP"
+    cidr_blocks = [var.self_public_ip]
+  }
+}
+
+resource "aws_security_group_rule" "core_public_to_self" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.core_public_sg.id
+  security_group_id        = aws_security_group.core_public_sg.id
+}
+
+resource "aws_security_group_rule" "core_public_from_core_private" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.core_private_sg.id
+  security_group_id        = aws_security_group.core_public_sg.id
+}
+
+resource "aws_security_group_rule" "core_public_from_spokes" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["10.245.0.0/16", "10.246.0.0/16"]
+  security_group_id = aws_security_group.core_public_sg.id
+}
+
+resource "aws_security_group" "core_private_sg" {
+  description = "Core VPC Private Subnet Security Groups - Based on Subnet count not instance"
+  vpc_id      = local.core_vpc_ids[0]
 
   egress {
     from_port   = 0
@@ -12,30 +63,108 @@ resource "aws_security_group" "this" {
   }
 }
 
-resource "aws_security_group_rule" "ingress" {
-  count             = length(local.vpc_ids)
+resource "aws_security_group_rule" "core_private_to_self" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.core_private_sg.id
+  security_group_id        = aws_security_group.core_private_sg.id
+}
+
+
+resource "aws_security_group_rule" "core_private_from_public" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.core_public_sg.id
+  security_group_id        = aws_security_group.core_private_sg.id
+}
+
+resource "aws_security_group_rule" "core_private_from_spokes" {
   type              = "ingress"
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  security_group_id = element(aws_security_group.this.*.id, count.index)
-  cidr_blocks       = local.cidr_blocks
+  cidr_blocks       = ["10.245.0.0/16", "10.246.0.0/16"]
+  security_group_id = aws_security_group.core_private_sg.id
 }
 
-resource "aws_security_group_rule" "allow_home_ssh" {
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "TCP"
-  security_group_id = element(aws_security_group.this.*.id, 0)
-  cidr_blocks       = [var.self_public_ip]
+resource "aws_security_group" "spoke_1_private_sg" {
+  description = "Spoke 1 VPC Security Groups - Based on Subnet count not instance"
+  vpc_id      = local.spoke_vpc_ids[0]
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
-resource "aws_security_group_rule" "allow_home_icmp" {
+resource "aws_security_group_rule" "spoke_1_to_self" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.spoke_1_private_sg.id
+  security_group_id        = aws_security_group.spoke_1_private_sg.id
+}
+
+resource "aws_security_group_rule" "spoke_1_from_core" {
   type              = "ingress"
-  from_port         = -1
-  to_port           = -1
-  protocol          = "ICMP"
-  security_group_id = element(aws_security_group.this.*.id, 0)
-  cidr_blocks       = [var.self_public_ip]
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["10.244.0.0/16"]
+  security_group_id = aws_security_group.spoke_1_private_sg.id
+}
+
+resource "aws_security_group_rule" "spoke_1_from_spoke_2" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["10.246.0.0/16"]
+  security_group_id = aws_security_group.spoke_1_private_sg.id
+}
+
+resource "aws_security_group" "spoke_2_private_sg" {
+  description = "Spoke 2 VPC Security Groups - Based on Subnet count not instance"
+  vpc_id      = local.spoke_vpc_ids[1]
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group_rule" "spoke_2_to_self" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.spoke_2_private_sg.id
+  security_group_id        = aws_security_group.spoke_2_private_sg.id
+}
+
+resource "aws_security_group_rule" "spoke_2_from_core" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["10.244.0.0/16"]
+  security_group_id = aws_security_group.spoke_2_private_sg.id
+}
+
+resource "aws_security_group_rule" "spoke_2_from_spoke_1" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["10.245.0.0/16"]
+  security_group_id = aws_security_group.spoke_2_private_sg.id
 }
