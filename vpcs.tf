@@ -43,14 +43,7 @@ module "core_vpc" {
       Name = "Core-VPC-Public-Subnet"
     },
   ]
-  num_priv_subnets = 1
-  priv_subnet_tags = [
-    {
-      Name = "Core-VPC-Private-Subnet-1"
-    },
-  ]
-  ipv4_priv_newbits = 8
-  ipv4_priv_netnum  = 128
+  num_priv_subnets = 0
 
   ### ROUTING AND INTERNET
   #############################################################################

@@ -59,11 +59,6 @@ locals {
     module.spoke_3_vpc.private_route_tables.*.id,
   )
 
-  core_sg_ids = [
-    aws_security_group.core_public_sg.id,
-    aws_security_group.core_private_sg.id,
-  ]
-
   spoke_sg_ids = [
     aws_security_group.spoke_1_private_sg.id,
     aws_security_group.spoke_2_private_sg.id,

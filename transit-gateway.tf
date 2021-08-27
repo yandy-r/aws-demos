@@ -8,8 +8,7 @@ resource "aws_ec2_transit_gateway" "tgw1" {
   vpn_ecmp_support                = "enable" # default
 
   tags = {
-    Name      = "TGW1",
-    Terraform = "True"
+    Name = "TGW1"
   }
 }
 
@@ -23,8 +22,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "core_vpc_attachment" {
   transit_gateway_default_route_table_propagation = false
 
   tags = {
-    Name      = "Core VPC Attachment",
-    Terraform = "True"
+    Name = "Core VPC Attachment"
   }
 }
 
@@ -32,8 +30,7 @@ resource "aws_ec2_transit_gateway_route_table" "core_route_table" {
   transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
 
   tags = {
-    Name      = "Core Route Table",
-    Terraform = "True"
+    Name = "Core Route Table"
   }
 }
 
@@ -156,4 +153,15 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_3" {
 resource "aws_ec2_transit_gateway_route_table_propagation" "core_to_spoke_3" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.core_vpc_attachment.id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_3_route_table.id
+}
+
+### ALL DEFAULT ROUTES
+
+resource "aws_ec2_transit_gateway_route" "routes" {
+  count                         = 3
+  destination_cidr_block        = "0.0.0.0/0"
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.core_vpc_attachment.id
+  transit_gateway_route_table_id = element([aws_ec2_transit_gateway_route_table.core_route_table.id,
+    aws_ec2_transit_gateway_route_table.spoke_1_2_route_table.id,
+  aws_ec2_transit_gateway_route_table.spoke_3_route_table.id], count.index)
 }

@@ -10,6 +10,10 @@ output "spoke_2_vpc" {
   value = module.spoke_2_vpc.vpc
 }
 
+output "spoke_3_vpc" {
+  value = module.spoke_3_vpc.vpc
+}
+
 output "core_vpc_id" {
   value = module.core_vpc.vpc_id
 }
@@ -22,6 +26,10 @@ output "spoke_2_vpc_id" {
   value = module.spoke_2_vpc.vpc_id
 }
 
+output "spoke_3_vpc_id" {
+  value = module.spoke_3_vpc.vpc_id
+}
+
 output "core_subnet_ids" {
   value = concat(
     module.core_vpc.private_subnets.*.id,
@@ -29,18 +37,22 @@ output "core_subnet_ids" {
   )
 }
 
-output "public_subnets_1" {
+output "core_public_subnets" {
   value = module.core_vpc.public_subnets
 }
 
-output "private_subnets_1" {
+output "core_private_subnets" {
   value = module.core_vpc.private_subnets
 }
 
-output "private_subnets_2" {
+output "spoke_1_private_subnets" {
   value = module.spoke_1_vpc.private_subnets
 }
 
-output "private_subnets_3" {
+output "spoke_2_private_subnets" {
   value = module.spoke_2_vpc.private_subnets
+}
+
+output "spoke_3_private_subnets" {
+  value = module.spoke_3_vpc.private_subnets
 }
