@@ -12,7 +12,7 @@ module "core_vpc" {
     "us-east-1c",
   ]
 
-  cidr_block                      = "10.244.0.0/16"
+  cidr_block                      = "10.240.0.0/16"
   instance_tenancy                = "default"
   enable_dns_hostnames            = true
   enable_dns_support              = true
@@ -77,7 +77,8 @@ module "core_vpc" {
 ## Spoke 1 VPC
 
 module "spoke_1_vpc" {
-  source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
+  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
+  source = "../terraform-aws-modules/vpc"
 
   ### VPC
   create_vpc = true
@@ -88,7 +89,7 @@ module "spoke_1_vpc" {
     "us-east-1f",
   ]
 
-  cidr_block                      = "10.245.0.0/16"
+  cidr_block                      = "10.241.0.0/16"
   instance_tenancy                = "default"
   enable_dns_hostnames            = true
   enable_dns_support              = true
@@ -147,7 +148,8 @@ module "spoke_1_vpc" {
 ## Spoke 2 VPC
 
 module "spoke_2_vpc" {
-  source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
+  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
+  source = "../terraform-aws-modules/vpc"
 
   ### VPC
   create_vpc = true
@@ -158,7 +160,7 @@ module "spoke_2_vpc" {
     "us-east-1e",
   ]
 
-  cidr_block                      = "10.246.0.0/16"
+  cidr_block                      = "10.242.0.0/16"
   instance_tenancy                = "default"
   enable_dns_hostnames            = true
   enable_dns_support              = true
@@ -211,5 +213,76 @@ module "spoke_2_vpc" {
 
   vpc_tags = {
     Name = "Spoke-2-VPC"
+  }
+}
+
+## Spoke 3 VPC
+
+module "spoke_3_vpc" {
+  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
+  source = "../terraform-aws-modules/vpc"
+
+  ### VPC
+  create_vpc = true
+
+  azs = [
+    "us-east-1c",
+    "us-east-1a",
+    "us-east-1e",
+  ]
+
+  cidr_block                      = "10.243.0.0/16"
+  instance_tenancy                = "default"
+  enable_dns_hostnames            = true
+  enable_dns_support              = true
+  enable_classic_link             = false
+  enable_classic_link_dns_support = false
+
+  ### DHCP OPTIONS
+  create_dhcp_options      = true
+  dhcp_domain_name         = var.domain_name
+  dhcp_domain_name_servers = ["AmazonProvidedDNS"]
+
+  dhcp_ntp_servers = [
+    "69.195.159.158",
+    "173.255.206.153",
+  ]
+
+  dhcp_netbios_name_servers = []
+  dhcp_netbios_node_type    = 2
+
+  #############################################################################
+  ### IPv4 SUBNETS
+  #############################################################################
+
+  num_pub_subnets  = 0
+  num_priv_subnets = 1
+  priv_subnet_tags = [
+    {
+      Name = "Spoke-3-VPC-Private-Subnet-1"
+    },
+  ]
+  ipv4_priv_newbits = 8
+  ipv4_priv_netnum  = 128
+
+  ### ROUTING AND INTERNET
+  #############################################################################
+
+  create_inet_gw = false
+  num_nat_gws    = 0
+
+  #############################################################################
+  ### FLOWLOGS
+  #############################################################################
+
+  create_flow_log     = true
+  flow_log_group_name = "Spoke-3-VPC-flowlog"
+
+  #############################################################################
+  ### ALL TAGS
+  #############################################################################
+
+  vpc_tags = {
+    Name = "Spoke-3-VPC"
   }
 }

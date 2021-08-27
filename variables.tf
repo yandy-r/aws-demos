@@ -14,5 +14,5 @@ variable "domain_name" {
 }
 
 variable "hostnames" {
-  default = ["ec2-1a-ssh-bastion", "ec2-1b", "ec2-2", "ec2-3"]
+  default = ["core-1a-ssh-bastion", "core-1b", "spoke-1", "spoke-2", "spoke-3"]
 }

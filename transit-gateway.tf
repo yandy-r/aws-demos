@@ -12,7 +12,7 @@ module "transit_gateway" {
   vpn_ecmp_support                = "enable"
 
   transit_gateway_tags = {
-    Name = "Transit-Gateway-01"
+    Name = "TGW-01"
   }
 
   ## VPC Attachments
@@ -21,6 +21,7 @@ module "transit_gateway" {
     local.core_private_subnet_ids,
     local.spoke_1_subnet_ids,
     local.spoke_2_subnet_ids,
+    local.spoke_3_subnet_ids,
   ]
   ipv6_support = "disable"
 
@@ -40,6 +41,9 @@ module "transit_gateway" {
     {
       Name = "Spoke-2-VPC-Attachment"
     },
+    {
+      Name = "Spoke-3-VPC-Attachment"
+    }
   ]
 
   ### SPOKE ROUTE TABLES
@@ -58,6 +62,9 @@ module "transit_gateway" {
     {
       Name = "Spoke-2-VPC-Route-Table"
     },
+    {
+      Name = "Spoke-3-VPC-Route-Table"
+    }
   ]
 }
 
@@ -84,7 +91,7 @@ resource "aws_ec2_transit_gateway_route" "default_routes" {
 resource "aws_route" "core_route_spokes" {
   count                  = length(local.core_route_table_ids)
   route_table_id         = local.core_route_table_ids[count.index]
-  destination_cidr_block = "10.244.0.0/14"
+  destination_cidr_block = "10.240.0.0/14"
   transit_gateway_id     = module.transit_gateway.transit_gateway_id
 }
 

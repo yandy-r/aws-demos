@@ -4,14 +4,14 @@ resource "aws_network_interface" "core" {
   count             = length(local.core_subnet_ids)
   subnet_id         = local.core_subnet_ids[count.index]
   security_groups   = [local.core_sg_ids[count.index]]
-  private_ips       = [element(["10.244.0.10", "10.244.128.10"], count.index)]
+  private_ips       = [element(["10.240.0.10", "10.240.128.10"], count.index)]
   source_dest_check = true
   tags = element([
     {
-      Name = "ec2-1a-eni"
+      Name = "core-1a-eni"
     },
     {
-      Name = "ec2-1b-eni"
+      Name = "core-1b-eni"
     },
   ], count.index)
 }
@@ -20,14 +20,17 @@ resource "aws_network_interface" "spokes" {
   count             = length(local.spoke_subnet_ids)
   subnet_id         = local.spoke_subnet_ids[count.index]
   security_groups   = [local.spoke_sg_ids[count.index]]
-  private_ips       = [element(["10.245.128.10", "10.246.128.10"], count.index)]
+  private_ips       = [element(["10.241.128.10", "10.242.128.10", "10.243.128.10"], count.index)]
   source_dest_check = true
   tags = element([
     {
-      Name = "ec2-2-eni"
+      Name = "spoke-1-eni"
     },
     {
-      Name = "ec2-3-eni"
+      Name = "spoke-2-eni"
+    },
+    {
+      Name = "spoke-3-eni"
     }
   ], count.index)
 }
@@ -48,10 +51,10 @@ resource "aws_instance" "core_instances" {
 
   tags = element([
     {
-      Name = "ec2-1a-ssh-bastion"
+      Name = "core-1a-ssh-bastion"
     },
     {
-      Name = "ec2-1b"
+      Name = "core-1b"
     },
   ], count.index)
 }
@@ -74,7 +77,7 @@ output "ec2_core_public_ips" {
 ## Spoke VPC Instances
 
 resource "aws_instance" "spoke_instances" {
-  count            = 2
+  count            = 3
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = var.ssh_key_name
@@ -87,11 +90,14 @@ resource "aws_instance" "spoke_instances" {
 
   tags = element([
     {
-      Name = "ec2-2"
+      Name = "spoke-1"
     },
     {
-      Name = "ec2-3"
+      Name = "spoke-2"
     },
+    {
+      Name = "spoke-3"
+    }
   ], count.index)
 }
 

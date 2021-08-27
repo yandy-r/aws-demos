@@ -47,7 +47,7 @@ resource "aws_security_group_rule" "core_public_from_spokes" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["10.245.0.0/16", "10.246.0.0/16"]
+  cidr_blocks       = ["10.241.0.0/16", "10.242.0.0/16", "10.243.0.0/16"]
   security_group_id = aws_security_group.core_public_sg.id
 }
 
@@ -87,13 +87,13 @@ resource "aws_security_group_rule" "core_private_from_spokes" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["10.245.0.0/16", "10.246.0.0/16"]
+  cidr_blocks       = ["10.241.0.0/16", "10.242.0.0/16", "10.243.0.0/16"]
   security_group_id = aws_security_group.core_private_sg.id
 }
 
 resource "aws_security_group" "spoke_1_private_sg" {
   description = "Spoke 1 VPC Security Groups - Based on Subnet count not instance"
-  vpc_id      = local.spoke_vpc_ids[0]
+  vpc_id      = local.spoke_vpc_ids[1]
 
   egress {
     from_port   = 0
@@ -117,7 +117,7 @@ resource "aws_security_group_rule" "spoke_1_from_core" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["10.244.0.0/16"]
+  cidr_blocks       = ["10.240.0.0/16"]
   security_group_id = aws_security_group.spoke_1_private_sg.id
 }
 
@@ -126,13 +126,13 @@ resource "aws_security_group_rule" "spoke_1_from_spoke_2" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["10.246.0.0/16"]
+  cidr_blocks       = ["10.242.0.0/16"]
   security_group_id = aws_security_group.spoke_1_private_sg.id
 }
 
 resource "aws_security_group" "spoke_2_private_sg" {
   description = "Spoke 2 VPC Security Groups - Based on Subnet count not instance"
-  vpc_id      = local.spoke_vpc_ids[1]
+  vpc_id      = local.spoke_vpc_ids[2]
 
   egress {
     from_port   = 0
@@ -156,7 +156,7 @@ resource "aws_security_group_rule" "spoke_2_from_core" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["10.244.0.0/16"]
+  cidr_blocks       = ["10.240.0.0/16"]
   security_group_id = aws_security_group.spoke_2_private_sg.id
 }
 
@@ -165,6 +165,36 @@ resource "aws_security_group_rule" "spoke_2_from_spoke_1" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["10.245.0.0/16"]
+  cidr_blocks       = ["10.241.0.0/16"]
   security_group_id = aws_security_group.spoke_2_private_sg.id
+}
+
+resource "aws_security_group" "spoke_3_private_sg" {
+  description = "Spoke 3 VPC Security Groups - Based on Subnet count not instance"
+  vpc_id      = local.spoke_vpc_ids[3]
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group_rule" "spoke_3_to_self" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.spoke_3_private_sg.id
+  security_group_id        = aws_security_group.spoke_3_private_sg.id
+}
+
+resource "aws_security_group_rule" "spoke_3_from_core" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["10.240.0.0/16"]
+  security_group_id = aws_security_group.spoke_3_private_sg.id
 }
