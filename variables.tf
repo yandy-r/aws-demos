@@ -1,13 +1,10 @@
 variable "self_public_ip" {
-  default = ""
 }
 
 variable "priv_ssh_key_path" {
-  default = ""
 }
 
 variable "pub_ssh_key_path" {
-  default = ""
 }
 
 variable "ssh_key_name" {}
