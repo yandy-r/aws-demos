@@ -1,105 +1,159 @@
-module "transit_gateway" {
-  ## Transit Gateway
-  source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//transit-gateway?ref=terraform-0.12"
-
-  create_transit_gateway          = true
-  transit_gateway_description     = "Transit Gateway Demo"
-  amazon_side_asn                 = 65100
-  auto_accept_shared_attachments  = "enable"
+resource "aws_ec2_transit_gateway" "tgw1" {
+  description                     = "Transit Gateway Demo"
+  amazon_side_asn                 = "64512"   # default
+  auto_accept_shared_attachments  = "disable" # default
   default_route_table_association = "disable"
   default_route_table_propagation = "disable"
-  dns_support                     = "enable"
-  vpn_ecmp_support                = "enable"
+  dns_support                     = "enable" # default
+  vpn_ecmp_support                = "enable" # default
 
-  transit_gateway_tags = {
-    Name = "TGW-01"
+  tags = {
+    Name      = "TGW1",
+    Terraform = "True"
   }
-
-  ## VPC Attachments
-  vpc_ids = concat(local.core_vpc_ids, local.spoke_vpc_ids)
-  subnet_ids = [
-    local.core_private_subnet_ids,
-    local.spoke_1_subnet_ids,
-    local.spoke_2_subnet_ids,
-    local.spoke_3_subnet_ids,
-  ]
-  ipv6_support = "disable"
-
-  ### Note that since we're using custom transit gateway route tables the
-  ### defautl route table attachment and default route table propagation
-  ### needs to be disabled, otherwise conflics when the custom attachments
-  ### are created will prevent ths from completing deployment.
-  associate_default_route_table       = false
-  vpc_default_route_table_propagation = false
-  vpc_attachment_tags = [
-    {
-      Name = "Core-VPC-Attachment"
-    },
-    {
-      Name = "Spoke-1-VPC-Attachment"
-    },
-    {
-      Name = "Spoke-2-VPC-Attachment"
-    },
-    {
-      Name = "Spoke-3-VPC-Attachment"
-    }
-  ]
-
-  ### SPOKE ROUTE TABLES
-
-  ### create_custom_route_tables is set to true to prevent the transit gateway
-  ### from setting default atachments as well
-  create_custom_route_tables = true
-  route_table_count          = length(concat(local.core_vpc_ids, local.spoke_vpc_ids))
-  route_table_tags = [
-    {
-      Name = "Core-VPC-Route-Table"
-    },
-    {
-      Name = "Spoke-1-VPC-Route-Table"
-    },
-    {
-      Name = "Spoke-2-VPC-Route-Table"
-    },
-    {
-      Name = "Spoke-3-VPC-Route-Table"
-    }
-  ]
 }
 
-## These settings propagate from source VPC (attachments) to core route table
-## in other words. The spoke vpc transit gateway route tables get propagated
-## into the core vpc route table so the core has visibility into the spokes.
-## The spoke route tables are not propagated to each other.
-resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_to_core" {
-  count                          = 2
-  transit_gateway_attachment_id  = module.transit_gateway.vpc_attachment_ids[count.index + 1]
-  transit_gateway_route_table_id = module.transit_gateway.route_table_ids[0]
+### CORE VPC
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "core_vpc_attachment" {
+  transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
+  vpc_id                                          = module.core_vpc.vpc_id
+  subnet_ids                                      = module.core_vpc.public_subnets.*.id
+  transit_gateway_default_route_table_association = false
+  transit_gateway_default_route_table_propagation = false
+
+  tags = {
+    Name      = "Core VPC Attachment",
+    Terraform = "True"
+  }
 }
 
-## create static default route on transit gateway from spoke routing tables
-## to core routing table attachment[0] is core vpc attachment. This ensures
-## that the transit gateway can send internet bound traffic from spokes out.
-resource "aws_ec2_transit_gateway_route" "default_routes" {
-  count                          = 3
-  destination_cidr_block         = "0.0.0.0/0"
-  transit_gateway_attachment_id  = module.transit_gateway.vpc_attachment_ids[0]
-  transit_gateway_route_table_id = module.transit_gateway.route_table_ids[count.index]
+resource "aws_ec2_transit_gateway_route_table" "core_route_table" {
+  transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
+
+  tags = {
+    Name      = "Core Route Table",
+    Terraform = "True"
+  }
 }
 
-resource "aws_route" "core_route_spokes" {
-  count                  = length(local.core_route_table_ids)
-  route_table_id         = local.core_route_table_ids[count.index]
-  destination_cidr_block = "10.240.0.0/14"
-  transit_gateway_id     = module.transit_gateway.transit_gateway_id
+resource "aws_ec2_transit_gateway_route_table_association" "core_route_table_association" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.core_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core_route_table.id
 }
 
-## This route ensures that all traffic from the spokes go out
-## to the transit gateway and internet is sent to the core vpc.
-resource "aws_route" "spoke_default_routes" {
-  count                  = length(local.spoke_priv_route_table_ids)
-  route_table_id         = local.spoke_priv_route_table_ids[count.index]
-  destination_cidr_block = "0.0.0.0/0"
-  transit_gateway_id     = module.transit_gateway.transit_gateway_id
+resource "aws_ec2_transit_gateway_route_table_propagation" "core" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.core_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_1_to_core" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_1_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_2_to_core" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_2_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_3_to_core" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_3_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core_route_table.id
+}
+
+### SPOKE 1 AND 2
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "spoke_1_vpc_attachment" {
+  transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
+  vpc_id                                          = module.spoke_1_vpc.vpc_id
+  subnet_ids                                      = module.spoke_1_vpc.private_subnets.*.id
+  transit_gateway_default_route_table_association = false
+  transit_gateway_default_route_table_propagation = false
+
+  tags = {
+    Name = "Spoke 1 VPC Attachment"
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "spoke_2_vpc_attachment" {
+  transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
+  vpc_id                                          = module.spoke_2_vpc.vpc_id
+  subnet_ids                                      = module.spoke_2_vpc.private_subnets.*.id
+  transit_gateway_default_route_table_association = false
+  transit_gateway_default_route_table_propagation = false
+
+  tags = {
+    Name = "Spoke 2 VPC Attachment"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table" "spoke_1_2_route_table" {
+  transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
+
+  tags = {
+    Name = "Spoke 1 & 2 Route Table"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "spoke_1_route_table_association" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_1_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_1_2_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "spoke_2_route_table_association" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_2_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_1_2_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_1" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_1_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_1_2_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_2" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_2_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_1_2_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "core_to_spoke_1_2" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.core_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_1_2_route_table.id
+}
+
+### SPOKE 3
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "spoke_3_vpc_attachment" {
+  transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
+  vpc_id                                          = module.spoke_3_vpc.vpc_id
+  subnet_ids                                      = module.spoke_3_vpc.private_subnets.*.id
+  transit_gateway_default_route_table_association = false
+  transit_gateway_default_route_table_propagation = false
+
+  tags = {
+    Name = "Spoke 3 VPC Attachment"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table" "spoke_3_route_table" {
+  transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
+
+  tags = {
+    Name = "Spoke 3 Route Table"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "spoke_3_route_table_association" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_3_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_3_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_3" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.spoke_3_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_3_route_table.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "core_to_spoke_3" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.core_vpc_attachment.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_3_route_table.id
 }
