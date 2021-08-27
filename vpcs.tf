@@ -1,7 +1,7 @@
 ## Core VPC
 module "core_vpc" {
   # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
-  source = "../terraform-aws-modules/vpc"
+  source = "./vpc-module"
 
   ### VPC
   create_vpc = true
