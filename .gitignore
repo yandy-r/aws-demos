@@ -10,6 +10,8 @@
 *.tfstate
 *.tfstate.*
 
+*.terraform.lock.*
+
 # .tfplan files
 *.tfplan
 *.tfplan.*
