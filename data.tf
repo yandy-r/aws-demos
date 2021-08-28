@@ -29,10 +29,12 @@ data "aws_ami" "latest_ubuntu" {
 }
 
 data "template_file" "cloud_config" {
+  count    = length(var.hostnames)
   template = file("${path.module}/cloud-config.tpl")
 
   vars = {
-    ssh_key = data.local_file.ssh_key.content
+    hostname = var.hostnames[count.index]
+    ssh_key  = data.local_file.ssh_key.content
   }
 }
 

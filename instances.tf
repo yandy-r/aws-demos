@@ -24,33 +24,33 @@ resource "aws_key_pair" "aws_test_key" {
 
 ## Network Interfaces
 
-resource "aws_network_interface" "core" {
+resource "aws_network_interface" "central" {
   count             = 1
   subnet_id         = aws_subnet.public[0].id
-  security_groups   = [aws_security_group.core_private_sg.id, aws_security_group.core_public_sg.id]
+  security_groups   = [aws_security_group.central_private.id, aws_security_group.central_public.id]
   private_ips       = [cidrhost(aws_subnet.public[count.index].cidr_block, 10)]
   source_dest_check = true
 
   tags = {
-    Name = "public-core-eni"
+    Name = "public-central-eni"
   }
 }
 
-## Core VPC Instances
+## Central VPC Instances
 
 resource "aws_instance" "public" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
-  user_data_base64 = base64encode(data.template_file.cloud_config.rendered)
+  user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
 
   network_interface {
-    network_interface_id = aws_network_interface.core.*.id[0]
+    network_interface_id = aws_network_interface.central.*.id[0]
     device_index         = 0
   }
 
   tags = {
-    Name = "Core Bastion"
+    Name = "Central Bastion"
   }
 
   depends_on = [aws_key_pair.aws_test_key]
@@ -68,15 +68,15 @@ resource "aws_network_interface" "private" {
 
   security_groups = [
     [
-      aws_security_group.core_private_sg.id,
-      aws_security_group.spoke_1_private_sg.id,
-      aws_security_group.spoke_2_private_sg.id,
-      aws_security_group.spoke_3_private_sg.id
+      aws_security_group.central_private.id,
+      aws_security_group.spoke_1.id,
+      aws_security_group.spoke_2.id,
+      aws_security_group.spoke_3.id
   ][count.index]]
 
   tags = element([
     {
-      Name = "private-core-eni"
+      Name = "private-central-eni"
     },
     {
       Name = "spoke-1-eni"
@@ -97,7 +97,7 @@ resource "aws_instance" "private" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
-  user_data_base64 = base64encode(data.template_file.cloud_config.rendered)
+  user_data_base64 = base64encode(data.template_file.cloud_config[count.index + 1].rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.private[count.index].id
@@ -106,7 +106,7 @@ resource "aws_instance" "private" {
 
   tags = element([
     {
-      Name = "Core Private"
+      Name = "Central Private"
     },
     {
       Name = "Spoke 1"

@@ -9,7 +9,7 @@ variable "domain_name" {
 }
 
 variable "hostnames" {
-  default = ["core-bastion", "core-private", "spoke-1", "spoke-2", "spoke-3"]
+  default = ["central-bastion", "central-private", "spoke-1", "spoke-2", "spoke-3"]
 }
 
 variable "rfc1918" {
