@@ -1,6 +1,6 @@
 resource "aws_security_group" "core_public_sg" {
   description = "Core instances Public SG"
-  vpc_id      = module.core_vpc.vpc_id
+  vpc_id      = aws_vpc.vpcs.*.id[0]
 
   egress {
     from_port   = 0
@@ -30,7 +30,7 @@ resource "aws_security_group" "core_public_sg" {
 
 resource "aws_security_group" "core_private_sg" {
   description = "Core instances Private SG"
-  vpc_id      = module.core_vpc.vpc_id
+  vpc_id      = aws_vpc.vpcs.*.id[0]
 
   egress {
     from_port   = 0
@@ -40,11 +40,11 @@ resource "aws_security_group" "core_private_sg" {
   }
 
   ingress {
-    description = "Allow all from spokes"
+    description = "Allow all from Private"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.241.0.0/16", "10.242.0.0/16", "10.243.0.0/16"]
+    cidr_blocks = ["10.0.0.0/8"]
   }
 
   tags = {
@@ -53,8 +53,8 @@ resource "aws_security_group" "core_private_sg" {
 }
 
 resource "aws_security_group" "spoke_1_private_sg" {
-  description = "Spoke 2 instances Private SG"
-  vpc_id      = module.spoke_1_vpc.vpc_id
+  description = "Spoke 1 instances Private SG"
+  vpc_id      = aws_vpc.vpcs.*.id[1]
 
   egress {
     from_port   = 0
@@ -64,18 +64,11 @@ resource "aws_security_group" "spoke_1_private_sg" {
   }
 
   ingress {
-    description = "Allow all from Core"
+    description = "Allow all from Private"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.240.0.0/16"]
-  }
-  ingress {
-    description = "Allow all from Spoke 2"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["10.242.0.0/16"]
+    cidr_blocks = ["10.0.0.0/8"]
   }
 
   tags = {
@@ -85,7 +78,7 @@ resource "aws_security_group" "spoke_1_private_sg" {
 
 resource "aws_security_group" "spoke_2_private_sg" {
   description = "Spoke 2 instances Private SG"
-  vpc_id      = module.spoke_2_vpc.vpc_id
+  vpc_id      = aws_vpc.vpcs.*.id[2]
 
   egress {
     from_port   = 0
@@ -95,18 +88,11 @@ resource "aws_security_group" "spoke_2_private_sg" {
   }
 
   ingress {
-    description = "Allow all from Core"
+    description = "Allow all from Private"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.240.0.0/16"]
-  }
-  ingress {
-    description = "Allow all from Spoke 1"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["10.241.0.0/16"]
+    cidr_blocks = ["10.0.0.0/8"]
   }
 
   tags = {
@@ -116,7 +102,7 @@ resource "aws_security_group" "spoke_2_private_sg" {
 
 resource "aws_security_group" "spoke_3_private_sg" {
   description = "Spoke 3 instances Private SG"
-  vpc_id      = module.spoke_3_vpc.vpc_id
+  vpc_id      = aws_vpc.vpcs.*.id[3]
 
   egress {
     from_port   = 0
@@ -126,11 +112,11 @@ resource "aws_security_group" "spoke_3_private_sg" {
   }
 
   ingress {
-    description = "Allow all from Core"
+    description = "Allow all from Private"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.240.0.0/16"]
+    cidr_blocks = ["10.0.0.0/8"]
   }
 
   tags = {

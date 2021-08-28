@@ -15,20 +15,22 @@ resource "aws_key_pair" "aws_test_key" {
   }
 
   provisioner "local-exec" {
-    command = "chmod 400 ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'"
+    command = "chmod 600 ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'"
   }
   provisioner "local-exec" {
-    command = "chmod 400 ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'.pub"
+    command = "chmod 600 ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'.pub"
   }
 }
 
 ## Network Interfaces
 
 resource "aws_network_interface" "core" {
-  subnet_id         = module.core_vpc.public_subnets.*.id[0]
+  count             = 1
+  subnet_id         = aws_subnet.public.*.id[0]
   security_groups   = [aws_security_group.core_private_sg.id, aws_security_group.core_public_sg.id]
-  private_ips       = ["10.240.0.10"]
+  private_ips       = [cidrhost(element(aws_subnet.public.*.cidr_block, count.index), 10)]
   source_dest_check = true
+
   tags = {
     Name = "core-1a-eni"
   }
@@ -43,7 +45,7 @@ resource "aws_instance" "core_instance" {
   user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
 
   network_interface {
-    network_interface_id = aws_network_interface.core.id
+    network_interface_id = aws_network_interface.core.*.id[0]
     device_index         = 0
   }
 
@@ -57,16 +59,17 @@ output "ec2_core_private_ips" {
 }
 
 output "ec2_core_public_ips" {
-  value = aws_instance.core_instance.associate_public_ip_address
+  value = aws_instance.core_instance.public_ip
 
 }
 
 resource "aws_network_interface" "spokes" {
-  count             = length(local.spoke_subnet_ids)
-  subnet_id         = local.spoke_subnet_ids[count.index]
-  security_groups   = [local.spoke_sg_ids[count.index]]
-  private_ips       = [element(["10.241.128.10", "10.242.128.10", "10.243.128.10"], count.index)]
+  count             = 3
+  subnet_id         = element(aws_subnet.private.*.id, count.index + 1)
+  security_groups   = [element([aws_security_group.spoke_1_private_sg.id, aws_security_group.spoke_2_private_sg.id, aws_security_group.spoke_3_private_sg.id], count.index)]
+  private_ips       = [cidrhost(element(aws_subnet.private.*.cidr_block, count.index + 1), 10)]
   source_dest_check = true
+
   tags = element([
     {
       Name = "spoke-1-eni"
@@ -96,13 +99,13 @@ resource "aws_instance" "spoke_instances" {
 
   tags = element([
     {
-      Name = "spoke 1"
+      Name = "Spoke 1"
     },
     {
-      Name = "spoke 2"
+      Name = "Spoke 2"
     },
     {
-      Name = "spoke 3"
+      Name = "Spoke 3"
     }
   ], count.index)
 }

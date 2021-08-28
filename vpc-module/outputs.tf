@@ -10,11 +10,11 @@ output "cidr_block" {
   value = aws_vpc.this[0].cidr_block
 }
 
-output "private_subnets" {
+output "private" {
   value = aws_subnet.private
 }
 
-output "public_subnets" {
+output "public" {
   value = aws_subnet.public
 }
 

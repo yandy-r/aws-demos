@@ -1,281 +1,152 @@
-## Core VPC
-module "core_vpc" {
-  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
-  source = "./vpc-module"
+data "aws_availability_zones" "azs" {
+  state = "available"
+}
 
-  ### VPC
-  create_vpc = true
+resource "aws_vpc" "vpcs" {
+  count                = 4
+  instance_tenancy     = "default"
+  enable_dns_hostnames = "true"
+  enable_dns_support   = "true"
 
-  azs = [
-    "us-east-1a",
-    "us-east-1b",
-    "us-east-1c",
-  ]
+  cidr_block = element(["10.240.0.0/16", "10.241.0.0/16", "10.242.0.0/16", "10.243.0.0/16"], count.index)
 
-  cidr_block                      = "10.240.0.0/16"
-  instance_tenancy                = "default"
-  enable_dns_hostnames            = true
-  enable_dns_support              = true
-  enable_classic_link             = false
-  enable_classic_link_dns_support = false
-
-  ### DHCP OPTIONS
-  create_dhcp_options      = true
-  dhcp_domain_name         = var.domain_name
-  dhcp_domain_name_servers = ["AmazonProvidedDNS"]
-
-  dhcp_ntp_servers = [
-    "69.195.159.158",
-    "173.255.206.153",
-  ]
-
-  dhcp_netbios_name_servers = []
-  dhcp_netbios_node_type    = 2
-
-  #############################################################################
-  ### IPv4 SUBNETS
-  #############################################################################
-
-  map_public      = true
-  num_pub_subnets = 1
-  pub_subnet_tags = [
+  tags = element([
     {
-      Name = "Core-VPC-Public-Subnet"
+      Name = "Core VPC"
     },
-  ]
-  num_priv_subnets = 0
+    {
+      Name = "Spoke VPC 1"
+    },
+    {
+      Name = "Spoke VPC 2"
+    },
+    {
+      Name = "Spoke VPC 3"
+    },
+  ], count.index)
+}
 
-  ### ROUTING AND INTERNET
-  #############################################################################
+resource "aws_internet_gateway" "inet_gw" {
+  vpc_id = aws_vpc.vpcs.*.id[0]
 
-  create_inet_gw = true
-  num_nat_gws    = 1
-
-  #############################################################################
-  ### FLOWLOGS
-  #############################################################################
-
-  create_flow_log     = true
-  flow_log_group_name = "Core-VPC-flowlog"
-
-  #############################################################################
-  ### ALL TAGS
-  #############################################################################
-
-  vpc_tags = {
-    Name = "Core-VPC"
+  tags = {
+    Name = "Core InetGW"
   }
 }
 
-## Spoke 1 VPC
+resource "aws_subnet" "public" {
+  count                   = 1
+  vpc_id                  = element(aws_vpc.vpcs.*.id, count.index)
+  cidr_block              = cidrsubnet(aws_vpc.vpcs.*.cidr_block[0], 8, 0)
+  availability_zone       = data.aws_availability_zones.azs.names[0]
+  map_public_ip_on_launch = "true"
 
-module "spoke_1_vpc" {
-  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
-  source = "../terraform-aws-modules/vpc"
-
-  ### VPC
-  create_vpc = true
-
-  azs = [
-    "us-east-1d",
-    "us-east-1e",
-    "us-east-1f",
-  ]
-
-  cidr_block                      = "10.241.0.0/16"
-  instance_tenancy                = "default"
-  enable_dns_hostnames            = true
-  enable_dns_support              = true
-  enable_classic_link             = false
-  enable_classic_link_dns_support = false
-
-  ### DHCP OPTIONS
-  create_dhcp_options      = true
-  dhcp_domain_name         = var.domain_name
-  dhcp_domain_name_servers = ["AmazonProvidedDNS"]
-
-  dhcp_ntp_servers = [
-    "69.195.159.158",
-    "173.255.206.153",
-  ]
-
-  dhcp_netbios_name_servers = []
-  dhcp_netbios_node_type    = 2
-
-  #############################################################################
-  ### IPv4 SUBNETS
-  #############################################################################
-
-  num_pub_subnets  = 0
-  num_priv_subnets = 1
-  priv_subnet_tags = [
+  tags = element([
     {
-      Name = "Spoke-1-VPC-Private-Subnet-1"
-    },
-  ]
-  ipv4_priv_newbits = 8
-  ipv4_priv_netnum  = 128
-
-  ### ROUTING AND INTERNET
-  #############################################################################
-
-  create_inet_gw = false
-  num_nat_gws    = 0
-
-  #############################################################################
-  ### FLOWLOGS
-  #############################################################################
-
-  create_flow_log     = true
-  flow_log_group_name = "Spoke-1-VPC-flowlog"
-
-  #############################################################################
-  ### ALL TAGS
-  #############################################################################
-
-  vpc_tags = {
-    Name = "Spoke-1-VPC"
-  }
+      Name = "Core VPC Public Subnet"
+    }
+  ], count.index)
 }
 
-## Spoke 2 VPC
+resource "aws_subnet" "private" {
+  count                   = 4
+  vpc_id                  = element(aws_vpc.vpcs.*.id, count.index)
+  cidr_block              = cidrsubnet(element(aws_vpc.vpcs.*.cidr_block, count.index), 8, 128)
+  availability_zone       = element(data.aws_availability_zones.azs.names, count.index + 1)
+  map_public_ip_on_launch = "false"
 
-module "spoke_2_vpc" {
-  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
-  source = "../terraform-aws-modules/vpc"
-
-  ### VPC
-  create_vpc = true
-
-  azs = [
-    "us-east-1c",
-    "us-east-1a",
-    "us-east-1e",
-  ]
-
-  cidr_block                      = "10.242.0.0/16"
-  instance_tenancy                = "default"
-  enable_dns_hostnames            = true
-  enable_dns_support              = true
-  enable_classic_link             = false
-  enable_classic_link_dns_support = false
-
-  ### DHCP OPTIONS
-  create_dhcp_options      = true
-  dhcp_domain_name         = var.domain_name
-  dhcp_domain_name_servers = ["AmazonProvidedDNS"]
-
-  dhcp_ntp_servers = [
-    "69.195.159.158",
-    "173.255.206.153",
-  ]
-
-  dhcp_netbios_name_servers = []
-  dhcp_netbios_node_type    = 2
-
-  #############################################################################
-  ### IPv4 SUBNETS
-  #############################################################################
-
-  num_pub_subnets  = 0
-  num_priv_subnets = 1
-  priv_subnet_tags = [
+  tags = element([
     {
-      Name = "Spoke-2-VPC-Private-Subnet-1"
+      Name = "Core VPC Private Subnet"
     },
-  ]
-  ipv4_priv_newbits = 8
-  ipv4_priv_netnum  = 128
-
-  ### ROUTING AND INTERNET
-  #############################################################################
-
-  create_inet_gw = false
-  num_nat_gws    = 0
-
-  #############################################################################
-  ### FLOWLOGS
-  #############################################################################
-
-  create_flow_log     = true
-  flow_log_group_name = "Spoke-2-VPC-flowlog"
-
-  #############################################################################
-  ### ALL TAGS
-  #############################################################################
-
-  vpc_tags = {
-    Name = "Spoke-2-VPC"
-  }
+    {
+      Name = "Spoke VPC 1 Private Subnet"
+    },
+    {
+      Name = "Spoke VPC 2 Private Subnet"
+    },
+    {
+      Name = "Spoke VPC 3 Private Subnet"
+    },
+  ], count.index)
 }
 
-## Spoke 3 VPC
+resource "aws_route_table" "public" {
+  count  = 1
+  vpc_id = element(aws_vpc.vpcs.*.id, count.index)
 
-module "spoke_3_vpc" {
-  # source = "git::ssh://git@github.com/IPyandy/terraform-aws-modules.git//vpc?ref=terraform-0.12"
-  source = "../terraform-aws-modules/vpc"
-
-  ### VPC
-  create_vpc = true
-
-  azs = [
-    "us-east-1c",
-    "us-east-1a",
-    "us-east-1e",
-  ]
-
-  cidr_block                      = "10.243.0.0/16"
-  instance_tenancy                = "default"
-  enable_dns_hostnames            = true
-  enable_dns_support              = true
-  enable_classic_link             = false
-  enable_classic_link_dns_support = false
-
-  ### DHCP OPTIONS
-  create_dhcp_options      = true
-  dhcp_domain_name         = var.domain_name
-  dhcp_domain_name_servers = ["AmazonProvidedDNS"]
-
-  dhcp_ntp_servers = [
-    "69.195.159.158",
-    "173.255.206.153",
-  ]
-
-  dhcp_netbios_name_servers = []
-  dhcp_netbios_node_type    = 2
-
-  #############################################################################
-  ### IPv4 SUBNETS
-  #############################################################################
-
-  num_pub_subnets  = 0
-  num_priv_subnets = 1
-  priv_subnet_tags = [
+  tags = element([
     {
-      Name = "Spoke-3-VPC-Private-Subnet-1"
+      Name = "Core Public RT"
+    }
+  ], count.index)
+}
+
+resource "aws_route_table" "private" {
+  count  = 4
+  vpc_id = element(aws_vpc.vpcs.*.id, count.index)
+
+  tags = element([
+    {
+      Name = "Core Private RT"
     },
-  ]
-  ipv4_priv_newbits = 8
-  ipv4_priv_netnum  = 128
+    {
+      Name = "Spoke 1 Private RT"
+    },
+    {
+      Name = "Spoke 2 Private RT"
+    },
+    {
+      Name = "Spoke 3 Private RT"
+    },
+  ], count.index)
+}
 
-  ### ROUTING AND INTERNET
-  #############################################################################
+resource "aws_route_table_association" "public" {
+  count          = 1
+  subnet_id      = element(aws_subnet.public.*.id, count.index)
+  route_table_id = element(aws_route_table.public.*.id, count.index)
+}
 
-  create_inet_gw = false
-  num_nat_gws    = 0
+resource "aws_route_table_association" "private" {
+  count          = 4
+  subnet_id      = element(aws_subnet.private.*.id, count.index)
+  route_table_id = element(aws_route_table.private.*.id, count.index)
+}
 
-  #############################################################################
-  ### FLOWLOGS
-  #############################################################################
+resource "aws_route" "core_default" {
+  route_table_id         = aws_route_table.public.*.id[0]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.inet_gw.id
+}
 
-  create_flow_log     = true
-  flow_log_group_name = "Spoke-3-VPC-flowlog"
+resource "aws_route" "core_default2" {
+  route_table_id         = aws_route_table.private.*.id[0]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.inet_gw.id
+}
 
-  #############################################################################
-  ### ALL TAGS
-  #############################################################################
+resource "aws_route" "tgw1_core_routes" {
+  count                  = length(aws_route_table.public)
+  route_table_id         = aws_route_table.public[count.index].id
+  destination_cidr_block = "10.0.0.0/8"
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
+  depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
+}
 
-  vpc_tags = {
-    Name = "Spoke-3-VPC"
-  }
+resource "aws_route" "tgw1_spoke_routes" {
+  count                  = length(aws_route_table.private)
+  route_table_id         = aws_route_table.private[count.index].id
+  destination_cidr_block = "10.0.0.0/8"
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
+  depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
+}
+
+
+resource "aws_route" "tgw1_spoke_defaults" {
+  count                  = 3
+  route_table_id         = aws_route_table.private[count.index + 1].id
+  destination_cidr_block = "0.0.0.0/0"
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
+  depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
