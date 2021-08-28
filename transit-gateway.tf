@@ -41,7 +41,7 @@ resource "aws_ec2_transit_gateway_route_table" "central" {
 
   tags = element([
     {
-      Name = "central Route Table"
+      Name = "Central Route Table"
     }
   ], count.index)
 }

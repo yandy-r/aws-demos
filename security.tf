@@ -16,8 +16,8 @@ resource "aws_security_group" "central_public" {
     cidr_blocks = [var.self_public_ip]
   }
   ingress {
-    from_port   = 0
-    to_port     = 0
+    from_port   = -1
+    to_port     = -1
     protocol    = "ICMP"
     cidr_blocks = [var.self_public_ip]
   }
@@ -25,6 +25,24 @@ resource "aws_security_group" "central_public" {
   tags = {
     Name = "Central VPC Public"
   }
+}
+
+resource "aws_security_group_rule" "ssh_from_private" {
+  type                     = "ingress"
+  from_port                = 22
+  to_port                  = 22
+  protocol                 = "TCP"
+  source_security_group_id = aws_security_group.central_private.id
+  security_group_id        = aws_security_group.central_public.id
+}
+
+resource "aws_security_group_rule" "icmp_from_private" {
+  type                     = "ingress"
+  from_port                = -1
+  to_port                  = -1
+  protocol                 = "ICMP"
+  source_security_group_id = aws_security_group.central_private.id
+  security_group_id        = aws_security_group.central_public.id
 }
 
 resource "aws_security_group" "central_private" {
@@ -39,17 +57,53 @@ resource "aws_security_group" "central_private" {
   }
 
   ingress {
-    description = "Allow all from Private"
+    description = "Allow all from Spoke VPC 1"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/8"]
+    cidr_blocks = ["10.241.0.0/16"]
+  }
+
+  ingress {
+    description = "Allow all from Spoke VPC 2"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.242.0.0/16"]
+  }
+
+  ingress {
+    description = "Allow all from Spoke VPC 3"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.243.0.0/16"]
   }
 
   tags = {
     Name = "Central VPC Private"
   }
 }
+
+
+resource "aws_security_group_rule" "ssh_from_public" {
+  type                     = "ingress"
+  from_port                = 22
+  to_port                  = 22
+  protocol                 = "TCP"
+  source_security_group_id = aws_security_group.central_public.id
+  security_group_id        = aws_security_group.central_private.id
+}
+
+resource "aws_security_group_rule" "icmp_from_public" {
+  type                     = "ingress"
+  from_port                = -1
+  to_port                  = -1
+  protocol                 = "ICMP"
+  source_security_group_id = aws_security_group.central_public.id
+  security_group_id        = aws_security_group.central_private.id
+}
+
 
 resource "aws_security_group" "spoke_1" {
   description = "Spoke 1 instances Private SG"
@@ -63,15 +117,23 @@ resource "aws_security_group" "spoke_1" {
   }
 
   ingress {
-    description = "Allow all from Private"
+    description = "Allow all from Central"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/8"]
+    cidr_blocks = ["10.240.0.0/16"]
+  }
+
+  ingress {
+    description = "Allow only ICMP from Spoke 2"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "ICMP"
+    cidr_blocks = ["10.242.0.0/16"]
   }
 
   tags = {
-    Name = "Spoke 1 VPC"
+    Name = "Spoke 1"
   }
 }
 
@@ -87,15 +149,23 @@ resource "aws_security_group" "spoke_2" {
   }
 
   ingress {
-    description = "Allow all from Private"
+    description = "Allow all from Central"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/8"]
+    cidr_blocks = ["10.240.0.0/16"]
+  }
+
+  ingress {
+    description = "Allow only ICMP from Spoke 1"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "ICMP"
+    cidr_blocks = ["10.241.0.0/16"]
   }
 
   tags = {
-    Name = "Spoke 2 VPC"
+    Name = "Spoke 2"
   }
 }
 
@@ -111,11 +181,11 @@ resource "aws_security_group" "spoke_3" {
   }
 
   ingress {
-    description = "Allow all from Private"
+    description = "Allow all from Central"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/8"]
+    cidr_blocks = ["10.240.0.0/16"]
   }
 
   tags = {

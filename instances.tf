@@ -22,12 +22,10 @@ resource "aws_key_pair" "aws_test_key" {
   }
 }
 
-## Network Interfaces
-
 resource "aws_network_interface" "central" {
   count             = 1
   subnet_id         = aws_subnet.public[0].id
-  security_groups   = [aws_security_group.central_private.id, aws_security_group.central_public.id]
+  security_groups   = [aws_security_group.central_public.id]
   private_ips       = [cidrhost(aws_subnet.public[count.index].cidr_block, 10)]
   source_dest_check = true
 
@@ -35,8 +33,6 @@ resource "aws_network_interface" "central" {
     Name = "public-central-eni"
   }
 }
-
-## Central VPC Instances
 
 resource "aws_instance" "public" {
   ami              = data.aws_ami.amzn2_linux.id
