@@ -12,16 +12,6 @@ resource "aws_ec2_transit_gateway" "tgw1" {
   }
 }
 
-### CORE VPC
-locals {
-  subnet_ids = [
-    [aws_subnet.public[0].id, aws_subnet.private[0].id],
-    [aws_subnet.private[1].id],
-    [aws_subnet.private[2].id],
-    [aws_subnet.private[3].id]
-  ]
-}
-
 resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
   count                                           = length(aws_subnet.private)
   transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
