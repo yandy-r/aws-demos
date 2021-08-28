@@ -11,3 +11,7 @@ variable "domain_name" {
 variable "hostnames" {
   default = ["core-bastion", "core-private", "spoke-1", "spoke-2", "spoke-3"]
 }
+
+variable "rfc1918" {
+  default = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+}
