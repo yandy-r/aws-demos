@@ -1,5 +1,5 @@
-resource "aws_security_group" "core_public_sg" {
-  description = "Core instances Public SG"
+resource "aws_security_group" "central_public" {
+  description = "Central instances Public SG"
   vpc_id      = aws_vpc.vpcs.*.id[0]
 
   egress {
@@ -9,7 +9,6 @@ resource "aws_security_group" "core_public_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ### Allow home from remote network to SSH and ICMP
   ingress {
     from_port   = 22
     to_port     = 22
@@ -24,12 +23,12 @@ resource "aws_security_group" "core_public_sg" {
   }
 
   tags = {
-    Name = "Core VPC Public"
+    Name = "Central VPC Public"
   }
 }
 
-resource "aws_security_group" "core_private_sg" {
-  description = "Core instances Private SG"
+resource "aws_security_group" "central_private" {
+  description = "Central instances Private SG"
   vpc_id      = aws_vpc.vpcs.*.id[0]
 
   egress {
@@ -48,11 +47,11 @@ resource "aws_security_group" "core_private_sg" {
   }
 
   tags = {
-    Name = "Core VPC Private"
+    Name = "Central VPC Private"
   }
 }
 
-resource "aws_security_group" "spoke_1_private_sg" {
+resource "aws_security_group" "spoke_1" {
   description = "Spoke 1 instances Private SG"
   vpc_id      = aws_vpc.vpcs.*.id[1]
 
@@ -76,7 +75,7 @@ resource "aws_security_group" "spoke_1_private_sg" {
   }
 }
 
-resource "aws_security_group" "spoke_2_private_sg" {
+resource "aws_security_group" "spoke_2" {
   description = "Spoke 2 instances Private SG"
   vpc_id      = aws_vpc.vpcs.*.id[2]
 
@@ -100,7 +99,7 @@ resource "aws_security_group" "spoke_2_private_sg" {
   }
 }
 
-resource "aws_security_group" "spoke_3_private_sg" {
+resource "aws_security_group" "spoke_3" {
   description = "Spoke 3 instances Private SG"
   vpc_id      = aws_vpc.vpcs.*.id[3]
 
