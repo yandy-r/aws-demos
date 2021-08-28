@@ -23,10 +23,10 @@ locals {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
-  count                                           = length(aws_subnet.tgw_attach)
+  count                                           = length(aws_subnet.private)
   transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
   vpc_id                                          = aws_vpc.vpcs[count.index].id
-  subnet_ids                                      = [aws_subnet.tgw_attach[count.index].id]
+  subnet_ids                                      = [aws_subnet.private[count.index].id]
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
 
@@ -57,15 +57,12 @@ resource "aws_ec2_transit_gateway_route_table" "core" {
 }
 
 resource "aws_ec2_transit_gateway_route_table" "spokes" {
-  count              = 2
+  count              = 1
   transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
 
   tags = element([
     {
-      Name = "Spoke 1 & 2 Route Table"
-    },
-    {
-      Name = "Spoke 3 Route Table"
+      Name = "Spokes"
     }
   ], count.index)
 }
@@ -75,19 +72,10 @@ resource "aws_ec2_transit_gateway_route_table_association" "core" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core[0].id
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "spoke_1" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach.*.id[1]
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes.*.id[0]
-}
-
-resource "aws_ec2_transit_gateway_route_table_association" "spoke_2" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach.*.id[2]
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes.*.id[0]
-}
-
-resource "aws_ec2_transit_gateway_route_table_association" "spoke_3" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach.*.id[3]
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes.*.id[1]
+resource "aws_ec2_transit_gateway_route_table_association" "spokes" {
+  count                          = 3
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index + 1].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "core" {
@@ -97,34 +85,27 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "core" {
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "core_to_spokes" {
-  count                          = 2
+  count                          = 1
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_1_2" {
+resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_1_to_2" {
   count                          = 2
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index + 1].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
 }
 
 resource "aws_ec2_transit_gateway_route" "spoke_defaults" {
-  count                          = 2
+  count                          = 1
   destination_cidr_block         = "0.0.0.0/0"
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
 }
 
-resource "aws_ec2_transit_gateway_route" "black_hole_1" {
+resource "aws_ec2_transit_gateway_route" "black_hole" {
   count                          = 3
   destination_cidr_block         = var.rfc1918[count.index]
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
-  blackhole                      = "true"
-}
-
-resource "aws_ec2_transit_gateway_route" "black_hole_2" {
-  count                          = 3
-  destination_cidr_block         = var.rfc1918[count.index]
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[1].id
   blackhole                      = "true"
 }
