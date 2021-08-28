@@ -52,6 +52,8 @@ resource "aws_instance" "public" {
   tags = {
     Name = "Core Bastion"
   }
+
+  depends_on = [aws_key_pair.aws_test_key]
 }
 
 output "public_ips" {
@@ -116,6 +118,8 @@ resource "aws_instance" "private" {
       Name = "Spoke 3"
     }
   ], count.index)
+
+  depends_on = [aws_key_pair.aws_test_key]
 }
 
 output "private_ips" {

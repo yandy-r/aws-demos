@@ -108,21 +108,23 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_1_2" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "spoke_3" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[3].id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[1].id
-}
-
-resource "aws_ec2_transit_gateway_route" "core_default" {
-  count                          = 1
-  destination_cidr_block         = "0.0.0.0/0"
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core[count.index].id
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
-}
-
 resource "aws_ec2_transit_gateway_route" "spoke_defaults" {
   count                          = 2
   destination_cidr_block         = "0.0.0.0/0"
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
+}
+
+resource "aws_ec2_transit_gateway_route" "black_hole_1" {
+  count                          = 3
+  destination_cidr_block         = var.rfc1918[count.index]
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
+  blackhole                      = "true"
+}
+
+resource "aws_ec2_transit_gateway_route" "black_hole_2" {
+  count                          = 3
+  destination_cidr_block         = var.rfc1918[count.index]
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[1].id
+  blackhole                      = "true"
 }

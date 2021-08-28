@@ -146,12 +146,21 @@ resource "aws_route" "core_inet_gw_default" {
 }
 
 resource "aws_route" "core_nat_gw_default" {
-  route_table_id         = aws_route_table.private[0].id
+  count                  = 2
+  route_table_id         = element([aws_route_table.private[0].id, aws_route_table.tgw_attach[0].id], count.index)
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_nat_gateway.nat_gw.id
 }
 
-resource "aws_route" "core_to_spokes" {
+resource "aws_route" "core_to_spokes_private" {
+  count                  = 3
+  route_table_id         = aws_route_table.private[0].id
+  destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
+  depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
+}
+
+resource "aws_route" "core_to_spokes_public" {
   count                  = 3
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block

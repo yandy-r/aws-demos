@@ -1,0 +1,238 @@
+[0m[1mtls_private_key.aws_test_priv_key: Refreshing state... [id=04bde9442f13be2ff0a65220a64937725cda3079][0m
+[0m[1maws_ec2_transit_gateway_route.core_default[0]: Refreshing state... [id=tgw-rtb-075eaabf21fcec5e9_0.0.0.0/0][0m
+[0m[1maws_vpc.vpcs[3]: Refreshing state... [id=vpc-0bbc393f6aabda6cc][0m
+[0m[1maws_ec2_transit_gateway.tgw1: Refreshing state... [id=tgw-0fc27f151f0790c0a][0m
+[0m[1maws_vpc.vpcs[2]: Refreshing state... [id=vpc-030f80a2cf522c55a][0m
+[0m[1maws_vpc.vpcs[1]: Refreshing state... [id=vpc-0cd926ec9d8ee031f][0m
+[0m[1maws_vpc.vpcs[0]: Refreshing state... [id=vpc-0de413cbe7b9ade8d][0m
+[0m[1maws_key_pair.aws_test_key: Refreshing state... [id=aws-test-key][0m
+[0m[1maws_ec2_transit_gateway_route_table.spokes[1]: Refreshing state... [id=tgw-rtb-0058e541949aaa81f][0m
+[0m[1maws_ec2_transit_gateway_route_table.core[0]: Refreshing state... [id=tgw-rtb-075eaabf21fcec5e9][0m
+[0m[1maws_ec2_transit_gateway_route_table.spokes[0]: Refreshing state... [id=tgw-rtb-075a2788601abaef2][0m
+[0m[1maws_ec2_transit_gateway_route.black_hole_2[2]: Refreshing state... [id=tgw-rtb-0058e541949aaa81f_192.168.0.0/16][0m
+[0m[1maws_ec2_transit_gateway_route.black_hole_1[0]: Refreshing state... [id=tgw-rtb-075a2788601abaef2_10.0.0.0/8][0m
+[0m[1maws_ec2_transit_gateway_route.black_hole_1[1]: Refreshing state... [id=tgw-rtb-075a2788601abaef2_172.16.0.0/12][0m
+[0m[1maws_ec2_transit_gateway_route.black_hole_1[2]: Refreshing state... [id=tgw-rtb-075a2788601abaef2_192.168.0.0/16][0m
+[0m[1maws_ec2_transit_gateway_route.black_hole_2[1]: Refreshing state... [id=tgw-rtb-0058e541949aaa81f_172.16.0.0/12][0m
+[0m[1maws_ec2_transit_gateway_route.black_hole_2[0]: Refreshing state... [id=tgw-rtb-0058e541949aaa81f_10.0.0.0/8][0m
+[0m[1maws_security_group.spoke_2_private_sg: Refreshing state... [id=sg-065190880903d5b9a][0m
+[0m[1maws_security_group.core_public_sg: Refreshing state... [id=sg-07a299ace72c961ac][0m
+[0m[1maws_route_table.private[2]: Refreshing state... [id=rtb-0cb17c4e27bcf2904][0m
+[0m[1maws_route_table.private[1]: Refreshing state... [id=rtb-0ddf0e3025c133276][0m
+[0m[1maws_subnet.tgw_attach[3]: Refreshing state... [id=subnet-01c66603acf0cd9d0][0m
+[0m[1maws_subnet.tgw_attach[1]: Refreshing state... [id=subnet-02ae22f7ed66c9448][0m
+[0m[1maws_route_table.private[3]: Refreshing state... [id=rtb-035e5e3c538ae0b33][0m
+[0m[1maws_subnet.tgw_attach[0]: Refreshing state... [id=subnet-0f59c71a1757508c9][0m
+[0m[1maws_subnet.tgw_attach[2]: Refreshing state... [id=subnet-0c35d632f57d3efd0][0m
+[0m[1maws_route_table.private[0]: Refreshing state... [id=rtb-03a52cb08620983e4][0m
+[0m[1maws_subnet.public[0]: Refreshing state... [id=subnet-0f8b2f8410f94e440][0m
+[0m[1maws_route_table.public[0]: Refreshing state... [id=rtb-0c93b1630dc5b403a][0m
+[0m[1maws_security_group.spoke_1_private_sg: Refreshing state... [id=sg-07880b053d083f968][0m
+[0m[1maws_security_group.core_private_sg: Refreshing state... [id=sg-044b74e3ae122dbcc][0m
+[0m[1maws_internet_gateway.inet_gw: Refreshing state... [id=igw-0e78757c23cf3c6a1][0m
+[0m[1maws_subnet.private[3]: Refreshing state... [id=subnet-0f54be47ba5a29361][0m
+[0m[1maws_subnet.private[1]: Refreshing state... [id=subnet-08ec2833818c40336][0m
+[0m[1maws_subnet.private[0]: Refreshing state... [id=subnet-06f6e582237cc90f0][0m
+[0m[1maws_subnet.private[2]: Refreshing state... [id=subnet-09ad7636dca8e43ea][0m
+[0m[1maws_security_group.spoke_3_private_sg: Refreshing state... [id=sg-014d3c3d4a8e51855][0m
+[0m[1maws_route_table.tgw_attach[3]: Refreshing state... [id=rtb-06ae4a94872cc9509][0m
+[0m[1maws_route_table.tgw_attach[0]: Refreshing state... [id=rtb-0f6af3bced3756f55][0m
+[0m[1maws_route_table.tgw_attach[1]: Refreshing state... [id=rtb-0f8886f32f3bb213a][0m
+[0m[1maws_route_table.tgw_attach[2]: Refreshing state... [id=rtb-0ad038c63291b9e3e][0m
+[0m[1maws_ec2_transit_gateway_vpc_attachment.attach[1]: Refreshing state... [id=tgw-attach-072ebf72191ff086f][0m
+[0m[1maws_ec2_transit_gateway_vpc_attachment.attach[2]: Refreshing state... [id=tgw-attach-0828bc4d8859b122e][0m
+[0m[1maws_ec2_transit_gateway_vpc_attachment.attach[0]: Refreshing state... [id=tgw-attach-0bde273ceb4cf4e53][0m
+[0m[1maws_ec2_transit_gateway_vpc_attachment.attach[3]: Refreshing state... [id=tgw-attach-0ba6f148b1fa9c8e7][0m
+[0m[1maws_eip.nat_gw: Refreshing state... [id=eipalloc-06a920d2d05a0b19f][0m
+[0m[1maws_route.core_inet_gw_default: Refreshing state... [id=r-rtb-0c93b1630dc5b403a1080289494][0m
+[0m[1maws_route_table_association.private[3]: Refreshing state... [id=rtbassoc-03c9b6f5af5bfafac][0m
+[0m[1maws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-05345310e4c7bc34e][0m
+[0m[1maws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-0738281e27e7656ca][0m
+[0m[1maws_route_table_association.private[2]: Refreshing state... [id=rtbassoc-04d952712a1580383][0m
+[0m[1maws_network_interface.private[2]: Refreshing state... [id=eni-0c7538c2fb2577160][0m
+[0m[1maws_network_interface.private[3]: Refreshing state... [id=eni-0f3377960a7089223][0m
+[0m[1maws_network_interface.private[1]: Refreshing state... [id=eni-084da3d51c36fb3ae][0m
+[0m[1maws_network_interface.private[0]: Refreshing state... [id=eni-04b59316d0cb8f194][0m
+[0m[1maws_network_interface.core[0]: Refreshing state... [id=eni-0c64b5d9fb6d9ea1c][0m
+[0m[1maws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-0e2f777f5ff4b92be][0m
+[0m[1maws_route_table_association.tgw_attach[1]: Refreshing state... [id=rtbassoc-02b5e822c407dae26][0m
+[0m[1maws_route_table_association.tgw_attach[2]: Refreshing state... [id=rtbassoc-0c0480cc54c1509e3][0m
+[0m[1maws_route_table_association.tgw_attach[3]: Refreshing state... [id=rtbassoc-0defeb6d03fa39c8e][0m
+[0m[1maws_route_table_association.tgw_attach[0]: Refreshing state... [id=rtbassoc-08f31de52ea9da332][0m
+[0m[1maws_ec2_transit_gateway_route_table_association.core: Refreshing state... [id=tgw-rtb-075eaabf21fcec5e9_tgw-attach-0bde273ceb4cf4e53][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.core_to_spokes[0]: Refreshing state... [id=tgw-rtb-075a2788601abaef2_tgw-attach-0bde273ceb4cf4e53][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.core_to_spokes[1]: Refreshing state... [id=tgw-rtb-0058e541949aaa81f_tgw-attach-0bde273ceb4cf4e53][0m
+[0m[1maws_route.tgw1_spoke_defaults[2]: Refreshing state... [id=r-rtb-035e5e3c538ae0b331080289494][0m
+[0m[1maws_route.tgw1_spoke_defaults[1]: Refreshing state... [id=r-rtb-0cb17c4e27bcf29041080289494][0m
+[0m[1maws_route.tgw1_spoke_defaults[0]: Refreshing state... [id=r-rtb-0ddf0e3025c1332761080289494][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.spokes_1_2[0]: Refreshing state... [id=tgw-rtb-075a2788601abaef2_tgw-attach-072ebf72191ff086f][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.spokes_1_2[1]: Refreshing state... [id=tgw-rtb-075a2788601abaef2_tgw-attach-0828bc4d8859b122e][0m
+[0m[1maws_ec2_transit_gateway_route_table_association.spoke_3: Refreshing state... [id=tgw-rtb-0058e541949aaa81f_tgw-attach-0ba6f148b1fa9c8e7][0m
+[0m[1maws_ec2_transit_gateway_route.spoke_defaults[1]: Refreshing state... [id=tgw-rtb-0058e541949aaa81f_0.0.0.0/0][0m
+[0m[1maws_ec2_transit_gateway_route.spoke_defaults[0]: Refreshing state... [id=tgw-rtb-075a2788601abaef2_0.0.0.0/0][0m
+[0m[1maws_ec2_transit_gateway_route_table_association.spoke_1: Refreshing state... [id=tgw-rtb-075a2788601abaef2_tgw-attach-072ebf72191ff086f][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.core[0]: Refreshing state... [id=tgw-rtb-075eaabf21fcec5e9_tgw-attach-0bde273ceb4cf4e53][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.core[3]: Refreshing state... [id=tgw-rtb-075eaabf21fcec5e9_tgw-attach-0ba6f148b1fa9c8e7][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.core[1]: Refreshing state... [id=tgw-rtb-075eaabf21fcec5e9_tgw-attach-072ebf72191ff086f][0m
+[0m[1maws_ec2_transit_gateway_route_table_propagation.core[2]: Refreshing state... [id=tgw-rtb-075eaabf21fcec5e9_tgw-attach-0828bc4d8859b122e][0m
+[0m[1maws_route.core_to_spokes_private[2]: Refreshing state... [id=r-rtb-03a52cb08620983e4773179622][0m
+[0m[1maws_route.core_to_spokes_private[0]: Refreshing state... [id=r-rtb-03a52cb08620983e41815138203][0m
+[0m[1maws_route.core_to_spokes_private[1]: Refreshing state... [id=r-rtb-03a52cb08620983e43804219512][0m
+[0m[1maws_ec2_transit_gateway_route_table_association.spoke_2: Refreshing state... [id=tgw-rtb-075a2788601abaef2_tgw-attach-0828bc4d8859b122e][0m
+[0m[1maws_nat_gateway.nat_gw: Refreshing state... [id=nat-02430cbc533bcef1d][0m
+[0m[1maws_instance.private[2]: Refreshing state... [id=i-0137cc4975d0ade10][0m
+[0m[1maws_instance.private[3]: Refreshing state... [id=i-02034dd0d87da10b8][0m
+[0m[1maws_instance.private[1]: Refreshing state... [id=i-00a12a6905e333eb4][0m
+[0m[1maws_instance.private[0]: Refreshing state... [id=i-00a6a62814674433d][0m
+[0m[1maws_instance.public: Refreshing state... [id=i-0233d5aad345e8a9b][0m
+[0m[1maws_route.core_nat_gw_default[0]: Refreshing state... [id=r-rtb-03a52cb08620983e41080289494][0m
+[0m[1maws_route.core_nat_gw_default[1]: Refreshing state... [id=r-rtb-0f6af3bced3756f551080289494][0m
+[0m
+[1m[36mNote:[0m[1m Objects have changed outside of Terraform[0m
+
+[0mTerraform detected the following changes made outside of Terraform since the
+last "terraform apply":
+
+[1m  # aws_route_table.public[0][0m has been changed[0m[0m
+[0m  [33m~[0m[0m resource "aws_route_table" "public" {
+        [1m[0mid[0m[0m               = "rtb-0c93b1630dc5b403a"
+      [33m~[0m [0m[1m[0mroute[0m[0m            = [
+          [31m-[0m [0m{
+              [31m-[0m [0mcarrier_gateway_id         = ""
+              [31m-[0m [0mcidr_block                 = "10.241.0.0/16"
+              [31m-[0m [0mdestination_prefix_list_id = ""
+              [31m-[0m [0megress_only_gateway_id     = ""
+              [31m-[0m [0mgateway_id                 = ""
+              [31m-[0m [0minstance_id                = ""
+              [31m-[0m [0mipv6_cidr_block            = ""
+              [31m-[0m [0mlocal_gateway_id           = ""
+              [31m-[0m [0mnat_gateway_id             = ""
+              [31m-[0m [0mnetwork_interface_id       = ""
+              [31m-[0m [0mtransit_gateway_id         = "tgw-0fc27f151f0790c0a"
+              [31m-[0m [0mvpc_endpoint_id            = ""
+              [31m-[0m [0mvpc_peering_connection_id  = ""
+            },
+          [31m-[0m [0m{
+              [31m-[0m [0mcarrier_gateway_id         = ""
+              [31m-[0m [0mcidr_block                 = "10.242.0.0/16"
+              [31m-[0m [0mdestination_prefix_list_id = ""
+              [31m-[0m [0megress_only_gateway_id     = ""
+              [31m-[0m [0mgateway_id                 = ""
+              [31m-[0m [0minstance_id                = ""
+              [31m-[0m [0mipv6_cidr_block            = ""
+              [31m-[0m [0mlocal_gateway_id           = ""
+              [31m-[0m [0mnat_gateway_id             = ""
+              [31m-[0m [0mnetwork_interface_id       = ""
+              [31m-[0m [0mtransit_gateway_id         = "tgw-0fc27f151f0790c0a"
+              [31m-[0m [0mvpc_endpoint_id            = ""
+              [31m-[0m [0mvpc_peering_connection_id  = ""
+            },
+          [31m-[0m [0m{
+              [31m-[0m [0mcarrier_gateway_id         = ""
+              [31m-[0m [0mcidr_block                 = "10.243.0.0/16"
+              [31m-[0m [0mdestination_prefix_list_id = ""
+              [31m-[0m [0megress_only_gateway_id     = ""
+              [31m-[0m [0mgateway_id                 = ""
+              [31m-[0m [0minstance_id                = ""
+              [31m-[0m [0mipv6_cidr_block            = ""
+              [31m-[0m [0mlocal_gateway_id           = ""
+              [31m-[0m [0mnat_gateway_id             = ""
+              [31m-[0m [0mnetwork_interface_id       = ""
+              [31m-[0m [0mtransit_gateway_id         = "tgw-0fc27f151f0790c0a"
+              [31m-[0m [0mvpc_endpoint_id            = ""
+              [31m-[0m [0mvpc_peering_connection_id  = ""
+            },
+            [90m# (1 unchanged element hidden)[0m[0m
+        ]
+        [1m[0mtags[0m[0m             = {
+            "Name" = "Core Public RT"
+        }
+        [90m# (5 unchanged attributes hidden)[0m[0m
+    }
+
+Unless you have made equivalent changes to your configuration, or ignored the
+relevant attributes using ignore_changes, the following plan may include
+actions to undo or respond to these changes.
+[90m
+─────────────────────────────────────────────────────────────────────────────[0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create
+  [33m~[0m update in-place
+  [31m-[0m destroy
+[0m
+Terraform will perform the following actions:
+
+[1m  # aws_ec2_transit_gateway_route.core_default[0][0m will be [1m[31mdestroyed[0m[0m
+[0m  [31m-[0m[0m resource "aws_ec2_transit_gateway_route" "core_default" {
+      [31m-[0m [0m[1m[0mblackhole[0m[0m                      = false [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mdestination_cidr_block[0m[0m         = "0.0.0.0/0" [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mid[0m[0m                             = "tgw-rtb-075eaabf21fcec5e9_0.0.0.0/0" [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mtransit_gateway_attachment_id[0m[0m  = "tgw-attach-0bde273ceb4cf4e53" [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mtransit_gateway_route_table_id[0m[0m = "tgw-rtb-075eaabf21fcec5e9" [90m->[0m [0m[90mnull[0m[0m
+    }
+
+[1m  # aws_route.core_nat_gw_default[0][0m will be updated in-place[0m[0m
+[0m  [33m~[0m[0m resource "aws_route" "core_nat_gw_default" {
+      [32m+[0m [0m[1m[0mgateway_id[0m[0m             = "nat-02430cbc533bcef1d"
+        [1m[0mid[0m[0m                     = "r-rtb-03a52cb08620983e41080289494"
+      [31m-[0m [0m[1m[0mnat_gateway_id[0m[0m         = "nat-02430cbc533bcef1d" [90m->[0m [0m[90mnull[0m[0m
+        [90m# (4 unchanged attributes hidden)[0m[0m
+    }
+
+[1m  # aws_route.core_nat_gw_default[1][0m will be updated in-place[0m[0m
+[0m  [33m~[0m[0m resource "aws_route" "core_nat_gw_default" {
+      [32m+[0m [0m[1m[0mgateway_id[0m[0m             = "nat-02430cbc533bcef1d"
+        [1m[0mid[0m[0m                     = "r-rtb-0f6af3bced3756f551080289494"
+      [31m-[0m [0m[1m[0mnat_gateway_id[0m[0m         = "nat-02430cbc533bcef1d" [90m->[0m [0m[90mnull[0m[0m
+        [90m# (4 unchanged attributes hidden)[0m[0m
+    }
+
+[1m  # aws_route.core_to_spokes_public[0][0m will be created[0m[0m
+[0m  [32m+[0m[0m resource "aws_route" "core_to_spokes_public" {
+      [32m+[0m [0m[1m[0mdestination_cidr_block[0m[0m = "10.241.0.0/16"
+      [32m+[0m [0m[1m[0mid[0m[0m                     = (known after apply)
+      [32m+[0m [0m[1m[0minstance_id[0m[0m            = (known after apply)
+      [32m+[0m [0m[1m[0minstance_owner_id[0m[0m      = (known after apply)
+      [32m+[0m [0m[1m[0mnetwork_interface_id[0m[0m   = (known after apply)
+      [32m+[0m [0m[1m[0morigin[0m[0m                 = (known after apply)
+      [32m+[0m [0m[1m[0mroute_table_id[0m[0m         = "rtb-0c93b1630dc5b403a"
+      [32m+[0m [0m[1m[0mstate[0m[0m                  = (known after apply)
+      [32m+[0m [0m[1m[0mtransit_gateway_id[0m[0m     = "tgw-0fc27f151f0790c0a"
+    }
+
+[1m  # aws_route.core_to_spokes_public[1][0m will be created[0m[0m
+[0m  [32m+[0m[0m resource "aws_route" "core_to_spokes_public" {
+      [32m+[0m [0m[1m[0mdestination_cidr_block[0m[0m = "10.242.0.0/16"
+      [32m+[0m [0m[1m[0mid[0m[0m                     = (known after apply)
+      [32m+[0m [0m[1m[0minstance_id[0m[0m            = (known after apply)
+      [32m+[0m [0m[1m[0minstance_owner_id[0m[0m      = (known after apply)
+      [32m+[0m [0m[1m[0mnetwork_interface_id[0m[0m   = (known after apply)
+      [32m+[0m [0m[1m[0morigin[0m[0m                 = (known after apply)
+      [32m+[0m [0m[1m[0mroute_table_id[0m[0m         = "rtb-0c93b1630dc5b403a"
+      [32m+[0m [0m[1m[0mstate[0m[0m                  = (known after apply)
+      [32m+[0m [0m[1m[0mtransit_gateway_id[0m[0m     = "tgw-0fc27f151f0790c0a"
+    }
+
+[1m  # aws_route.core_to_spokes_public[2][0m will be created[0m[0m
+[0m  [32m+[0m[0m resource "aws_route" "core_to_spokes_public" {
+      [32m+[0m [0m[1m[0mdestination_cidr_block[0m[0m = "10.243.0.0/16"
+      [32m+[0m [0m[1m[0mid[0m[0m                     = (known after apply)
+      [32m+[0m [0m[1m[0minstance_id[0m[0m            = (known after apply)
+      [32m+[0m [0m[1m[0minstance_owner_id[0m[0m      = (known after apply)
+      [32m+[0m [0m[1m[0mnetwork_interface_id[0m[0m   = (known after apply)
+      [32m+[0m [0m[1m[0morigin[0m[0m                 = (known after apply)
+      [32m+[0m [0m[1m[0mroute_table_id[0m[0m         = "rtb-0c93b1630dc5b403a"
+      [32m+[0m [0m[1m[0mstate[0m[0m                  = (known after apply)
+      [32m+[0m [0m[1m[0mtransit_gateway_id[0m[0m     = "tgw-0fc27f151f0790c0a"
+    }
+
+[0m[1mPlan:[0m 3 to add, 2 to change, 1 to destroy.
+[0m[90m
+─────────────────────────────────────────────────────────────────────────────[0m
+
+Saved the plan to: plan.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "plan.tfplan"
