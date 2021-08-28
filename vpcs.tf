@@ -159,14 +159,6 @@ resource "aws_route" "core_to_spokes" {
   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
 
-# resource "aws_route" "core_to_spokes_private" {
-#   count                  = 3
-#   route_table_id         = aws_route_table.private[0].id
-#   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
-#   transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
-#   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
-# }
-
 resource "aws_route" "tgw1_spoke_defaults" {
   count                  = 3
   route_table_id         = aws_route_table.private[count.index + 1].id
