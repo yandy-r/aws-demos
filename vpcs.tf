@@ -16,7 +16,7 @@ resource "aws_vpc" "vpcs" {
 
   tags = element([
     {
-      Name = "Core VPC"
+      Name = "Central VPC"
     },
     {
       Name = "Spoke VPC 1"
@@ -34,7 +34,7 @@ resource "aws_internet_gateway" "inet_gw" {
   vpc_id = aws_vpc.vpcs[0].id
 
   tags = {
-    Name = "Core InetGW"
+    Name = "Central InetGW"
   }
 }
 
@@ -42,7 +42,7 @@ resource "aws_eip" "nat_gw" {
   vpc = true
 
   tags = {
-    Name = "Core NatGw"
+    Name = "Central NatGw"
   }
 
   depends_on = [aws_internet_gateway.inet_gw]
@@ -68,7 +68,7 @@ resource "aws_subnet" "public" {
 
   tags = element([
     {
-      Name = "Core VPC Public Subnet"
+      Name = "Central VPC Public Subnet"
     }
   ], count.index)
 }
@@ -82,7 +82,7 @@ resource "aws_subnet" "private" {
 
   tags = element([
     {
-      Name = "Core VPC Private Subnet"
+      Name = "Central VPC Private Subnet"
     },
     {
       Name = "Spoke VPC 1 Private Subnet"
@@ -102,7 +102,7 @@ resource "aws_route_table" "public" {
 
   tags = element([
     {
-      Name = "Core Public RT"
+      Name = "Central Public RT"
     }
   ], count.index)
 }
@@ -113,7 +113,7 @@ resource "aws_route_table" "private" {
 
   tags = element([
     {
-      Name = "Core Private RT"
+      Name = "Central Private RT"
     },
     {
       Name = "Spoke 1 Private RT"
@@ -139,19 +139,19 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-resource "aws_route" "core_inet_gw_default" {
+resource "aws_route" "central_inet_gw_default" {
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.inet_gw.id
 }
 
-resource "aws_route" "core_nat_gw_default" {
+resource "aws_route" "central_nat_gw_default" {
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
-resource "aws_route" "core_to_spokes_private" {
+resource "aws_route" "central_to_spokes_private" {
   count                  = 3
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
@@ -159,7 +159,7 @@ resource "aws_route" "core_to_spokes_private" {
   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
 
-resource "aws_route" "core_to_spokes_public" {
+resource "aws_route" "central_to_spokes_public" {
   count                  = 3
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block

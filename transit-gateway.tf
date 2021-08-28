@@ -22,7 +22,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
 
   tags = [
     {
-      Name = "Core VPC"
+      Name = "central VPC"
     },
     {
       Name = "Spoke 1 VPC"
@@ -35,13 +35,13 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
   }][count.index]
 }
 
-resource "aws_ec2_transit_gateway_route_table" "core" {
+resource "aws_ec2_transit_gateway_route_table" "central" {
   count              = 1
   transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
 
   tags = element([
     {
-      Name = "Core Route Table"
+      Name = "central Route Table"
     }
   ], count.index)
 }
@@ -57,9 +57,9 @@ resource "aws_ec2_transit_gateway_route_table" "spokes" {
   ], count.index)
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "core" {
+resource "aws_ec2_transit_gateway_route_table_association" "central" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core[0].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.central[0].id
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "spokes" {
@@ -68,13 +68,13 @@ resource "aws_ec2_transit_gateway_route_table_association" "spokes" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "core" {
+resource "aws_ec2_transit_gateway_route_table_propagation" "central" {
   count                          = 4
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index].id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core[0].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.central[0].id
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "core_to_spokes" {
+resource "aws_ec2_transit_gateway_route_table_propagation" "central_to_spokes" {
   count                          = 1
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id
