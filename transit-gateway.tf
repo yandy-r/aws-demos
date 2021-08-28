@@ -13,12 +13,20 @@ resource "aws_ec2_transit_gateway" "tgw1" {
 }
 
 ### CORE VPC
+locals {
+  subnet_ids = [
+    [aws_subnet.public[0].id, aws_subnet.private[0].id],
+    [aws_subnet.private[1].id],
+    [aws_subnet.private[2].id],
+    [aws_subnet.private[3].id]
+  ]
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
   count                                           = length(aws_vpc.vpcs)
   transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
   vpc_id                                          = aws_vpc.vpcs.*.id[count.index]
-  subnet_ids                                      = [aws_subnet.private.*.id[count.index]]
+  subnet_ids                                      = local.subnet_ids[count.index]
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
 
