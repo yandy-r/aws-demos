@@ -22,7 +22,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
 
   tags = [
     {
-      Name = "central VPC"
+      Name = "Central VPC"
     },
     {
       Name = "Spoke 1 VPC"
