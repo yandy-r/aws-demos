@@ -15,6 +15,7 @@
 # .tfplan files
 *.tfplan
 *.tfplan.*
+plan.txt
 
 # .tfvar files
 *.tfvars
