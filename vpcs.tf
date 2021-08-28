@@ -148,7 +148,7 @@ resource "aws_route" "core_inet_gw_default" {
 resource "aws_route" "core_nat_gw_default" {
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_nat_gateway.nat_gw.id
+  nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
 resource "aws_route" "core_to_spokes_private" {
