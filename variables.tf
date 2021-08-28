@@ -9,5 +9,5 @@ variable "domain_name" {
 }
 
 variable "hostnames" {
-  default = ["core-bastion", "spoke-1", "spoke-2", "spoke-3"]
+  default = ["core-bastion", "core-private", "spoke-1", "spoke-2", "spoke-3"]
 }

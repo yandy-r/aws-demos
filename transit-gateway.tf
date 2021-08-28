@@ -23,10 +23,10 @@ locals {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
-  count                                           = length(aws_vpc.vpcs)
+  count                                           = length(aws_subnet.tgw_attach)
   transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
-  vpc_id                                          = aws_vpc.vpcs.*.id[count.index]
-  subnet_ids                                      = local.subnet_ids[count.index]
+  vpc_id                                          = aws_vpc.vpcs[count.index].id
+  subnet_ids                                      = [aws_subnet.tgw_attach[count.index].id]
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
 
@@ -93,12 +93,12 @@ resource "aws_ec2_transit_gateway_route_table_association" "spoke_3" {
 resource "aws_ec2_transit_gateway_route_table_propagation" "core" {
   count                          = 4
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index].id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core.*.id[0]
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.core[0].id
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "core_to_spokes" {
   count                          = 2
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach.*.id[0]
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id
 }
 

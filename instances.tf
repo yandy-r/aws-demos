@@ -28,21 +28,21 @@ resource "aws_network_interface" "core" {
   count             = 1
   subnet_id         = aws_subnet.public[0].id
   security_groups   = [aws_security_group.core_private_sg.id, aws_security_group.core_public_sg.id]
-  private_ips       = [cidrhost(element(aws_subnet.public.*.cidr_block, count.index), 10)]
+  private_ips       = [cidrhost(aws_subnet.public[count.index].cidr_block, 10)]
   source_dest_check = true
 
   tags = {
-    Name = "core-1a-eni"
+    Name = "public-core-eni"
   }
 }
 
 ## Core VPC Instances
 
-resource "aws_instance" "core_instance" {
+resource "aws_instance" "public" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
-  user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
+  user_data_base64 = base64encode(data.template_file.cloud_config.rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.core.*.id[0]
@@ -54,18 +54,28 @@ resource "aws_instance" "core_instance" {
   }
 }
 
-output "ec2_core_public_ips" {
-  value = aws_instance.core_instance.public_ip
+output "public_ips" {
+  value = aws_instance.public.public_ip
 }
 
-resource "aws_network_interface" "spokes" {
-  count             = 3
-  subnet_id         = element(aws_subnet.private.*.id, count.index + 1)
-  security_groups   = [[aws_security_group.spoke_1_private_sg.id, aws_security_group.spoke_2_private_sg.id, aws_security_group.spoke_3_private_sg.id][count.index]]
-  private_ips       = [cidrhost(element(aws_subnet.private.*.cidr_block, count.index + 1), 10)]
+resource "aws_network_interface" "private" {
+  count             = 4
+  subnet_id         = aws_subnet.private[count.index].id
+  private_ips       = [cidrhost(aws_subnet.private[count.index].cidr_block, 10)]
   source_dest_check = true
 
+  security_groups = [
+    [
+      aws_security_group.core_private_sg.id,
+      aws_security_group.spoke_1_private_sg.id,
+      aws_security_group.spoke_2_private_sg.id,
+      aws_security_group.spoke_3_private_sg.id
+  ][count.index]]
+
   tags = element([
+    {
+      Name = "private-core-eni"
+    },
     {
       Name = "spoke-1-eni"
     },
@@ -80,19 +90,22 @@ resource "aws_network_interface" "spokes" {
 
 ## Spoke VPC Instances
 
-resource "aws_instance" "spoke_instances" {
-  count            = 3
+resource "aws_instance" "private" {
+  count            = 4
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
-  user_data_base64 = base64encode(data.template_file.cloud_config[count.index + 1].rendered)
+  user_data_base64 = base64encode(data.template_file.cloud_config.rendered)
 
   network_interface {
-    network_interface_id = aws_network_interface.spokes[count.index].id
+    network_interface_id = aws_network_interface.private[count.index].id
     device_index         = 0
   }
 
   tags = element([
+    {
+      Name = "Core Private"
+    },
     {
       Name = "Spoke 1"
     },
@@ -105,9 +118,9 @@ resource "aws_instance" "spoke_instances" {
   ], count.index)
 }
 
-output "ec2_spoke_private_ips" {
+output "private_ips" {
   value = {
-    for i in aws_instance.spoke_instances :
+    for i in aws_instance.private :
     i.id => i.private_ip
   }
 }
