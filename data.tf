@@ -40,4 +40,8 @@ data "template_file" "cloud_config" {
 
 data "local_file" "ssh_key" {
   filename = pathexpand(var.priv_ssh_key_path)
+
+  depends_on = [
+    aws_key_pair.aws_test_key
+  ]
 }
