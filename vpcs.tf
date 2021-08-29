@@ -174,3 +174,66 @@ resource "aws_route" "tgw1_spoke_defaults" {
   transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
+
+resource "aws_iam_role" "flow_logs" {
+  name               = "flow_logs"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "vpc-flow-logs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+  tags = {
+    Name = "Flow Logs"
+  }
+}
+
+resource "aws_iam_role_policy" "flow_logs" {
+  name = "flow_logs"
+  role = aws_iam_role.flow_logs.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "flow_logs" {
+  name = "flow_logs"
+
+  tags = {
+    Name = "Flow logs"
+  }
+}
+
+resource "aws_flow_log" "flow_logs" {
+  count           = length(aws_vpc.vpcs)
+  iam_role_arn    = aws_iam_role.flow_logs.arn
+  log_destination = aws_cloudwatch_log_group.flow_logs.arn
+  traffic_type    = "ALL"
+  vpc_id          = aws_vpc.vpcs[count.index].id
+}
