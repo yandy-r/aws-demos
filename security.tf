@@ -3,7 +3,7 @@ resource "aws_security_group" "central_public" {
   vpc_id      = aws_vpc.vpcs.*.id[0]
 
   tags = {
-    Name = "Central VPC"
+    Name = "Central Public"
   }
 }
 
@@ -13,7 +13,7 @@ resource "aws_security_group" "central_private" {
   vpc_id      = aws_vpc.vpcs.*.id[0]
 
   tags = {
-    Name = "Central VPC"
+    Name = "Central Private"
   }
 }
 
@@ -253,6 +253,6 @@ resource "aws_security_group" "spoke_3" {
   }
 
   tags = {
-    Name = "Spoke 3 VPC"
+    Name = "Spoke 3"
   }
 }
