@@ -180,21 +180,7 @@ resource "aws_route" "tgw1_spoke_defaults" {
 resource "aws_iam_role" "flow_logs" {
   count              = var.create_flow_logs ? 1 : 0
   name               = "flow_logs"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "vpc-flow-logs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+  assume_role_policy = file("iam/flow_logs_role.json")
 
   tags = {
     Name = "Flow Logs"
@@ -202,28 +188,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "flow_logs" {
-  count = var.create_flow_logs ? 1 : 0
-  name  = "flow_logs"
-  role  = aws_iam_role.flow_logs[0].id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  count  = var.create_flow_logs ? 1 : 0
+  name   = "flow_logs"
+  role   = aws_iam_role.flow_logs[0].id
+  policy = file("iam/flow_logs_role_policy.json")
 }
 
 resource "aws_cloudwatch_log_group" "flow_logs" {
@@ -242,3 +210,9 @@ resource "aws_flow_log" "flow_logs" {
   traffic_type    = "ALL"
   vpc_id          = aws_vpc.vpcs[count.index].id
 }
+
+# resource "aws_vpc_endpoint" "s3" {
+#   count =
+#   vpc_id = aws_vpc.vpcs[0].id
+
+# }
