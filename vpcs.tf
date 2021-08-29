@@ -211,30 +211,19 @@ resource "aws_flow_log" "flow_logs" {
   vpc_id          = aws_vpc.vpcs[count.index].id
 }
 
+data "template_file" "s3_endpoint_policy" {
+  template = file("iam/s3_endpoint_policy.json")
+
+  vars = {
+    bucket_arn = aws_s3_bucket.lab_data.arn
+  }
+}
 resource "aws_vpc_endpoint" "s3" {
   count             = var.create_vpc_endpoint ? 1 : 0
   vpc_id            = aws_vpc.vpcs[0].id
   vpc_endpoint_type = "Gateway"
   service_name      = "com.amazonaws.us-east-1.s3"
-
-  policy = jsonencode({
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:ListBucket",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ],
-        "Resource" : [
-          "${aws_s3_bucket.lab_data.arn}",
-          "${aws_s3_bucket.lab_data.arn}/*"
-        ],
-        "Principal" : "*"
-      }
-    ]
-  })
+  policy            = data.template_file.s3_endpoint_policy.rendered
 
   tags = {
     Name = "S3 Endpoint"
