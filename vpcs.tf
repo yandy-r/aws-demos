@@ -211,8 +211,38 @@ resource "aws_flow_log" "flow_logs" {
   vpc_id          = aws_vpc.vpcs[count.index].id
 }
 
-# resource "aws_vpc_endpoint" "s3" {
-#   count =
-#   vpc_id = aws_vpc.vpcs[0].id
+resource "aws_vpc_endpoint" "s3" {
+  count             = var.create_vpc_endpoint ? 1 : 0
+  vpc_id            = aws_vpc.vpcs[0].id
+  vpc_endpoint_type = "Gateway"
+  service_name      = "com.amazonaws.us-east-1.s3"
 
-# }
+  policy = jsonencode({
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ],
+        "Resource" : [
+          "${aws_s3_bucket.lab_data.arn}",
+          "${aws_s3_bucket.lab_data.arn}/*"
+        ],
+        "Principal" : "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "S3 Endpoint"
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "s3" {
+  for_each        = toset([aws_route_table.public[0].id, aws_route_table.private[0].id])
+  route_table_id  = each.value
+  vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
+}

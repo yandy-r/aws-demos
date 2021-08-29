@@ -23,7 +23,7 @@ variable "create_flow_logs" {
 }
 
 variable "aws_profile" {
-  type = string
+  type = map(string)
 }
 
 variable "owner" {
@@ -36,4 +36,9 @@ variable "aws_region" {
 
 variable "credentials_file" {
   type = string
+}
+
+variable "create_vpc_endpoint" {
+  type    = bool
+  default = true
 }
