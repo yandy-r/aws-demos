@@ -35,7 +35,8 @@ resource "aws_network_interface" "central" {
 }
 
 resource "aws_instance" "public" {
-  ami              = data.aws_ami.amzn2_linux.id
+  # ami              = data.aws_ami.amzn2_linux.id
+  ami              = data.aws_ami.latest_ubuntu.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
@@ -89,8 +90,9 @@ resource "aws_network_interface" "private" {
 ## Spoke VPC Instances
 
 resource "aws_instance" "private" {
-  count            = 4
-  ami              = data.aws_ami.amzn2_linux.id
+  count = 4
+  # ami              = data.aws_ami.amzn2_linux.id
+  ami              = data.aws_ami.latest_ubuntu.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[count.index + 1].rendered)
