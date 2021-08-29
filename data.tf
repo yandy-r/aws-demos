@@ -24,7 +24,7 @@ data "aws_ami" "latest_ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-disco-19.04-amd64*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-hirsute-21.04-amd64-server*"]
   }
 }
 
