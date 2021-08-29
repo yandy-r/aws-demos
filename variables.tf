@@ -1,7 +1,9 @@
 variable "self_public_ip" {
+  type = string
 }
 
 variable "priv_ssh_key_path" {
+  type = string
 }
 
 variable "domain_name" {
@@ -18,4 +20,20 @@ variable "rfc1918" {
 
 variable "create_flow_logs" {
   default = true
+}
+
+variable "aws_profile" {
+  type = string
+}
+
+variable "owner" {
+  type = string
+}
+
+variable "aws_region" {
+  type = string
+}
+
+variable "credentials_file" {
+  type = string
 }
