@@ -30,7 +30,7 @@ resource "aws_network_interface" "central" {
   source_dest_check = true
 
   tags = {
-    Name = "public-central-eni"
+    Name = "Central Public"
   }
 }
 
@@ -72,16 +72,16 @@ resource "aws_network_interface" "private" {
 
   tags = element([
     {
-      Name = "private-central-eni"
+      Name = "Central Private"
     },
     {
-      Name = "spoke-1-eni"
+      Name = "Spoke 1"
     },
     {
-      Name = "spoke-2-eni"
+      Name = "Spoke 2"
     },
     {
-      Name = "spoke-3-eni"
+      Name = "Spoke 3"
     }
   ], count.index)
 }
