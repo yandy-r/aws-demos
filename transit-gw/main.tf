@@ -195,7 +195,7 @@ resource "aws_route" "tgw_spoke_defaults" {
 
 resource "aws_iam_role" "flow_logs" {
   count              = var.create_flow_logs ? 1 : 0
-  name               = "flow_logs"
+  name               = "${data.aws_region.current.name}-flow_logs"
   assume_role_policy = file("${path.module}/templates/flow_logs_role.json")
 
   tags = {
@@ -205,14 +205,14 @@ resource "aws_iam_role" "flow_logs" {
 
 resource "aws_iam_role_policy" "flow_logs" {
   count  = var.create_flow_logs ? 1 : 0
-  name   = "flow_logs"
+  name   = "${data.aws_region.current.name}-flow_logs"
   role   = aws_iam_role.flow_logs[0].id
   policy = file("${path.module}/templates/flow_logs_role_policy.json")
 }
 
 resource "aws_cloudwatch_log_group" "flow_logs" {
   count = var.create_flow_logs ? 1 : 0
-  name  = "flow_logs"
+  name  = "${data.aws_region.current.name}-flow_logs"
 
   tags = {
     Name = "Flow logs"
@@ -234,11 +234,13 @@ data "template_file" "s3_endpoint_policy" {
     bucket_arn = aws_s3_bucket.lab_data.arn
   }
 }
+
+data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "s3" {
   count             = var.create_vpc_endpoint ? 1 : 0
   vpc_id            = aws_vpc.vpcs[0].id
   vpc_endpoint_type = "Gateway"
-  service_name      = "com.amazonaws.us-east-1.s3"
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
   policy            = data.template_file.s3_endpoint_policy.rendered
 
   tags = {
@@ -267,21 +269,21 @@ resource "tls_private_key" "aws_test_priv_key" {
 }
 
 resource "aws_key_pair" "aws_test_key" {
-  key_name   = "aws-test-key"
+  key_name   = "aws-${var.region}-test-key"
   public_key = tls_private_key.aws_test_priv_key.public_key_openssh
 
   provisioner "local-exec" {
-    command = "echo '${tls_private_key.aws_test_priv_key.private_key_pem}' > ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'"
+    command = "echo '${tls_private_key.aws_test_priv_key.private_key_pem}' > ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'"
   }
   provisioner "local-exec" {
-    command = "echo '${tls_private_key.aws_test_priv_key.public_key_openssh}' > ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'.pub"
+    command = "echo '${tls_private_key.aws_test_priv_key.public_key_openssh}' > ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'.pub"
   }
 
   provisioner "local-exec" {
-    command = "chmod 600 ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'"
+    command = "chmod 600 ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'"
   }
   provisioner "local-exec" {
-    command = "chmod 600 ~/.aws-keys/'${aws_key_pair.aws_test_key.key_name}'.pub"
+    command = "chmod 600 ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'.pub"
   }
 }
 
@@ -326,7 +328,7 @@ data "template_file" "cloud_config" {
 }
 
 data "local_file" "ssh_key" {
-  filename = pathexpand(var.priv_ssh_key_path)
+  filename = pathexpand("${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}")
 
   depends_on = [
     aws_key_pair.aws_test_key
@@ -348,7 +350,7 @@ resource "aws_network_interface" "hub" {
 resource "aws_instance" "hub_public" {
   count            = 1
   ami              = data.aws_ami.amzn2_linux.id
-  instance_type    = "t2.micro"
+  instance_type    = "t3.medium"
   key_name         = aws_key_pair.aws_test_key.key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[count.index].rendered)
 
@@ -399,7 +401,7 @@ resource "aws_network_interface" "private" {
 resource "aws_instance" "private" {
   count            = 4
   ami              = data.aws_ami.amzn2_linux.id
-  instance_type    = "t2.micro"
+  instance_type    = "t3.medium"
   key_name         = aws_key_pair.aws_test_key.key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[count.index + 1].rendered)
 
