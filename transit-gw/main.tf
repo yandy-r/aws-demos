@@ -589,33 +589,178 @@ resource "aws_security_group_rule" "hub_rules" {
   security_group_id        = each.value.security_group_id
 }
 
+locals {
+  spoke_1_rules = {
+
+    egress = {
+      description              = "Allow all outbound"
+      type                     = "egress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["0.0.0.0/0"]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_1.id
+    }
+
+    rule_1 = {
+      description              = "Allow ALL from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = null
+      source_security_group_id = aws_security_group.spoke_1.id
+      security_group_id        = aws_security_group.spoke_1.id
+    }
+
+    rule_2 = {
+      description              = "Allow ALL from Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = [aws_vpc.vpcs[0].cidr_block]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_1.id
+    }
+
+    rule_3 = {
+      description              = "Allow ALL from Spoke 2"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = [aws_vpc.vpcs[2].cidr_block]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_1.id
+    }
+  }
+
+  spoke_2_rules = {
+
+    egress = {
+      description              = "Allow all outbound"
+      type                     = "egress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["0.0.0.0/0"]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_2.id
+    }
+
+    rule_1 = {
+      description              = "Allow ALL from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = null
+      source_security_group_id = aws_security_group.spoke_2.id
+      security_group_id        = aws_security_group.spoke_2.id
+    }
+
+    rule_2 = {
+      description              = "Allow ALL from Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = [aws_vpc.vpcs[0].cidr_block]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_2.id
+    }
+
+    rule_3 = {
+      description              = "Allow ALL from Spoke 1"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = [aws_vpc.vpcs[1].cidr_block]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_2.id
+    }
+  }
+
+  spoke_3_rules = {
+
+    egress = {
+      description              = "Allow all outbound"
+      type                     = "egress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["0.0.0.0/0"]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_3.id
+    }
+
+    rule_1 = {
+      description              = "Allow ALL from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = null
+      source_security_group_id = aws_security_group.spoke_3.id
+      security_group_id        = aws_security_group.spoke_3.id
+    }
+
+    rule_2 = {
+      description              = "Allow ALL from Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = [aws_vpc.vpcs[0].cidr_block]
+      source_security_group_id = null
+      security_group_id        = aws_security_group.spoke_3.id
+    }
+  }
+}
+
+
+resource "aws_security_group_rule" "spoke_1_rules" {
+  for_each                 = local.spoke_1_rules
+  description              = each.value.description
+  type                     = each.value.type
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = each.value.cidr_blocks
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = each.value.security_group_id
+}
+
+resource "aws_security_group_rule" "spoke_2_rules" {
+  for_each                 = local.spoke_2_rules
+  description              = each.value.description
+  type                     = each.value.type
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = each.value.cidr_blocks
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = each.value.security_group_id
+}
+
+resource "aws_security_group_rule" "spoke_3_rules" {
+  for_each                 = local.spoke_3_rules
+  description              = each.value.description
+  type                     = each.value.type
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = each.value.cidr_blocks
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = each.value.security_group_id
+}
+
 resource "aws_security_group" "spoke_1" {
   description = "Spoke 1 Private"
   vpc_id      = aws_vpc.vpcs.*.id[1]
-
-  egress {
-    description = "Allow all outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow all from Hub"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [aws_vpc.vpcs[0].cidr_block]
-  }
-
-  ingress {
-    description = "Allow ALL from Spoke 2"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [aws_vpc.vpcs[2].cidr_block]
-  }
 
   tags = {
     Name = "Spoke 1"
@@ -626,30 +771,6 @@ resource "aws_security_group" "spoke_2" {
   description = "Spoke 2 Private"
   vpc_id      = aws_vpc.vpcs.*.id[2]
 
-  egress {
-    description = "Allow all outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow all from Hub"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [aws_vpc.vpcs[0].cidr_block]
-  }
-
-  ingress {
-    description = "Allow ALL from Spoke 1"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [aws_vpc.vpcs[1].cidr_block]
-  }
-
   tags = {
     Name = "Spoke 2"
   }
@@ -659,41 +780,9 @@ resource "aws_security_group" "spoke_3" {
   description = "Spoke 3 Private"
   vpc_id      = aws_vpc.vpcs.*.id[3]
 
-  egress {
-    description = "Allow all outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow all from Hub"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [aws_vpc.vpcs[0].cidr_block]
-  }
-
   tags = {
     Name = "Spoke 3"
   }
-}
-
-resource "aws_security_group_rule" "spokes_to_self" {
-  for_each = { for k, v in [
-    aws_security_group.spoke_1,
-    aws_security_group.spoke_2,
-    aws_security_group.spoke_3
-  ] : k => v }
-
-  description              = "Spoke to Self"
-  type                     = "ingress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "-1"
-  source_security_group_id = each.value.id
-  security_group_id        = each.value.id
 }
 
 ### -------------------------------------------------------------------------------------------- ###
