@@ -351,10 +351,6 @@ resource "aws_instance" "central_public" {
   depends_on = [aws_key_pair.aws_test_key]
 }
 
-output "public_ips" {
-  value = aws_instance.central_public.public_ip
-}
-
 resource "aws_network_interface" "private" {
   count             = 4
   subnet_id         = aws_subnet.private[count.index].id
@@ -415,13 +411,6 @@ resource "aws_instance" "private" {
   ], count.index)
 
   depends_on = [aws_key_pair.aws_test_key]
-}
-
-output "private_ips" {
-  value = {
-    for i in aws_instance.private :
-    i.id => i.private_ip
-  }
 }
 
 ### -------------------------------------------------------------------------------------------- ###
@@ -798,7 +787,7 @@ resource "aws_ec2_transit_gateway_route" "black_hole" {
 ### -------------------------------------------------------------------------------------------- ###
 
 resource "aws_s3_bucket" "lab_data" {
-  bucket = "lab-data.local-domain.not-domain"
+  bucket = var.bucket_name
   acl    = "private"
 
   tags = {

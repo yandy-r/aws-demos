@@ -39,3 +39,7 @@ variable "create_vpc_endpoint" {
   type    = bool
   default = true
 }
+
+variable "bucket_name" {
+  type = string
+}
