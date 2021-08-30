@@ -180,7 +180,7 @@ resource "aws_route" "tgw1_spoke_defaults" {
 resource "aws_iam_role" "flow_logs" {
   count              = var.create_flow_logs ? 1 : 0
   name               = "flow_logs"
-  assume_role_policy = file("iam/flow_logs_role.json")
+  assume_role_policy = file("${path.module}/iam/flow_logs_role.json")
 
   tags = {
     Name = "Flow Logs"
@@ -191,7 +191,7 @@ resource "aws_iam_role_policy" "flow_logs" {
   count  = var.create_flow_logs ? 1 : 0
   name   = "flow_logs"
   role   = aws_iam_role.flow_logs[0].id
-  policy = file("iam/flow_logs_role_policy.json")
+  policy = file("${path.module}/iam/flow_logs_role_policy.json")
 }
 
 resource "aws_cloudwatch_log_group" "flow_logs" {
@@ -212,7 +212,7 @@ resource "aws_flow_log" "flow_logs" {
 }
 
 data "template_file" "s3_endpoint_policy" {
-  template = file("iam/s3_endpoint_policy.json")
+  template = file("${path.module}/iam/s3_endpoint_policy.json")
 
   vars = {
     bucket_arn = aws_s3_bucket.lab_data.arn
@@ -230,8 +230,13 @@ resource "aws_vpc_endpoint" "s3" {
   }
 }
 
+locals {
+  central_rts = [
+    aws_route_table.public[0], aws_route_table.private[0]
+  ]
+}
 resource "aws_vpc_endpoint_route_table_association" "s3" {
-  for_each        = toset([aws_route_table.public[0].id, aws_route_table.private[0].id])
+  for_each        = { for k, v in local.central_rts : k => v.id }
   route_table_id  = each.value
   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
 }
