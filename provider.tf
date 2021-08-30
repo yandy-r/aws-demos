@@ -8,6 +8,7 @@ provider "aws" {
       Terraform   = "True"
       Environemnt = "Test"
       Owner       = "Dev"
+      Region      = "US-East-1"
     }
   }
 }
@@ -23,6 +24,7 @@ provider "aws" {
       Terraform   = "True"
       Environemnt = "Test"
       Owner       = "Dev"
+      Region      = "US-West-2"
     }
   }
 }
