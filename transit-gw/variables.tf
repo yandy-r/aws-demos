@@ -34,3 +34,7 @@ variable "create_vpc_endpoint" {
 variable "bucket_name" {
   type = string
 }
+
+variable "region" {
+  type = string
+}

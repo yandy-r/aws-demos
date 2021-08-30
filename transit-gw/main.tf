@@ -158,7 +158,7 @@ resource "aws_route" "hub_to_spokes_private" {
   count                  = 3
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
-  transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
 
@@ -166,15 +166,15 @@ resource "aws_route" "hub_to_spokes_public" {
   count                  = 3
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
-  transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
 
-resource "aws_route" "tgw1_spoke_defaults" {
+resource "aws_route" "tgw_spoke_defaults" {
   count                  = 3
   route_table_id         = aws_route_table.private[count.index + 1].id
   destination_cidr_block = "0.0.0.0/0"
-  transit_gateway_id     = aws_ec2_transit_gateway.tgw1.id
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
 
@@ -679,7 +679,7 @@ resource "aws_security_group" "spoke_3" {
 ### TRANSIT GATEWAY
 ### -------------------------------------------------------------------------------------------- ###
 
-resource "aws_ec2_transit_gateway" "tgw1" {
+resource "aws_ec2_transit_gateway" "tgw" {
   description                     = "Transit Gateway Demo"
   amazon_side_asn                 = "64512"   # default
   auto_accept_shared_attachments  = "disable" # default
@@ -689,13 +689,13 @@ resource "aws_ec2_transit_gateway" "tgw1" {
   vpn_ecmp_support                = "enable" # default
 
   tags = {
-    Name = "TGW1"
+    Name = "TGW-${var.region}"
   }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
   count                                           = length(aws_subnet.private)
-  transit_gateway_id                              = aws_ec2_transit_gateway.tgw1.id
+  transit_gateway_id                              = aws_ec2_transit_gateway.tgw.id
   vpc_id                                          = aws_vpc.vpcs[count.index].id
   subnet_ids                                      = [aws_subnet.private[count.index].id]
   transit_gateway_default_route_table_association = false
@@ -718,7 +718,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
 
 resource "aws_ec2_transit_gateway_route_table" "hub" {
   count              = 1
-  transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
+  transit_gateway_id = aws_ec2_transit_gateway.tgw.id
 
   tags = element([
     {
@@ -729,7 +729,7 @@ resource "aws_ec2_transit_gateway_route_table" "hub" {
 
 resource "aws_ec2_transit_gateway_route_table" "spokes" {
   count              = 1
-  transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
+  transit_gateway_id = aws_ec2_transit_gateway.tgw.id
 
   tags = element([
     {

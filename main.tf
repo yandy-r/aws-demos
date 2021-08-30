@@ -6,6 +6,7 @@ module "tgw" {
   create_flow_logs    = var.create_flow_logs
   create_vpc_endpoint = var.create_vpc_endpoint
   bucket_name         = var.bucket_name
+  region              = "US-East-1"
 
   vpc_cidr_blocks = [
     "10.240.0.0/16",
