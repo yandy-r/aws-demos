@@ -1,4 +1,17 @@
 ### -------------------------------------------------------------------------------------------- ###
+### PROVIDERS
+### -------------------------------------------------------------------------------------------- ###
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.7.0"
+    }
+  }
+}
+
+### -------------------------------------------------------------------------------------------- ###
 ### VPCS
 ### -------------------------------------------------------------------------------------------- ###
 
@@ -333,10 +346,11 @@ resource "aws_network_interface" "hub" {
 }
 
 resource "aws_instance" "hub_public" {
+  count            = 1
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
-  user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
+  user_data_base64 = base64encode(data.template_file.cloud_config[count.index].rendered)
 
   network_interface {
     network_interface_id = aws_network_interface.hub.*.id[0]

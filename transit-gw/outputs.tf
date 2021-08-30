@@ -24,13 +24,18 @@ output "route_tables" {
 ### EC2 INSTANCES
 ### -------------------------------------------------------------------------------------------- ###
 
-output "public_ip" {
-  value = aws_instance.hub_public.public_ip
+output "public_instances" {
+  value = aws_instance.hub_public
 }
 
-output "private_ips" {
-  value = {
-    for i in aws_instance.private :
-    i.id => i.private_ip
-  }
+output "private_instances" {
+  value = aws_instance.private
+}
+
+### -------------------------------------------------------------------------------------------- ###
+### TRANSIT GATEWAY
+### -------------------------------------------------------------------------------------------- ###
+
+output "tgw" {
+  value = aws_ec2_transit_gateway.tgw
 }
