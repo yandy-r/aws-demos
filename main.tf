@@ -2,11 +2,25 @@ module "tgw" {
   source              = "./transit-gw"
   self_public_ip      = var.self_public_ip
   priv_ssh_key_path   = var.priv_ssh_key_path
-  hostnames           = var.hostnames
-  domain_name         = var.domain_name
+  domain_name         = var.domain_name_east
   create_flow_logs    = var.create_flow_logs
   create_vpc_endpoint = var.create_vpc_endpoint
   bucket_name         = var.bucket_name
+
+  vpc_cidr_blocks = [
+    "10.240.0.0/16",
+    "10.241.0.0/16",
+    "10.242.0.0/16",
+    "10.243.0.0/16"
+  ]
+
+  hostnames = [
+    "hub-bastion",
+    "hub-private",
+    "spoke-1",
+    "spoke-2",
+    "spoke-3"
+  ]
 }
 
 locals {

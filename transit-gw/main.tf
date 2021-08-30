@@ -11,16 +11,15 @@ locals {
 }
 
 resource "aws_vpc" "vpcs" {
-  count                = 4
+  count                = length(var.vpc_cidr_blocks)
   instance_tenancy     = "default"
   enable_dns_hostnames = "true"
   enable_dns_support   = "true"
-
-  cidr_block = element(["10.240.0.0/16", "10.241.0.0/16", "10.242.0.0/16", "10.243.0.0/16"], count.index)
+  cidr_block           = var.vpc_cidr_blocks[count.index]
 
   tags = element([
     {
-      Name = "Central VPC"
+      Name = "Hub VPC"
     },
     {
       Name = "Spoke VPC 1"
@@ -38,7 +37,7 @@ resource "aws_internet_gateway" "inet_gw" {
   vpc_id = aws_vpc.vpcs[0].id
 
   tags = {
-    Name = "Central InetGW"
+    Name = "Hub InetGW"
   }
 }
 
@@ -46,7 +45,7 @@ resource "aws_eip" "nat_gw" {
   vpc = true
 
   tags = {
-    Name = "Central NatGw"
+    Name = "Hub NatGw"
   }
 
   depends_on = [aws_internet_gateway.inet_gw]
@@ -72,7 +71,7 @@ resource "aws_subnet" "public" {
 
   tags = element([
     {
-      Name = "Central VPC Public Subnet"
+      Name = "Hub VPC Public Subnet"
     }
   ], count.index)
 }
@@ -86,7 +85,7 @@ resource "aws_subnet" "private" {
 
   tags = element([
     {
-      Name = "Central VPC Private Subnet"
+      Name = "Hub VPC Private Subnet"
     },
     {
       Name = "Spoke VPC 1 Private Subnet"
@@ -106,7 +105,7 @@ resource "aws_route_table" "public" {
 
   tags = element([
     {
-      Name = "Central Public RT"
+      Name = "Hub Public RT"
     }
   ], count.index)
 }
@@ -117,7 +116,7 @@ resource "aws_route_table" "private" {
 
   tags = element([
     {
-      Name = "Central Private RT"
+      Name = "Hub Private RT"
     },
     {
       Name = "Spoke 1 Private RT"
@@ -143,19 +142,19 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-resource "aws_route" "central_inet_gw_default" {
+resource "aws_route" "hub_inet_gw_default" {
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.inet_gw.id
 }
 
-resource "aws_route" "central_nat_gw_default" {
+resource "aws_route" "hub_nat_gw_default" {
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
-resource "aws_route" "central_to_spokes_private" {
+resource "aws_route" "hub_to_spokes_private" {
   count                  = 3
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
@@ -163,7 +162,7 @@ resource "aws_route" "central_to_spokes_private" {
   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
 }
 
-resource "aws_route" "central_to_spokes_public" {
+resource "aws_route" "hub_to_spokes_public" {
   count                  = 3
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
@@ -235,12 +234,12 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 locals {
-  central_rts = [
+  hub_rts = [
     aws_route_table.public[0], aws_route_table.private[0]
   ]
 }
 resource "aws_vpc_endpoint_route_table_association" "s3" {
-  for_each        = { for k, v in local.central_rts : k => v.id }
+  for_each        = { for k, v in local.hub_rts : k => v.id }
   route_table_id  = each.value
   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
 }
@@ -321,31 +320,31 @@ data "local_file" "ssh_key" {
   ]
 }
 
-resource "aws_network_interface" "central" {
+resource "aws_network_interface" "hub" {
   count             = 1
   subnet_id         = aws_subnet.public[0].id
-  security_groups   = [aws_security_group.central_public.id]
+  security_groups   = [aws_security_group.hub_public.id]
   private_ips       = [cidrhost(aws_subnet.public[count.index].cidr_block, 10)]
   source_dest_check = true
 
   tags = {
-    Name = "Central Public"
+    Name = "Hub Public"
   }
 }
 
-resource "aws_instance" "central_public" {
+resource "aws_instance" "hub_public" {
   ami              = data.aws_ami.amzn2_linux.id
   instance_type    = "t2.micro"
   key_name         = aws_key_pair.aws_test_key.key_name
   user_data_base64 = base64encode(data.template_file.cloud_config[0].rendered)
 
   network_interface {
-    network_interface_id = aws_network_interface.central.*.id[0]
+    network_interface_id = aws_network_interface.hub.*.id[0]
     device_index         = 0
   }
 
   tags = {
-    Name = "Central Bastion"
+    Name = "Hub Bastion"
   }
 
   depends_on = [aws_key_pair.aws_test_key]
@@ -359,7 +358,7 @@ resource "aws_network_interface" "private" {
 
   security_groups = [
     [
-      aws_security_group.central_private.id,
+      aws_security_group.hub_private.id,
       aws_security_group.spoke_1.id,
       aws_security_group.spoke_2.id,
       aws_security_group.spoke_3.id
@@ -367,7 +366,7 @@ resource "aws_network_interface" "private" {
 
   tags = element([
     {
-      Name = "Central Private"
+      Name = "Hub Private"
     },
     {
       Name = "Spoke 1"
@@ -397,7 +396,7 @@ resource "aws_instance" "private" {
 
   tags = element([
     {
-      Name = "Central Private"
+      Name = "Hub Private"
     },
     {
       Name = "Spoke 1"
@@ -417,27 +416,27 @@ resource "aws_instance" "private" {
 ### SECURITY GROUPS
 ### -------------------------------------------------------------------------------------------- ###
 
-resource "aws_security_group" "central_public" {
-  description = "Central instances Public SG"
+resource "aws_security_group" "hub_public" {
+  description = "Hub instances Public SG"
   vpc_id      = aws_vpc.vpcs.*.id[0]
 
   tags = {
-    Name = "Central Public"
+    Name = "Hub Public"
   }
 }
 
 
-resource "aws_security_group" "central_private" {
-  description = "Central instances Private SG"
+resource "aws_security_group" "hub_private" {
+  description = "Hub instances Private SG"
   vpc_id      = aws_vpc.vpcs.*.id[0]
 
   tags = {
-    Name = "Central Private"
+    Name = "Hub Private"
   }
 }
 
 locals {
-  central_rules = {
+  hub_rules = {
 
     public_egress = {
       description              = "Allow all outbound"
@@ -447,7 +446,7 @@ locals {
       protocol                 = "-1"
       cidr_blocks              = ["0.0.0.0/0"]
       source_security_group_id = null
-      security_group_id        = aws_security_group.central_public.id
+      security_group_id        = aws_security_group.hub_public.id
     }
 
     public_rule_1 = {
@@ -458,7 +457,7 @@ locals {
       protocol                 = "tcp"
       cidr_blocks              = [var.self_public_ip]
       source_security_group_id = null
-      security_group_id        = aws_security_group.central_public.id
+      security_group_id        = aws_security_group.hub_public.id
     }
 
     public_rule_2 = {
@@ -469,40 +468,40 @@ locals {
       protocol                 = "icmp"
       cidr_blocks              = [var.self_public_ip]
       source_security_group_id = null
-      security_group_id        = aws_security_group.central_public.id
+      security_group_id        = aws_security_group.hub_public.id
     }
 
     public_rule_3 = {
-      description              = "Allow SSH from Central Private subnet"
+      description              = "Allow SSH from Hub Private subnet"
       type                     = "ingress"
       from_port                = 22
       to_port                  = 22
       protocol                 = "tcp"
-      source_security_group_id = aws_security_group.central_private.id
+      source_security_group_id = aws_security_group.hub_private.id
       cidr_blocks              = null
-      security_group_id        = aws_security_group.central_public.id
+      security_group_id        = aws_security_group.hub_public.id
     }
 
     public_rule_4 = {
-      description              = "Allow SSH from Central Public subnet"
+      description              = "Allow SSH from Hub Public subnet"
       type                     = "ingress"
       from_port                = 22
       to_port                  = 22
       protocol                 = "tcp"
-      source_security_group_id = aws_security_group.central_public.id
+      source_security_group_id = aws_security_group.hub_public.id
       cidr_blocks              = null
-      security_group_id        = aws_security_group.central_public.id
+      security_group_id        = aws_security_group.hub_public.id
     }
 
     public_rule_5 = {
-      description              = "Allow ICMP from Central Private subnet"
+      description              = "Allow ICMP from Hub Private subnet"
       type                     = "ingress"
       from_port                = -1
       to_port                  = -1
       protocol                 = "icmp"
-      source_security_group_id = aws_security_group.central_private.id
+      source_security_group_id = aws_security_group.hub_private.id
       cidr_blocks              = null
-      security_group_id        = aws_security_group.central_public.id
+      security_group_id        = aws_security_group.hub_public.id
     }
 
     private_egress = {
@@ -513,7 +512,7 @@ locals {
       protocol                 = "-1"
       cidr_blocks              = ["0.0.0.0/0"]
       source_security_group_id = null
-      security_group_id        = aws_security_group.central_private.id
+      security_group_id        = aws_security_group.hub_private.id
     }
 
     private_rule_1 = {
@@ -522,9 +521,9 @@ locals {
       from_port                = 0
       to_port                  = 0
       protocol                 = "-1"
-      cidr_blocks              = ["10.241.0.0/16"]
+      cidr_blocks              = [aws_vpc.vpcs[1].cidr_block]
       source_security_group_id = null
-      security_group_id        = aws_security_group.central_private.id
+      security_group_id        = aws_security_group.hub_private.id
     }
 
     private_rule_2 = {
@@ -533,9 +532,9 @@ locals {
       from_port                = 0
       to_port                  = 0
       protocol                 = "-1"
-      cidr_blocks              = ["10.242.0.0/16"]
+      cidr_blocks              = [aws_vpc.vpcs[2].cidr_block]
       source_security_group_id = null
-      security_group_id        = aws_security_group.central_private.id
+      security_group_id        = aws_security_group.hub_private.id
     }
 
     private_rule_3 = {
@@ -544,37 +543,37 @@ locals {
       from_port                = 0
       to_port                  = 0
       protocol                 = "-1"
-      cidr_blocks              = ["10.243.0.0/16"]
+      cidr_blocks              = [aws_vpc.vpcs[3].cidr_block]
       source_security_group_id = null
-      security_group_id        = aws_security_group.central_private.id
+      security_group_id        = aws_security_group.hub_private.id
     }
 
     private_rule_4 = {
-      description              = "Allow SSH from Central Public subnet"
+      description              = "Allow SSH from Hub Public subnet"
       type                     = "ingress"
       from_port                = 22
       to_port                  = 22
       protocol                 = "tcp"
-      source_security_group_id = aws_security_group.central_public.id
+      source_security_group_id = aws_security_group.hub_public.id
       cidr_blocks              = null
-      security_group_id        = aws_security_group.central_private.id
+      security_group_id        = aws_security_group.hub_private.id
     }
 
     private_rule_5 = {
-      description              = "Allow ICMP from Central Public subnet"
+      description              = "Allow ICMP from Hub Public subnet"
       type                     = "ingress"
       from_port                = -1
       to_port                  = -1
       protocol                 = "icmp"
-      source_security_group_id = aws_security_group.central_public.id
+      source_security_group_id = aws_security_group.hub_public.id
       cidr_blocks              = null
-      security_group_id        = aws_security_group.central_private.id
+      security_group_id        = aws_security_group.hub_private.id
     }
   }
 }
 
-resource "aws_security_group_rule" "central_rules" {
-  for_each                 = local.central_rules
+resource "aws_security_group_rule" "hub_rules" {
+  for_each                 = local.hub_rules
   description              = each.value.description
   type                     = each.value.type
   from_port                = each.value.from_port
@@ -598,11 +597,11 @@ resource "aws_security_group" "spoke_1" {
   }
 
   ingress {
-    description = "Allow all from Central"
+    description = "Allow all from Hub"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.240.0.0/16"]
+    cidr_blocks = [aws_vpc.vpcs[0].cidr_block]
   }
 
   ingress {
@@ -610,7 +609,7 @@ resource "aws_security_group" "spoke_1" {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
-    cidr_blocks = ["10.242.0.0/16"]
+    cidr_blocks = [aws_vpc.vpcs[2].cidr_block]
   }
 
   tags = {
@@ -631,11 +630,11 @@ resource "aws_security_group" "spoke_2" {
   }
 
   ingress {
-    description = "Allow all from Central"
+    description = "Allow all from Hub"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.240.0.0/16"]
+    cidr_blocks = [aws_vpc.vpcs[0].cidr_block]
   }
 
   ingress {
@@ -643,7 +642,7 @@ resource "aws_security_group" "spoke_2" {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
-    cidr_blocks = ["10.241.0.0/16"]
+    cidr_blocks = [aws_vpc.vpcs[1].cidr_block]
   }
 
   tags = {
@@ -664,11 +663,11 @@ resource "aws_security_group" "spoke_3" {
   }
 
   ingress {
-    description = "Allow all from Central"
+    description = "Allow all from Hub"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.240.0.0/16"]
+    cidr_blocks = [aws_vpc.vpcs[0].cidr_block]
   }
 
   tags = {
@@ -704,7 +703,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
 
   tags = [
     {
-      Name = "Central VPC"
+      Name = "Hub VPC"
     },
     {
       Name = "Spoke 1 VPC"
@@ -717,13 +716,13 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "attach" {
   }][count.index]
 }
 
-resource "aws_ec2_transit_gateway_route_table" "central" {
+resource "aws_ec2_transit_gateway_route_table" "hub" {
   count              = 1
   transit_gateway_id = aws_ec2_transit_gateway.tgw1.id
 
   tags = element([
     {
-      Name = "Central Route Table"
+      Name = "Hub Route Table"
     }
   ], count.index)
 }
@@ -739,9 +738,9 @@ resource "aws_ec2_transit_gateway_route_table" "spokes" {
   ], count.index)
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "central" {
+resource "aws_ec2_transit_gateway_route_table_association" "hub" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.central[0].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.hub[0].id
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "spokes" {
@@ -750,13 +749,13 @@ resource "aws_ec2_transit_gateway_route_table_association" "spokes" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "central" {
+resource "aws_ec2_transit_gateway_route_table_propagation" "hub" {
   count                          = 4
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index].id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.central[0].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.hub[0].id
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "central_to_spokes" {
+resource "aws_ec2_transit_gateway_route_table_propagation" "hub_to_spokes" {
   count                          = 1
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id

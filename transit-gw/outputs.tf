@@ -25,7 +25,7 @@ output "route_tables" {
 ### -------------------------------------------------------------------------------------------- ###
 
 output "public_ip" {
-  value = aws_instance.central_public.public_ip
+  value = aws_instance.hub_public.public_ip
 }
 
 output "private_ips" {

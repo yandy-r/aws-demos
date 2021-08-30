@@ -1,5 +1,5 @@
 provider "aws" {
-  region                  = var.aws_region
+  region                  = "us-east-1"
   shared_credentials_file = var.credentials_file
   profile                 = var.aws_profile.sandbox
 
@@ -7,7 +7,22 @@ provider "aws" {
     tags = {
       Terraform   = "True"
       Environemnt = "Test"
-      Owner       = var.owner
+      Owner       = "Dev"
+    }
+  }
+}
+
+provider "aws" {
+  alias                   = "west"
+  region                  = "us-west-2"
+  shared_credentials_file = var.credentials_file
+  profile                 = var.aws_profile.sandbox
+
+  default_tags {
+    tags = {
+      Terraform   = "True"
+      Environemnt = "Test"
+      Owner       = "Dev"
     }
   }
 }

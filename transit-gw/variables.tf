@@ -1,3 +1,6 @@
+variable "vpc_cidr_blocks" {
+  type = list(string)
+}
 variable "self_public_ip" {
   type = string
 }
