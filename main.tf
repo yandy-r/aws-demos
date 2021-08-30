@@ -6,7 +6,7 @@ module "tgw_east" {
   domain_name           = var.domain_name_east
   create_flow_logs      = var.create_flow_logs
   create_vpc_endpoint   = var.create_vpc_endpoint
-  bucket_name           = "east-2-${var.bucket_name}"
+  bucket_name           = "east-3-${var.bucket_name}"
   region                = "us-east-1"
   create_peering_routes = true
 
@@ -34,7 +34,7 @@ module "tgw_west" {
   domain_name           = var.domain_name_east
   create_flow_logs      = var.create_flow_logs
   create_vpc_endpoint   = var.create_vpc_endpoint
-  bucket_name           = "west2-2-${var.bucket_name}"
+  bucket_name           = "west2-3-${var.bucket_name}"
   region                = "us-west-2"
   create_peering_routes = true
 
@@ -135,11 +135,32 @@ resource "aws_ec2_transit_gateway_route" "east_to_west" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.east_west.id
 }
 
-resource "aws_ec2_transit_gateway_route" "east_peering_to_vpc_hub" {
+resource "aws_ec2_transit_gateway_route" "east_peering_to_hub_vpc" {
   provider                       = aws.us_east_1
   destination_cidr_block         = "10.200.0.0/16"
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
   transit_gateway_attachment_id  = local.east_tgw_attach_id[0]
+}
+
+resource "aws_ec2_transit_gateway_route" "east_peering_to_spoke_1_vpc" {
+  provider                       = aws.us_east_1
+  destination_cidr_block         = "10.201.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
+  transit_gateway_attachment_id  = local.east_tgw_attach_id[1]
+}
+
+resource "aws_ec2_transit_gateway_route" "east_peering_to_spoke_2_vpc" {
+  provider                       = aws.us_east_1
+  destination_cidr_block         = "10.202.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
+  transit_gateway_attachment_id  = local.east_tgw_attach_id[2]
+}
+
+resource "aws_ec2_transit_gateway_route" "east_peering_to_spoke_3_vpc" {
+  provider                       = aws.us_east_1
+  destination_cidr_block         = "10.203.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
+  transit_gateway_attachment_id  = local.east_tgw_attach_id[3]
 }
 
 resource "aws_route" "east_peering_routes_private" {
@@ -181,11 +202,32 @@ resource "aws_ec2_transit_gateway_route" "west_to_east" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.east_west.id
 }
 
-resource "aws_ec2_transit_gateway_route" "west_peering_to_vpc_hub" {
+resource "aws_ec2_transit_gateway_route" "west_peering_to_hub_vpc" {
   provider                       = aws.us_west_2
   destination_cidr_block         = "10.220.0.0/16"
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
   transit_gateway_attachment_id  = local.west_tgw_attach_id[0]
+}
+
+resource "aws_ec2_transit_gateway_route" "west_peering_to_spoke_1_vpc" {
+  provider                       = aws.us_west_2
+  destination_cidr_block         = "10.221.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
+  transit_gateway_attachment_id  = local.west_tgw_attach_id[1]
+}
+
+resource "aws_ec2_transit_gateway_route" "west_peering_to_spoke_2_vpc" {
+  provider                       = aws.us_west_2
+  destination_cidr_block         = "10.222.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
+  transit_gateway_attachment_id  = local.west_tgw_attach_id[2]
+}
+
+resource "aws_ec2_transit_gateway_route" "west_peering_to_spoke_3_vpc" {
+  provider                       = aws.us_west_2
+  destination_cidr_block         = "10.223.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
+  transit_gateway_attachment_id  = local.west_tgw_attach_id[3]
 }
 
 resource "aws_route" "west_peering_routes_private" {
