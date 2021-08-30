@@ -563,6 +563,17 @@ locals {
       cidr_blocks              = null
       security_group_id        = aws_security_group.hub_private.id
     }
+
+    private_rule_5 = {
+      description              = "Allow ALL from Hub Private (self)"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = aws_security_group.hub_private.id
+      cidr_blocks              = null
+      security_group_id        = aws_security_group.hub_private.id
+    }
   }
 }
 
@@ -667,6 +678,22 @@ resource "aws_security_group" "spoke_3" {
   tags = {
     Name = "Spoke 3"
   }
+}
+
+resource "aws_security_group_rule" "spokes_to_self" {
+  for_each = { for k, v in [
+    aws_security_group.spoke_1,
+    aws_security_group.spoke_2,
+    aws_security_group.spoke_3
+  ] : k => v }
+
+  description              = "Spoke to Self"
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = each.value.id
+  security_group_id        = each.value.id
 }
 
 ### -------------------------------------------------------------------------------------------- ###
