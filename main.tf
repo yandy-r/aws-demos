@@ -1,13 +1,14 @@
 module "tgw_east" {
-  source              = "./transit-gw"
-  providers           = { aws = aws.us_east_1 }
-  self_public_ip      = var.self_public_ip
-  priv_ssh_key_path   = var.priv_ssh_key_path
-  domain_name         = var.domain_name_east
-  create_flow_logs    = var.create_flow_logs
-  create_vpc_endpoint = var.create_vpc_endpoint
-  bucket_name         = "east-1-${var.bucket_name}"
-  region              = "us-east-1"
+  source                = "./transit-gw"
+  providers             = { aws = aws.us_east_1 }
+  self_public_ip        = var.self_public_ip
+  priv_ssh_key_path     = var.priv_ssh_key_path
+  domain_name           = var.domain_name_east
+  create_flow_logs      = var.create_flow_logs
+  create_vpc_endpoint   = var.create_vpc_endpoint
+  bucket_name           = "east-2-${var.bucket_name}"
+  region                = "us-east-1"
+  create_peering_routes = true
 
   vpc_cidr_blocks = [
     "10.200.0.0/16",
@@ -26,15 +27,16 @@ module "tgw_east" {
 }
 
 module "tgw_west" {
-  source              = "./transit-gw"
-  providers           = { aws = aws.us_west_2 }
-  self_public_ip      = var.self_public_ip
-  priv_ssh_key_path   = var.priv_ssh_key_path
-  domain_name         = var.domain_name_east
-  create_flow_logs    = var.create_flow_logs
-  create_vpc_endpoint = var.create_vpc_endpoint
-  bucket_name         = "west2-1-${var.bucket_name}"
-  region              = "us-west-2"
+  source                = "./transit-gw"
+  providers             = { aws = aws.us_west_2 }
+  self_public_ip        = var.self_public_ip
+  priv_ssh_key_path     = var.priv_ssh_key_path
+  domain_name           = var.domain_name_east
+  create_flow_logs      = var.create_flow_logs
+  create_vpc_endpoint   = var.create_vpc_endpoint
+  bucket_name           = "west2-2-${var.bucket_name}"
+  region                = "us-west-2"
+  create_peering_routes = true
 
   vpc_cidr_blocks = [
     "10.220.0.0/16",
@@ -56,16 +58,38 @@ locals {
   east_subnets         = module.tgw_east.subnets
   private_east_subnets = module.tgw_east.subnets.private
   public_east_subnets  = module.tgw_east.subnets.public
+  east_private_rts     = module.tgw_east.route_tables.private
+  east_public_rts      = module.tgw_east.route_tables.public
   east_tgw             = module.tgw_east.tgw
   east_tgw_rts         = module.tgw_east.tgw_rts
+  east_tgw_attach_id   = module.tgw_east.tgw_attach_id
   east_region          = module.tgw_east.aws_region
+  east_hub_sgs         = module.tgw_east.hub_sgs
+  east_spoke_sgs       = module.tgw_east.spoke_sgs
+
+  all_east_tgw_rts = [
+    aws_ec2_transit_gateway_route_table.east_to_west,
+    module.tgw_east.tgw_rts[0],
+    module.tgw_east.tgw_rts[1]
+  ]
 
   west_subnets         = module.tgw_west.subnets
   private_west_subnets = module.tgw_west.subnets.private
   public_west_subnets  = module.tgw_west.subnets.public
+  west_private_rts     = module.tgw_west.route_tables.private
+  west_public_rts      = module.tgw_west.route_tables.public
   west_tgw             = module.tgw_west.tgw
   west_tgw_rts         = module.tgw_west.tgw_rts
+  west_tgw_attach_id   = module.tgw_west.tgw_attach_id
   west_region          = module.tgw_west.aws_region
+  west_hub_sgs         = module.tgw_west.hub_sgs
+  west_spoke_sgs       = module.tgw_west.spoke_sgs
+
+  all_west_tgw_rts = [
+    aws_ec2_transit_gateway_route_table.west_to_east,
+    module.tgw_west.tgw_rts[0],
+    module.tgw_west.tgw_rts[1]
+  ]
 }
 
 resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
@@ -75,7 +99,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
   peer_transit_gateway_id = local.west_tgw.id
 
   tags = {
-    Name = "EAST-WEST"
+    Name = "EAST->WEST"
   }
 }
 
@@ -84,24 +108,158 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "east_west" {
   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.east_west.id
 
   tags = {
-    Name = "EAST-WEST"
+    Name = "WEST->EAST"
   }
+}
+
+resource "aws_ec2_transit_gateway_route_table" "east_to_west" {
+  provider           = aws.us_east_1
+  transit_gateway_id = local.east_tgw.id
+
+  tags = {
+    Name = "EAST->WEST"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "east_to_west" {
+  provider                       = aws.us_east_1
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.east_west.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
 }
 
 resource "aws_ec2_transit_gateway_route" "east_to_west" {
   provider                       = aws.us_east_1
-  for_each                       = { for k, v in local.east_tgw_rts : k => v }
+  for_each                       = { for k, v in local.all_east_tgw_rts : k => v }
   destination_cidr_block         = "10.220.0.0/14"
   transit_gateway_route_table_id = each.value.id
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.east_west.id
 }
 
+resource "aws_ec2_transit_gateway_route" "east_peering_to_vpc_hub" {
+  provider                       = aws.us_east_1
+  destination_cidr_block         = "10.200.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
+  transit_gateway_attachment_id  = local.east_tgw_attach_id[0]
+}
+
+resource "aws_route" "east_peering_routes_private" {
+  provider               = aws.us_east_1
+  for_each               = { for k, v in local.east_private_rts : k => v }
+  route_table_id         = each.value.id
+  destination_cidr_block = "10.220.0.0/14"
+  transit_gateway_id     = local.east_tgw.id
+}
+
+resource "aws_route" "east_peering_routes_public" {
+  provider               = aws.us_east_1
+  for_each               = { for k, v in local.east_public_rts : k => v }
+  route_table_id         = each.value.id
+  destination_cidr_block = "10.220.0.0/14"
+  transit_gateway_id     = local.east_tgw.id
+}
+
+resource "aws_ec2_transit_gateway_route_table" "west_to_east" {
+  provider           = aws.us_west_2
+  transit_gateway_id = local.west_tgw.id
+
+  tags = {
+    Name = "WEST->EAST"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "west_to_east" {
+  provider                       = aws.us_west_2
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.east_west.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
+}
+
 resource "aws_ec2_transit_gateway_route" "west_to_east" {
   provider                       = aws.us_west_2
-  for_each                       = { for k, v in local.west_tgw_rts : k => v }
+  for_each                       = { for k, v in local.all_west_tgw_rts : k => v }
   destination_cidr_block         = "10.200.0.0/14"
   transit_gateway_route_table_id = each.value.id
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.east_west.id
+}
+
+resource "aws_ec2_transit_gateway_route" "west_peering_to_vpc_hub" {
+  provider                       = aws.us_west_2
+  destination_cidr_block         = "10.220.0.0/16"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
+  transit_gateway_attachment_id  = local.west_tgw_attach_id[0]
+}
+
+resource "aws_route" "west_peering_routes_private" {
+  provider               = aws.us_west_2
+  for_each               = { for k, v in local.west_private_rts : k => v }
+  route_table_id         = each.value.id
+  destination_cidr_block = "10.200.0.0/14"
+  transit_gateway_id     = local.west_tgw.id
+}
+
+resource "aws_route" "west_peering_routes_public" {
+  provider               = aws.us_west_2
+  for_each               = { for k, v in local.west_public_rts : k => v }
+  route_table_id         = each.value.id
+  destination_cidr_block = "10.200.0.0/14"
+  transit_gateway_id     = local.west_tgw.id
+}
+
+locals {
+  east_hub_rules = {
+
+    from_west_to_east_hub = {
+      description              = "Allow all from West Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.220.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_hub_sgs.public.id
+    }
+  }
+}
+
+resource "aws_security_group_rule" "east_hub_rules" {
+  provider                 = aws.us_east_1
+  for_each                 = local.east_hub_rules
+  description              = each.value.description
+  type                     = each.value.type
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = each.value.cidr_blocks
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = each.value.security_group_id
+}
+
+locals {
+  west_hub_rules = {
+
+    from_east_to_west_hub = {
+      description              = "Allow all from East Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.200.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_hub_sgs.public.id
+    }
+  }
+}
+
+resource "aws_security_group_rule" "west_hub_rules" {
+  provider                 = aws.us_west_2
+  for_each                 = local.west_hub_rules
+  description              = each.value.description
+  type                     = each.value.type
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = each.value.cidr_blocks
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = each.value.security_group_id
 }
 
 # output "public_east_ec2" {

@@ -50,3 +50,22 @@ output "tgw_rts" {
     aws_ec2_transit_gateway_route_table.spokes[0]
   ]
 }
+
+output "tgw_attach_id" {
+  value = [for v in aws_ec2_transit_gateway_vpc_attachment.attach : v.id]
+}
+
+### -------------------------------------------------------------------------------------------- ###
+### SECURITY GROUPS
+### -------------------------------------------------------------------------------------------- ###
+
+output "spoke_sgs" {
+  value = [aws_security_group.spoke_1, aws_security_group.spoke_2, aws_security_group.spoke_3]
+}
+
+output "hub_sgs" {
+  value = {
+    public  = aws_security_group.hub_public,
+    private = aws_security_group.hub_private
+  }
+}

@@ -273,17 +273,17 @@ resource "aws_key_pair" "aws_test_key" {
   public_key = tls_private_key.aws_test_priv_key.public_key_openssh
 
   provisioner "local-exec" {
-    command = "echo '${tls_private_key.aws_test_priv_key.private_key_pem}' > ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'"
+    command = "echo '${tls_private_key.aws_test_priv_key.private_key_pem}' > ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}"
   }
   provisioner "local-exec" {
-    command = "echo '${tls_private_key.aws_test_priv_key.public_key_openssh}' > ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'.pub"
+    command = "echo '${tls_private_key.aws_test_priv_key.public_key_openssh}' > ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}.pub"
   }
 
   provisioner "local-exec" {
-    command = "chmod 600 ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'"
+    command = "chmod 600 ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}"
   }
   provisioner "local-exec" {
-    command = "chmod 600 ~${var.priv_ssh_key_path}/'${aws_key_pair.aws_test_key.key_name}'.pub"
+    command = "chmod 600 ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}.pub"
   }
 }
 
@@ -621,6 +621,14 @@ resource "aws_security_group" "spoke_1" {
   }
 
   ingress {
+    description = "Allow SSH from Spoke 2"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.vpcs[2].cidr_block]
+  }
+
+  ingress {
     description = "Allow only ICMP from Spoke 2"
     from_port   = -1
     to_port     = -1
@@ -651,6 +659,14 @@ resource "aws_security_group" "spoke_2" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [aws_vpc.vpcs[0].cidr_block]
+  }
+
+  ingress {
+    description = "Allow SSH from Spoke 1"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.vpcs[1].cidr_block]
   }
 
   ingress {

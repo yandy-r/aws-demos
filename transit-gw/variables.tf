@@ -38,3 +38,8 @@ variable "bucket_name" {
 variable "region" {
   type = string
 }
+
+variable "create_peering_routes" {
+  type    = bool
+  default = false
+}
