@@ -488,34 +488,23 @@ locals {
     }
 
     public_rule_3 = {
-      description              = "Allow SSH from Hub Private subnet"
+      description              = "Allow ALL from Hub Private subnet"
       type                     = "ingress"
-      from_port                = 22
-      to_port                  = 22
-      protocol                 = "tcp"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
       source_security_group_id = aws_security_group.hub_private.id
       cidr_blocks              = null
       security_group_id        = aws_security_group.hub_public.id
     }
 
     public_rule_4 = {
-      description              = "Allow SSH from Hub Public subnet"
+      description              = "Allow ALL from Hub Public to self"
       type                     = "ingress"
-      from_port                = 22
-      to_port                  = 22
-      protocol                 = "tcp"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
       source_security_group_id = aws_security_group.hub_public.id
-      cidr_blocks              = null
-      security_group_id        = aws_security_group.hub_public.id
-    }
-
-    public_rule_5 = {
-      description              = "Allow ICMP from Hub Private subnet"
-      type                     = "ingress"
-      from_port                = -1
-      to_port                  = -1
-      protocol                 = "icmp"
-      source_security_group_id = aws_security_group.hub_private.id
       cidr_blocks              = null
       security_group_id        = aws_security_group.hub_public.id
     }
@@ -565,22 +554,11 @@ locals {
     }
 
     private_rule_4 = {
-      description              = "Allow SSH from Hub Public subnet"
+      description              = "Allow ALL from Hub Public subnet"
       type                     = "ingress"
-      from_port                = 22
-      to_port                  = 22
-      protocol                 = "tcp"
-      source_security_group_id = aws_security_group.hub_public.id
-      cidr_blocks              = null
-      security_group_id        = aws_security_group.hub_private.id
-    }
-
-    private_rule_5 = {
-      description              = "Allow ICMP from Hub Public subnet"
-      type                     = "ingress"
-      from_port                = -1
-      to_port                  = -1
-      protocol                 = "icmp"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
       source_security_group_id = aws_security_group.hub_public.id
       cidr_blocks              = null
       security_group_id        = aws_security_group.hub_private.id
@@ -621,18 +599,10 @@ resource "aws_security_group" "spoke_1" {
   }
 
   ingress {
-    description = "Allow SSH from Spoke 2"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [aws_vpc.vpcs[2].cidr_block]
-  }
-
-  ingress {
-    description = "Allow only ICMP from Spoke 2"
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
+    description = "Allow ALL from Spoke 2"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = [aws_vpc.vpcs[2].cidr_block]
   }
 
@@ -662,18 +632,10 @@ resource "aws_security_group" "spoke_2" {
   }
 
   ingress {
-    description = "Allow SSH from Spoke 1"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [aws_vpc.vpcs[1].cidr_block]
-  }
-
-  ingress {
-    description = "Allow only ICMP from Spoke 1"
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
+    description = "Allow ALL from Spoke 1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = [aws_vpc.vpcs[1].cidr_block]
   }
 
