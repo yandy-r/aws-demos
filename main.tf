@@ -37,10 +37,10 @@ module "tgw_west" {
   region              = "us-west-2"
 
   vpc_cidr_blocks = [
-    "10.210.0.0/16",
-    "10.211.0.0/16",
-    "10.212.0.0/16",
-    "10.213.0.0/16"
+    "10.220.0.0/16",
+    "10.221.0.0/16",
+    "10.222.0.0/16",
+    "10.223.0.0/16"
   ]
 
   hostnames = [
@@ -57,12 +57,14 @@ locals {
   private_east_subnets = module.tgw_east.subnets.private
   public_east_subnets  = module.tgw_east.subnets.public
   east_tgw             = module.tgw_east.tgw
+  east_tgw_rts         = module.tgw_east.tgw_rts
   east_region          = module.tgw_east.aws_region
 
   west_subnets         = module.tgw_west.subnets
   private_west_subnets = module.tgw_west.subnets.private
   public_west_subnets  = module.tgw_west.subnets.public
   west_tgw             = module.tgw_west.tgw
+  west_tgw_rts         = module.tgw_west.tgw_rts
   west_region          = module.tgw_west.aws_region
 }
 
@@ -84,6 +86,22 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "east_west" {
   tags = {
     Name = "EAST-WEST"
   }
+}
+
+resource "aws_ec2_transit_gateway_route" "east_to_west" {
+  provider                       = aws.us_east_1
+  for_each                       = { for k, v in local.east_tgw_rts : k => v }
+  destination_cidr_block         = "10.220.0.0/14"
+  transit_gateway_route_table_id = each.value.id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.east_west.id
+}
+
+resource "aws_ec2_transit_gateway_route" "west_to_east" {
+  provider                       = aws.us_west_2
+  for_each                       = { for k, v in local.west_tgw_rts : k => v }
+  destination_cidr_block         = "10.200.0.0/14"
+  transit_gateway_route_table_id = each.value.id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.east_west.id
 }
 
 # output "public_east_ec2" {

@@ -43,3 +43,10 @@ output "private_instances" {
 output "tgw" {
   value = aws_ec2_transit_gateway.tgw
 }
+
+output "tgw_rts" {
+  value = [
+    aws_ec2_transit_gateway_route_table.hub[0],
+    aws_ec2_transit_gateway_route_table.spokes[0]
+  ]
+}
