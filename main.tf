@@ -56,9 +56,34 @@ locals {
   east_subnets         = module.tgw_east.subnets
   private_east_subnets = module.tgw_east.subnets.private
   public_east_subnets  = module.tgw_east.subnets.public
+  east_tgw             = module.tgw_east.tgw
+  east_region          = module.tgw_east.aws_region
+
   west_subnets         = module.tgw_west.subnets
   private_west_subnets = module.tgw_west.subnets.private
   public_west_subnets  = module.tgw_west.subnets.public
+  west_tgw             = module.tgw_west.tgw
+  west_region          = module.tgw_west.aws_region
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
+  provider                = aws.us_east_1
+  peer_region             = local.west_region
+  transit_gateway_id      = local.east_tgw.id
+  peer_transit_gateway_id = local.west_tgw.id
+
+  tags = {
+    Name = "EAST-WEST"
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "east_west" {
+  provider                      = aws.us_west_2
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.east_west.id
+
+  tags = {
+    Name = "EAST-WEST"
+  }
 }
 
 # output "public_east_ec2" {
