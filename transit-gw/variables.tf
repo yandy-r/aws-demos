@@ -1,53 +1,56 @@
-variable "vpc_cidr_blocks" {
-  type = list(string)
-}
-variable "self_public_ip" {
-  type = string
+### -------------------------------------------------------------------------------------------- ###
+### S3
+### -------------------------------------------------------------------------------------------- ###
+
+variable "name" {
+  type        = string
+  description = "Name used for all resources in module"
+  default     = "0"
 }
 
-variable "priv_ssh_key_path" {
-  type = string
+variable "tags" {
+  type        = map(string)
+  description = "Tags applied to all resources in module"
+  default     = {}
 }
 
-variable "domain_name" {
-  type = string
+variable "vpc_cidr" {
+  type    = string
+  default = ""
 }
 
-variable "hostnames" {
-  type = list(string)
+variable "vpc_tags" {
+  type        = map(string)
+  description = "Tags applied and merged with tags variable to VPC"
+  default     = {}
 }
 
-variable "rfc1918" {
-  default = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+variable "instance_tenancy" {
+  type    = string
+  default = "default"
 }
 
-variable "create_flow_logs" {
+variable "enable_dns_hostnames" {
   type    = bool
   default = true
 }
 
-variable "create_vpc_endpoint" {
+variable "enable_dns_support" {
   type    = bool
   default = true
 }
 
-variable "bucket_name" {
-  type = string
-}
-
-variable "region" {
-  type = string
-}
-
-variable "create_peering_routes" {
+variable "enable_classiclink" {
   type    = bool
   default = false
 }
 
-variable "key_name" {
-  type = string
+variable "enable_classiclink_dns_support" {
+  type    = bool
+  default = false
 }
-variable "priv_key" {
-  type      = map(string)
-  sensitive = true
+
+variable "assign_generated_ipv6_cidr_block" {
+  type    = bool
+  default = false
 }

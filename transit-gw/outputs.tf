@@ -2,70 +2,18 @@
 ### VPC
 ### -------------------------------------------------------------------------------------------- ###
 
-output "vpcs" {
-  value = aws_vpc.vpcs
+output "vpc" {
+  value = aws_vpc.vpc
 }
 
-output "subnets" {
-  value = {
-    private = aws_subnet.private,
-    public  = aws_subnet.public
-  }
+output "vpc_id" {
+  value = aws_vpc.vpc.id
 }
 
-output "route_tables" {
-  value = {
-    private = aws_route_table.private,
-    public  = aws_route_table.public
-  }
+output "vpc_cidr" {
+  value = aws_vpc.vpc.cidr_block
 }
 
-output "aws_region" {
-  value = data.aws_region.current.name
-}
-
-### -------------------------------------------------------------------------------------------- ###
-### EC2 INSTANCES
-### -------------------------------------------------------------------------------------------- ###
-
-output "public_instances" {
-  value = aws_instance.hub_public
-}
-
-output "private_instances" {
-  value = aws_instance.private
-}
-
-### -------------------------------------------------------------------------------------------- ###
-### TRANSIT GATEWAY
-### -------------------------------------------------------------------------------------------- ###
-
-output "tgw" {
-  value = aws_ec2_transit_gateway.tgw
-}
-
-output "tgw_rts" {
-  value = [
-    aws_ec2_transit_gateway_route_table.hub[0],
-    aws_ec2_transit_gateway_route_table.spokes[0]
-  ]
-}
-
-output "tgw_attach_id" {
-  value = [for v in aws_ec2_transit_gateway_vpc_attachment.attach : v.id]
-}
-
-### -------------------------------------------------------------------------------------------- ###
-### SECURITY GROUPS
-### -------------------------------------------------------------------------------------------- ###
-
-output "spoke_sgs" {
-  value = [aws_security_group.spoke_1, aws_security_group.spoke_2, aws_security_group.spoke_3]
-}
-
-output "hub_sgs" {
-  value = {
-    public  = aws_security_group.hub_public,
-    private = aws_security_group.hub_private
-  }
+output "vpc_arn" {
+  value = aws_vpc.vpc.arn
 }
