@@ -70,6 +70,44 @@ resource "aws_subnet" "public" {
   )
 }
 
+resource "aws_route_table" "public" {
+  count  = length(var.public_subnets) > 0 ? 1 : 0
+  vpc_id = aws_vpc.this.id
+
+  route = [
+    {
+      cidr_block                               = "0.0.0.0/0"
+      gateway_id                               = aws_internet_gateway.this[count.index].id
+      carrier_gateway_id                       = null
+      egress_only_gateway_id                   = null
+      destination_prefix_list_id               = null
+      nat_gateway_id                           = null
+      instance_id                              = null
+      ipv6_cidr_block                          = null
+      local_gateway_id                         = null
+      network_interface_id                     = null
+      transit_gateway_id                       = null
+      vpc_endpoint_id                          = null
+      vpc_peering_connection_id                = null
+      carrier_gegress_only_gateway_idateway_id = null
+    }
+  ]
+
+  tags = merge(
+    {
+      Name = "${var.name}-Public-${count.index + 1}"
+    },
+    var.tags,
+    var.public_route_table_tags,
+  )
+}
+
+resource "aws_route_table_association" "public" {
+  count          = length(var.public_subnets) > 0 ? 1 : 0
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public[count.index].id
+}
+
 resource "aws_subnet" "private" {
   count                   = length(var.private_subnets) > 0 && (length(var.private_subnets) <= length(local.azs)) ? length(var.private_subnets) : 0
   vpc_id                  = aws_vpc.this.id
@@ -84,6 +122,44 @@ resource "aws_subnet" "private" {
     var.tags,
     var.private_subnet_tags
   )
+}
+
+resource "aws_route_table" "private" {
+  count  = var.nat_gateway_count > 0 && (length(var.private_subnets) > 0 && length(var.public_subnets) > 0) ? var.nat_gateway_count : 0
+  vpc_id = aws_vpc.this.id
+
+  route = [
+    {
+      cidr_block                               = "0.0.0.0/0"
+      nat_gateway_id                           = aws_nat_gateway.this[count.index].id
+      carrier_gateway_id                       = null
+      egress_only_gateway_id                   = null
+      destination_prefix_list_id               = null
+      gateway_id                               = null
+      instance_id                              = null
+      ipv6_cidr_block                          = null
+      local_gateway_id                         = null
+      network_interface_id                     = null
+      transit_gateway_id                       = null
+      vpc_endpoint_id                          = null
+      vpc_peering_connection_id                = null
+      carrier_gegress_only_gateway_idateway_id = null
+    }
+  ]
+
+  tags = merge(
+    {
+      Name = "${var.name}-Private-${count.index + 1}"
+    },
+    var.tags,
+    var.private_route_table_tags,
+  )
+}
+
+resource "aws_route_table_association" "private" {
+  count          = var.nat_gateway_count > 0 && length(var.private_subnets) > 0 ? var.nat_gateway_count : 0
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private[count.index].id
 }
 
 resource "aws_subnet" "intra" {
@@ -102,6 +178,25 @@ resource "aws_subnet" "intra" {
     var.tags,
     var.intra_subnet_tags,
   )
+}
+
+resource "aws_route_table" "intra" {
+  count  = length(var.intra_subnets) > 0 ? 1 : 0
+  vpc_id = aws_vpc.this.id
+
+  tags = merge(
+    {
+      Name = "${var.name}-Intra-${count.index + 1}"
+    },
+    var.tags,
+    var.intra_route_table_tags,
+  )
+}
+
+resource "aws_route_table_association" "intra" {
+  count          = length(var.intra_subnets) > 0 ? 1 : 0
+  subnet_id      = aws_subnet.intra[count.index].id
+  route_table_id = aws_route_table.intra[count.index].id
 }
 
 resource "aws_eip" "nat" {

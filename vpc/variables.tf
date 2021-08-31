@@ -120,3 +120,21 @@ variable "nat_gateway_tags" {
   description = "Tags applied and merged with tags variable to VPC"
   default     = {}
 }
+
+variable "public_route_table_tags" {
+  type        = map(string)
+  description = "Tags applied and merged with tags variable to VPC"
+  default     = {}
+}
+
+variable "private_route_table_tags" {
+  type        = map(string)
+  description = "Tags applied and merged with tags variable to VPC"
+  default     = {}
+}
+
+variable "intra_route_table_tags" {
+  type        = map(string)
+  description = "Tags applied and merged with tags variable to VPC"
+  default     = {}
+}

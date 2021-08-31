@@ -27,14 +27,13 @@ module "east_hub_vpc" {
 }
 
 module "east_spoke_vpc" {
-  source          = "./vpc"
-  providers       = { aws = aws.us_east_1 }
-  for_each        = var.east_spke_vpc_cidrs
-  vpc_cidr        = each.value
-  name            = var.east_spoke_names[each.key]
-  create_igw      = false
-  private_subnets = [cidrsubnet(var.east_spke_vpc_cidrs[each.key], 8, 128)]
-  intra_subnets   = [cidrsubnet(var.east_spke_vpc_cidrs[each.key], 8, 64)]
+  source        = "./vpc"
+  providers     = { aws = aws.us_east_1 }
+  for_each      = var.east_spke_vpc_cidrs
+  vpc_cidr      = each.value
+  name          = var.east_spoke_names[each.key]
+  create_igw    = false
+  intra_subnets = [cidrsubnet(var.east_spke_vpc_cidrs[each.key], 8, 128)]
 }
 
 # module "tgw_west" {
