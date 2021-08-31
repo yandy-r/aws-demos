@@ -138,3 +138,44 @@ variable "intra_route_table_tags" {
   description = "Tags applied and merged with tags variable to VPC"
   default     = {}
 }
+
+variable "create_tgw" {
+  type    = bool
+  default = false
+}
+
+variable "amazon_side_asn" {
+  type    = string
+  default = "64512"
+}
+
+variable "auto_accept_shared_attachments" {
+  type    = string
+  default = "disable"
+}
+
+variable "default_route_table_association" {
+  type    = string
+  default = "disable"
+}
+
+variable "default_route_table_propagation" {
+  type    = string
+  default = "disable"
+}
+
+variable "dns_support" {
+  type    = string
+  default = "enable"
+}
+
+variable "vpn_ecmp_support" {
+  type    = string
+  default = "enable"
+}
+
+variable "tgw_tags" {
+  type        = map(string)
+  description = "Tags applied and merged with tags variable to VPC"
+  default     = {}
+}
