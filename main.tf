@@ -4,13 +4,15 @@ module "ssh_key" {
   priv_ssh_key_path = var.priv_key_path
 }
 
-module "tgw_east" {
-  source    = "./transit-gw"
-  providers = { aws = aws.us_east_1 }
-  for_each  = var.east_vpc_cidrs
-  vpc_cidr  = each.value
-  name      = var.name[each.key]
-  # vpc_tags  = toset(var.east_vpc_tags)
+module "east_hub_vpc" {
+  source          = "./vpc"
+  providers       = { aws = aws.us_east_1 }
+  for_each        = var.east_hub_vpc_cidrs
+  vpc_cidr        = each.value
+  name            = var.east_hub_names[each.key]
+  create_igw      = true
+  public_subnets  = [cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 0)]
+  private_subnets = [cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 128)]
   # self_public_ip        = var.self_public_ip
   # key_name              = "aws-test-key"
   # priv_key              = module.ssh_key.priv_key
@@ -22,6 +24,17 @@ module "tgw_east" {
   # region                = "us-east-1"
   # create_peering_routes = true
   # hostnames             = var.east_ec2_hostnames
+}
+
+module "east_spoke_vpc" {
+  source          = "./vpc"
+  providers       = { aws = aws.us_east_1 }
+  for_each        = var.east_spke_vpc_cidrs
+  vpc_cidr        = each.value
+  name            = var.east_spoke_names[each.key]
+  create_igw      = false
+  private_subnets = [cidrsubnet(var.east_spke_vpc_cidrs[each.key], 8, 128)]
+  intra_subnets   = [cidrsubnet(var.east_spke_vpc_cidrs[each.key], 8, 64)]
 }
 
 # module "tgw_west" {
