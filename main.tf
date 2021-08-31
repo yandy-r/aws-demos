@@ -259,6 +259,17 @@ locals {
       source_security_group_id = null
       security_group_id        = local.east_hub_sgs.public.id
     }
+
+    from_west_to_east_private = {
+      description              = "Allow all from West"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.220.0.0/14"]
+      source_security_group_id = null
+      security_group_id        = local.east_hub_sgs.private.id
+    }
   }
 }
 
@@ -278,7 +289,7 @@ resource "aws_security_group_rule" "east_hub_rules" {
 locals {
   west_hub_rules = {
 
-    from_east_to_west_hub = {
+    from_east_to_west_public = {
       description              = "Allow all from East Hub"
       type                     = "ingress"
       from_port                = 0
@@ -288,12 +299,235 @@ locals {
       source_security_group_id = null
       security_group_id        = local.west_hub_sgs.public.id
     }
+
+    from_east_to_west_private = {
+      description              = "Allow all from West"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.200.0.0/14"]
+      source_security_group_id = null
+      security_group_id        = local.west_hub_sgs.private.id
+    }
   }
 }
 
 resource "aws_security_group_rule" "west_hub_rules" {
   provider                 = aws.us_west_2
   for_each                 = local.west_hub_rules
+  description              = each.value.description
+  type                     = each.value.type
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = each.value.cidr_blocks
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = each.value.security_group_id
+}
+
+locals {
+  east_spoke_rules = {
+
+    from_west_to_east_1 = {
+      description              = "Allow all from West Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.220.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[0].id
+    }
+
+    from_west_to_east_2 = {
+      description              = "Allow all from West Spoke 1"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.221.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[0].id
+    }
+
+    from_west_to_east_3 = {
+      description              = "Allow all from West Spoke 2"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.222.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[0].id
+    }
+
+    from_west_to_east_4 = {
+      description              = "Allow all from West Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.220.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[1].id
+    }
+
+    from_west_to_east_5 = {
+      description              = "Allow all from West Spoke 1"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.221.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[1].id
+    }
+
+    from_west_to_east_6 = {
+      description              = "Allow all from West Spoke 2"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.222.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[1].id
+    }
+
+    from_west_to_east_7 = {
+      description              = "Allow all from West Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.220.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[2].id
+    }
+
+    from_west_to_east_8 = {
+      description              = "Allow all from West Spoke 3"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.223.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.east_spoke_sgs[2].id
+    }
+  }
+}
+
+resource "aws_security_group_rule" "east_spoke_rules" {
+  provider                 = aws.us_east_1
+  for_each                 = local.east_spoke_rules
+  description              = each.value.description
+  type                     = each.value.type
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = each.value.cidr_blocks
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = each.value.security_group_id
+}
+
+locals {
+  west_spoke_rules = {
+
+    from_east_to_west_1 = {
+      description              = "Allow all from East Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.200.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[0].id
+    }
+
+    from_east_to_west_2 = {
+      description              = "Allow all from East Spoke 1"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.201.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[0].id
+    }
+
+    from_east_to_west_3 = {
+      description              = "Allow all from East Spoke 2"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.202.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[0].id
+    }
+
+    from_east_to_west_4 = {
+      description              = "Allow all from East Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.200.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[1].id
+    }
+
+    from_east_to_west_5 = {
+      description              = "Allow all from East Spoke 1"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.201.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[1].id
+    }
+
+    from_east_to_west_6 = {
+      description              = "Allow all from East Spoke 2"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.202.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[1].id
+    }
+
+    from_east_to_west_7 = {
+      description              = "Allow all from East Hub"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.200.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[2].id
+    }
+
+    from_east_to_west_8 = {
+      description              = "Allow all from East Spoke 3"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      cidr_blocks              = ["10.203.0.0/16"]
+      source_security_group_id = null
+      security_group_id        = local.west_spoke_sgs[2].id
+    }
+  }
+}
+
+resource "aws_security_group_rule" "west_spoke_rules" {
+  provider                 = aws.us_west_2
+  for_each                 = local.west_spoke_rules
   description              = each.value.description
   type                     = each.value.type
   from_port                = each.value.from_port
