@@ -43,3 +43,11 @@ variable "create_peering_routes" {
   type    = bool
   default = false
 }
+
+variable "key_name" {
+  type = string
+}
+variable "priv_key" {
+  type      = map(string)
+  sensitive = true
+}

@@ -263,28 +263,9 @@ resource "aws_vpc_endpoint_route_table_association" "s3" {
 ### EC2 INSTANCES
 ### -------------------------------------------------------------------------------------------- ###
 
-resource "tls_private_key" "aws_test_priv_key" {
-  algorithm = "RSA"
-  rsa_bits  = "4096"
-}
-
 resource "aws_key_pair" "aws_test_key" {
-  key_name   = "aws-${var.region}-test-key"
-  public_key = tls_private_key.aws_test_priv_key.public_key_openssh
-
-  provisioner "local-exec" {
-    command = "echo '${tls_private_key.aws_test_priv_key.private_key_pem}' > ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}"
-  }
-  provisioner "local-exec" {
-    command = "echo '${tls_private_key.aws_test_priv_key.public_key_openssh}' > ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}.pub"
-  }
-
-  provisioner "local-exec" {
-    command = "chmod 600 ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}"
-  }
-  provisioner "local-exec" {
-    command = "chmod 600 ${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}.pub"
-  }
+  key_name   = var.key_name
+  public_key = var.priv_key.public_key_openssh
 }
 
 data "aws_ami" "amzn2_linux" {

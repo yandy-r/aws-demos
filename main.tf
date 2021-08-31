@@ -1,7 +1,15 @@
+module "ssh_key" {
+  source            = "./ssh-key"
+  key_name          = "aws-test-key"
+  priv_ssh_key_path = var.priv_ssh_key_path
+}
+
 module "tgw_east" {
   source                = "./transit-gw"
   providers             = { aws = aws.us_east_1 }
   self_public_ip        = var.self_public_ip
+  key_name              = "aws-test-key"
+  priv_key              = module.ssh_key.priv_key
   priv_ssh_key_path     = var.priv_ssh_key_path
   domain_name           = var.domain_name_east
   create_flow_logs      = var.create_flow_logs
@@ -17,6 +25,8 @@ module "tgw_west" {
   source                = "./transit-gw"
   providers             = { aws = aws.us_west_2 }
   self_public_ip        = var.self_public_ip
+  key_name              = "aws-test-key"
+  priv_key              = module.ssh_key.priv_key
   priv_ssh_key_path     = var.priv_ssh_key_path
   domain_name           = var.domain_name_east
   create_flow_logs      = var.create_flow_logs

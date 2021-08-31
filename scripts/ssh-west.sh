@@ -8,5 +8,5 @@ select(.module == "module.tgw_west") |
 
 ssh -o "StrictHostKeyChecking no" \
   -o "UserKnownHostsFile /dev/null" \
-  -i keys/aws-us-west-2-test-key \
+  -i keys/aws-test-key \
   ec2-user@"${WEST_BASTION}"
