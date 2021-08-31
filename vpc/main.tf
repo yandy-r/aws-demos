@@ -24,6 +24,7 @@ locals {
 }
 
 resource "aws_vpc" "this" {
+  count                            = var.create_vpc ? 1 : 0
   cidr_block                       = var.vpc_cidr
   instance_tenancy                 = var.instance_tenancy
   enable_dns_hostnames             = var.enable_dns_hostnames
@@ -43,7 +44,7 @@ resource "aws_vpc" "this" {
 
 resource "aws_internet_gateway" "this" {
   count  = var.create_igw && length(var.public_subnets) > 0 ? 1 : 0
-  vpc_id = aws_vpc.this.id
+  vpc_id = aws_vpc.this[0].id
 
   tags = merge(
     {
@@ -56,7 +57,7 @@ resource "aws_internet_gateway" "this" {
 
 resource "aws_subnet" "public" {
   count                   = length(var.public_subnets) > 0 && (length(var.public_subnets) <= length(local.azs)) ? length(var.public_subnets) : 0
-  vpc_id                  = aws_vpc.this.id
+  vpc_id                  = aws_vpc.this[0].id
   cidr_block              = var.public_subnets[count.index]
   availability_zone       = length(regexall("^[a-z]{2}-", local.azs.names[count.index])) > 0 ? local.azs.names[count.index] : null
   map_public_ip_on_launch = var.map_public_ip_on_launch
@@ -72,7 +73,7 @@ resource "aws_subnet" "public" {
 
 resource "aws_route_table" "public" {
   count  = length(var.public_subnets) > 0 ? 1 : 0
-  vpc_id = aws_vpc.this.id
+  vpc_id = aws_vpc.this[0].id
 
   route = [
     {
@@ -110,7 +111,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_subnet" "private" {
   count                   = length(var.private_subnets) > 0 && (length(var.private_subnets) <= length(local.azs)) ? length(var.private_subnets) : 0
-  vpc_id                  = aws_vpc.this.id
+  vpc_id                  = aws_vpc.this[0].id
   cidr_block              = var.private_subnets[count.index]
   availability_zone       = length(regexall("^[a-z]{2}-", local.azs.names[count.index])) > 0 ? local.azs.names[count.index] : null
   map_public_ip_on_launch = false
@@ -126,7 +127,7 @@ resource "aws_subnet" "private" {
 
 resource "aws_route_table" "private" {
   count  = var.nat_gateway_count > 0 && (length(var.private_subnets) > 0 && length(var.public_subnets) > 0) ? var.nat_gateway_count : 0
-  vpc_id = aws_vpc.this.id
+  vpc_id = aws_vpc.this[0].id
 
   route = [
     {
@@ -165,7 +166,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_subnet" "intra" {
   count = length(var.intra_subnets) > 0 ? length(var.intra_subnets) : 0
 
-  vpc_id                  = aws_vpc.this.id
+  vpc_id                  = aws_vpc.this[0].id
   cidr_block              = var.intra_subnets[count.index]
   availability_zone       = length(regexall("^[a-z]{2}-", local.azs.names[count.index])) > 0 ? local.azs.names[count.index] : null
   availability_zone_id    = length(regexall("^[a-z]{2}-", element(local.azs.names, count.index))) == 0 ? element(local.azs.names, count.index) : null
@@ -182,7 +183,7 @@ resource "aws_subnet" "intra" {
 
 resource "aws_route_table" "intra" {
   count  = length(var.intra_subnets) > 0 ? 1 : 0
-  vpc_id = aws_vpc.this.id
+  vpc_id = aws_vpc.this[0].id
 
   tags = merge(
     {
@@ -228,28 +229,6 @@ resource "aws_nat_gateway" "this" {
   )
 
   depends_on = [aws_internet_gateway.this]
-}
-
-### -------------------------------------------------------------------------------------------- ###
-### TRANSIT GATEWAY
-### -------------------------------------------------------------------------------------------- ###
-
-resource "aws_ec2_transit_gateway" "this" {
-  count                           = var.create_tgw ? 1 : 0
-  amazon_side_asn                 = var.amazon_side_asn
-  auto_accept_shared_attachments  = var.auto_accept_shared_attachments
-  default_route_table_association = var.default_route_table_association
-  default_route_table_propagation = var.default_route_table_propagation
-  dns_support                     = var.dns_support
-  vpn_ecmp_support                = var.vpn_ecmp_support
-
-  tags = merge(
-    {
-      Name = "${var.name}-tgw-${count.index + 1}"
-    },
-    var.tags,
-    var.tgw_tags,
-  )
 }
 
 # ### -------------------------------------------------------------------------------------------- ###

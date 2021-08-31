@@ -43,7 +43,7 @@ variable "east_spke_vpc_cidrs" {
 variable "east_hub_names" {
   type = map(string)
   default = {
-    vpc1 = "HUB"
+    vpc1 = "Hub"
   }
 }
 

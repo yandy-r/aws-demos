@@ -33,51 +33,20 @@ resource "aws_ec2_transit_gateway" "this" {
   )
 }
 
-resource "aws_ec2_transit_gateway_vpc_attachment" "attach_private" {
-  count                                           = var.create_tgw && var.tgw_attach_private && length(var.private_subnets) > 0 ? 1 : 0
+resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
+  count                                           = (var.create_vpc_attach && length(var.vpc_ids) > 0 && length(var.subnet_ids) > 0) && !var.create_custom_attach ? length(var.vpc_ids) : 0
   transit_gateway_id                              = aws_ec2_transit_gateway.this[0].id
-  vpc_id                                          = aws_vpc.this.id
-  subnet_ids                                      = aws_subnet.private.*.id
-  transit_gateway_default_route_table_association = false
-  transit_gateway_default_route_table_propagation = false
+  vpc_id                                          = var.vpc_ids[count.index]
+  subnet_ids                                      = var.subnet_ids[count.index]
+  transit_gateway_default_route_table_association = var.transit_gateway_default_route_table_association
+  transit_gateway_default_route_table_propagation = var.transit_gateway_default_route_table_propagation
 
   tags = merge(
     {
-      Name = "${var.name}-private"
+      Name = "${var.name}-${count.index}"
     },
-    var.tags
-  )
-}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "attach_public" {
-  count                                           = var.create_tgw && var.tgw_attach_public && length(var.public_subnets) > 0 ? 1 : 0
-  transit_gateway_id                              = aws_ec2_transit_gateway.this[0].id
-  vpc_id                                          = aws_vpc.this.id
-  subnet_ids                                      = aws_subnet.public.*.id
-  transit_gateway_default_route_table_association = false
-  transit_gateway_default_route_table_propagation = false
-
-  tags = merge(
-    {
-      Name = "${var.name}-public"
-    },
-    var.tags
-  )
-}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "attach_intra" {
-  count                                           = var.create_tgw && var.tgw_attach_intra && length(var.intra_subnets) > 0 ? 1 : 0
-  transit_gateway_id                              = aws_ec2_transit_gateway.this[0].id
-  vpc_id                                          = aws_vpc.this.id
-  subnet_ids                                      = aws_subnet.intra.*.id
-  transit_gateway_default_route_table_association = false
-  transit_gateway_default_route_table_propagation = false
-
-  tags = merge(
-    {
-      Name = "${var.name}-intra"
-    },
-    var.tags
+    var.tags,
+    var.tgw_attach_tags[count.index]
   )
 }
 

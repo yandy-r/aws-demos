@@ -5,13 +5,11 @@ module "ssh_key" {
 }
 
 module "east_hub_vpc" {
-  source     = "./vpc"
-  providers  = { aws = aws.us_east_1 }
-  for_each   = var.east_hub_vpc_cidrs
-  vpc_cidr   = each.value
-  name       = var.east_hub_names[each.key]
-  create_igw = true
-  create_tgw = true
+  source    = "./vpc"
+  providers = { aws = aws.us_east_1 }
+  for_each  = var.east_hub_vpc_cidrs
+  vpc_cidr  = each.value
+  name      = var.east_hub_names[each.key]
 
   public_subnets = [
     cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 0)
@@ -45,6 +43,32 @@ module "east_spoke_vpc" {
   intra_subnets = [
     cidrsubnet(var.east_spke_vpc_cidrs[each.key], 8, 128)
   ]
+}
+
+locals {
+  east_hub_vpc             = module.east_hub_vpc["vpc1"].vpc
+  east_spoke_vpc           = [for v in module.east_spoke_vpc : v.vpc]
+  east_hub_private_subnets = module.east_hub_vpc["vpc1"].private_subnets
+  east_spoke_intra_subnets = [for v in module.east_spoke_vpc : v.intra_subnets]
+}
+module "east_tgw" {
+  source            = "./transit-gateway"
+  providers         = { aws = aws.us_east_1 }
+  create_tgw        = true
+  name              = "east_tgw"
+  create_vpc_attach = true
+  vpc_ids           = flatten([local.east_hub_vpc, local.east_spoke_vpc])
+  subnet_ids        = concat([local.east_hub_private_subnets], local.east_spoke_intra_subnets)
+  tgw_attach_tags = [
+    { Name = "Hub" },
+    { Name = "Spoke-1" },
+    { Name = "Spoke-2" },
+    { Name = "Spoke-3" }
+  ]
+}
+
+output "test" {
+  value = concat([local.east_hub_private_subnets], local.east_spoke_intra_subnets)
 }
 
 # locals {
