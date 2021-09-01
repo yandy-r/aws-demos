@@ -18,18 +18,6 @@ module "east_hub_vpc" {
     cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 128),
     cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 129)
   ]
-
-  # self_public_ip        = var.self_public_ip
-  # key_name              = "aws-test-key"
-  # priv_key              = module.ssh_key.priv_key
-  # priv_ssh_key_path     = var.priv_ssh_key_path
-  # domain_name           = var.domain_name_east
-  # create_flow_logs      = var.create_flow_logs
-  # create_vpc_endpoint   = var.create_vpc_endpoint
-  # bucket_name           = "east-3-${var.bucket_name}"
-  # region                = "us-east-1"
-  # create_peering_routes = true
-  # hostnames             = var.east_ec2_hostnames
 }
 
 module "east_spoke_vpc" {
@@ -50,25 +38,77 @@ locals {
   east_spoke_vpc           = [for v in module.east_spoke_vpc : v.vpc]
   east_hub_private_subnets = module.east_hub_vpc["vpc1"].private_subnets
   east_spoke_intra_subnets = [for v in module.east_spoke_vpc : v.intra_subnets]
+  east_tgw_route_tables    = module.east_tgw.route_tables
+  east_tgw_attachments     = module.east_tgw.attachments
 }
 module "east_tgw" {
-  source            = "./transit-gateway"
-  providers         = { aws = aws.us_east_1 }
-  create_tgw        = true
-  name              = "east_tgw"
-  create_vpc_attach = true
-  vpc_ids           = flatten([local.east_hub_vpc, local.east_spoke_vpc])
-  subnet_ids        = concat([local.east_hub_private_subnets], local.east_spoke_intra_subnets)
-  tgw_attach_tags = [
+  source              = "./transit-gateway"
+  providers           = { aws = aws.us_east_1 }
+  create_tgw          = true
+  name                = "EastTGW"
+  create_vpc_attach   = true
+  vpc_ids             = flatten([local.east_hub_vpc, local.east_spoke_vpc])
+  subnet_ids          = concat([local.east_hub_private_subnets], local.east_spoke_intra_subnets)
+  create_route_tables = true
+  num_route_tables    = 2
+
+  route_table_associatons = [
+    {
+      attachment_id  = local.east_tgw_attachments[0]
+      route_table_id = local.east_tgw_route_tables[0]
+    },
+    {
+      attachment_id  = local.east_tgw_attachments[1]
+      route_table_id = local.east_tgw_route_tables[1]
+    },
+    {
+      attachment_id  = local.east_tgw_attachments[2]
+      route_table_id = local.east_tgw_route_tables[1]
+    },
+    {
+      attachment_id  = local.east_tgw_attachments[3]
+      route_table_id = local.east_tgw_route_tables[1]
+    }
+  ]
+
+  route_table_propagations = {
+    hub_to_all = {
+      attachment_id  = local.east_tgw_attachments[0]
+      route_table_id = local.east_tgw_route_tables[1]
+    },
+    "spoke_1->hub" = {
+      attachment_id  = local.east_tgw_attachments[1]
+      route_table_id = local.east_tgw_route_tables[0]
+    },
+    "spoke_1->2" = {
+      attachment_id  = local.east_tgw_attachments[1]
+      route_table_id = local.east_tgw_route_tables[1]
+    },
+    "spoke_2->hub" = {
+      attachment_id  = local.east_tgw_attachments[2]
+      route_table_id = local.east_tgw_route_tables[0]
+    },
+    "spoke_2->1" = {
+      attachment_id  = local.east_tgw_attachments[2]
+      route_table_id = local.east_tgw_route_tables[1]
+    },
+    "spoke_3->hub" = {
+      attachment_id  = local.east_tgw_attachments[3]
+      route_table_id = local.east_tgw_route_tables[0]
+    }
+  }
+
+  attach_tags = [
     { Name = "Hub" },
     { Name = "Spoke-1" },
     { Name = "Spoke-2" },
     { Name = "Spoke-3" }
   ]
-}
 
-output "test" {
-  value = concat([local.east_hub_private_subnets], local.east_spoke_intra_subnets)
+  route_table_tags = [
+    { Name = "Hub" },
+    { Name = "Spoke" }
+  ]
 }
 
 # locals {

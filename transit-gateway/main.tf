@@ -46,53 +46,43 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
       Name = "${var.name}-${count.index}"
     },
     var.tags,
-    var.tgw_attach_tags[count.index]
+    var.attach_tags[count.index]
   )
 }
 
-# resource "aws_ec2_transit_gateway_route_table" "hub" {
-#   count              = 1
-#   transit_gateway_id = aws_ec2_transit_gateway.tgw.id
+resource "aws_ec2_transit_gateway_route_table" "this" {
+  count              = var.create_route_tables && var.num_route_tables > 0 ? var.num_route_tables : 0
+  transit_gateway_id = aws_ec2_transit_gateway.this[0].id
 
-#   tags = element([
-#     {
-#       Name = "Hub Route Table"
-#     }
-#   ], count.index)
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-${count.index}"
+    },
+    var.tags,
+    var.route_table_tags[count.index]
+  )
+}
 
-# resource "aws_ec2_transit_gateway_route_table" "spokes" {
-#   count              = 1
-#   transit_gateway_id = aws_ec2_transit_gateway.tgw.id
+resource "aws_ec2_transit_gateway_route_table_association" "this" {
+  for_each = {
+    for k, v in var.route_table_associatons : k => v
+    if length(var.route_table_associatons) > 0
+  }
 
-#   tags = element([
-#     {
-#       Name = "Spokes"
-#     }
-#   ], count.index)
-# }
+  transit_gateway_attachment_id  = each.value.attachment_id
+  transit_gateway_route_table_id = each.value.route_table_id
+}
 
-# resource "aws_ec2_transit_gateway_route_table_association" "hub" {
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.hub[0].id
-# }
-
-# resource "aws_ec2_transit_gateway_route_table_association" "spokes" {
-#   count                          = 3
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index + 1].id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
-# }
-
-# resource "aws_ec2_transit_gateway_route_table_propagation" "hub" {
-#   count                          = 4
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index].id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.hub[0].id
-# }
+resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
+  for_each                       = var.route_table_propagations
+  transit_gateway_attachment_id  = each.value.attachment_id
+  transit_gateway_route_table_id = each.value.route_table_id
+}
 
 # resource "aws_ec2_transit_gateway_route_table_propagation" "hub_to_spokes" {
 #   count                          = 1
 #   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id
+#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
 # }
 
 # resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_1_to_2" {

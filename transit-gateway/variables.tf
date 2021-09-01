@@ -87,8 +87,32 @@ variable "custom_attach" {
   default = []
 }
 
-variable "tgw_attach_tags" {
-  type        = list(map(string))
-  description = "Tags applied to all resources in module"
-  default     = []
+variable "attach_tags" {
+  type    = list(map(string))
+  default = []
+}
+
+variable "create_route_tables" {
+  type    = bool
+  default = false
+}
+
+variable "num_route_tables" {
+  type    = number
+  default = 0
+}
+
+variable "route_table_tags" {
+  type    = list(map(string))
+  default = []
+}
+
+variable "route_table_associatons" {
+  type    = list(map(string))
+  default = []
+}
+
+variable "route_table_propagations" {
+  type    = map(map(string))
+  default = {}
 }

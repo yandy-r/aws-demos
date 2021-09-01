@@ -1,7 +1,10 @@
+locals {
+  aws_profile = var.aws_profile.sandbox
+}
 provider "aws" {
   region                  = "us-east-1"
   shared_credentials_file = var.credentials_file
-  profile                 = var.aws_profile.sandbox
+  profile                 = local.aws_profile
 
   default_tags {
     tags = {
@@ -17,7 +20,7 @@ provider "aws" {
   alias                   = "us_east_1"
   region                  = "us-east-1"
   shared_credentials_file = var.credentials_file
-  profile                 = var.aws_profile.sandbox
+  profile                 = local.aws_profile
 
   default_tags {
     tags = {
@@ -33,7 +36,7 @@ provider "aws" {
   alias                   = "us_west_2"
   region                  = "us-west-2"
   shared_credentials_file = var.credentials_file
-  profile                 = var.aws_profile.sandbox
+  profile                 = local.aws_profile
 
   default_tags {
     tags = {
