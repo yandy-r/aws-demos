@@ -1,4 +1,3 @@
-
 variable "name" {
   type        = string
   description = "Name used for all resources in module"
@@ -105,14 +104,4 @@ variable "num_route_tables" {
 variable "route_table_tags" {
   type    = list(map(string))
   default = []
-}
-
-variable "route_table_associatons" {
-  type    = list(map(string))
-  default = []
-}
-
-variable "route_table_propagations" {
-  type    = map(map(string))
-  default = {}
 }

@@ -63,34 +63,6 @@ resource "aws_ec2_transit_gateway_route_table" "this" {
   )
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "this" {
-  for_each = {
-    for k, v in var.route_table_associatons : k => v
-    if length(var.route_table_associatons) > 0
-  }
-
-  transit_gateway_attachment_id  = each.value.attachment_id
-  transit_gateway_route_table_id = each.value.route_table_id
-}
-
-resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
-  for_each                       = var.route_table_propagations
-  transit_gateway_attachment_id  = each.value.attachment_id
-  transit_gateway_route_table_id = each.value.route_table_id
-}
-
-# resource "aws_ec2_transit_gateway_route_table_propagation" "hub_to_spokes" {
-#   count                          = 1
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
-# }
-
-# resource "aws_ec2_transit_gateway_route_table_propagation" "spokes_1_to_2" {
-#   count                          = 2
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[count.index + 1].id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
-# }
-
 # resource "aws_ec2_transit_gateway_route" "spoke_defaults" {
 #   count                          = 1
 #   destination_cidr_block         = "0.0.0.0/0"

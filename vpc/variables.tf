@@ -71,6 +71,11 @@ variable "igw_tags" {
   default     = {}
 }
 
+variable "azs" {
+  type    = list(string)
+  default = []
+}
+
 variable "public_subnets" {
   type    = list(string)
   default = []

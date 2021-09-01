@@ -59,7 +59,7 @@ resource "aws_subnet" "public" {
   count                   = length(var.public_subnets) > 0 && (length(var.public_subnets) <= length(local.azs)) ? length(var.public_subnets) : 0
   vpc_id                  = aws_vpc.this[0].id
   cidr_block              = var.public_subnets[count.index]
-  availability_zone       = length(regexall("^[a-z]{2}-", local.azs.names[count.index])) > 0 ? local.azs.names[count.index] : null
+  availability_zone       = length(regexall("^[a-z]{2}-", var.azs[count.index])) > 0 ? var.azs[count.index] : null
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
   tags = merge(
@@ -113,7 +113,7 @@ resource "aws_subnet" "private" {
   count                   = length(var.private_subnets) > 0 && (length(var.private_subnets) <= length(local.azs)) ? length(var.private_subnets) : 0
   vpc_id                  = aws_vpc.this[0].id
   cidr_block              = var.private_subnets[count.index]
-  availability_zone       = length(regexall("^[a-z]{2}-", local.azs.names[count.index])) > 0 ? local.azs.names[count.index] : null
+  availability_zone       = length(regexall("^[a-z]{2}-", var.azs[count.index])) > 0 ? var.azs[count.index] : null
   map_public_ip_on_launch = false
 
   tags = merge(
@@ -168,8 +168,8 @@ resource "aws_subnet" "intra" {
 
   vpc_id                  = aws_vpc.this[0].id
   cidr_block              = var.intra_subnets[count.index]
-  availability_zone       = length(regexall("^[a-z]{2}-", local.azs.names[count.index])) > 0 ? local.azs.names[count.index] : null
-  availability_zone_id    = length(regexall("^[a-z]{2}-", element(local.azs.names, count.index))) == 0 ? element(local.azs.names, count.index) : null
+  availability_zone       = length(regexall("^[a-z]{2}-", var.azs[count.index])) > 0 ? var.azs[count.index] : null
+  availability_zone_id    = length(regexall("^[a-z]{2}-", element(var.azs, count.index))) == 0 ? element(var.azs, count.index) : null
   map_public_ip_on_launch = false
 
   tags = merge(
