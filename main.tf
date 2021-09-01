@@ -105,10 +105,12 @@ module "east_spoke_vpc" {
 }
 
 locals {
-  east_hub_vpc             = module.east_hub_vpc["vpc1"].vpc_id
+  east_hub_vpc             = module.east_hub_vpc["Hub"].vpc_id
   east_spoke_vpc           = [for v in module.east_spoke_vpc : v.vpc_id]
-  east_hub_private_subnets = module.east_hub_vpc["vpc1"].private_subnets
+  east_hub_private_subnets = module.east_hub_vpc["Hub"].private_subnets
   east_spoke_intra_subnets = [for v in module.east_spoke_vpc : v.intra_subnets]
+  east_hub_cidr            = module.east_hub_vpc["Hub"].vpc_cidr
+  east_spoke_cidr          = [for v in module.east_spoke_vpc : v.vpc_cidr]
 }
 
 module "east_tgw" {
@@ -148,30 +150,83 @@ module "east_tgw" {
   }
 
   route_tables = {
-    Main = {
-      tags = { Purpose = "RT attached to All VPC" }
+    Hub = {
+      tags = { Purpose = "RT attached to Hub VPC" }
+    }
+    Spokes = {
+      tags = { Purpose = "RT attached to Spoke VPC" }
     }
   }
 
   route_table_associations = {
-    Hub    = { rt = "Main" }
-    Spoke1 = { rt = "Main" }
-    Spoke2 = { rt = "Main" }
-    Spoke3 = { rt = "Main" }
+    Hub    = { route_table_name = "Hub" }
+    Spoke1 = { route_table_name = "Spokes" }
+    Spoke2 = { route_table_name = "Spokes" }
+    Spoke3 = { route_table_name = "Spokes" }
   }
 
   route_table_propagations = {
-    Hub    = { rt = "Main" }
-    Spoke1 = { rt = "Main" }
-    Spoke2 = { rt = "Main" }
-    Spoke3 = { rt = "Main" }
+    hub_to_spokes = {
+      attach_name      = "Hub"
+      route_table_name = "Spokes"
+    }
+    spoke_1_to_hub = {
+      attach_name      = "Spoke1"
+      route_table_name = "Hub"
+    }
+    spoke_2_to_hub = {
+      attach_name      = "Spoke2"
+      route_table_name = "Hub"
+    }
+    spoke_3_to_hub = {
+      attach_name      = "Spoke3"
+      route_table_name = "Hub"
+    }
+    spoke_1_to_2 = {
+      attach_name      = "Spoke1"
+      route_table_name = "Spokes"
+    }
+    spoke_2_to_1 = {
+      attach_name      = "Spoke2"
+      route_table_name = "Spokes"
+    }
   }
 
   tgw_routes = {
-    route1 = {
-      destination = "0.0.0.0/0"
-      attach_id   = "Hub"
-      rt_name     = "Main"
+    spoke_default = {
+      destination      = "0.0.0.0/0"
+      attach_id        = "Hub"
+      route_table_name = "Spokes"
+    }
+    blackhole_1 = {
+      destination      = "10.0.0.0/8"
+      blackhole        = true
+      route_table_name = "Hub"
+    }
+    blackhole_2 = {
+      destination      = "10.0.0.0/8"
+      blackhole        = true
+      route_table_name = "Spokes"
+    }
+    blackhole_3 = {
+      destination      = "172.16.0.0/12"
+      blackhole        = true
+      route_table_name = "Hub"
+    }
+    blackhole_4 = {
+      destination      = "172.16.0.0/12"
+      blackhole        = true
+      route_table_name = "Spokes"
+    }
+    blackhole_5 = {
+      destination      = "192.168.0.0/16"
+      blackhole        = true
+      route_table_name = "Hub"
+    }
+    blackhole_6 = {
+      destination      = "192.168.0.0/16"
+      blackhole        = true
+      route_table_name = "Spokes"
     }
   }
 }

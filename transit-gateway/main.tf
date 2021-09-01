@@ -66,21 +66,21 @@ resource "aws_ec2_transit_gateway_route_table" "this" {
 resource "aws_ec2_transit_gateway_route_table_association" "this" {
   for_each                       = { for k, v in var.route_table_associations : k => v if length(var.route_table_associations) > 0 }
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.rt].id)
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.route_table_name].id)
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
   for_each                       = { for k, v in var.route_table_propagations : k => v if length(var.route_table_propagations) > 0 }
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.rt].id)
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.value.attach_name].id
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.route_table_name].id)
 }
 
 resource "aws_ec2_transit_gateway_route" "this" {
   for_each                       = { for k, v in var.tgw_routes : k => v if length(var.tgw_routes) > 0 }
   blackhole                      = lookup(each.value, "blackhole", null)
   destination_cidr_block         = each.value.destination
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.value.attach_id].id
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.rt_name].id)
+  transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? aws_ec2_transit_gateway_vpc_attachment.this[each.value.attach_id].id : null
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.route_table_name].id)
 }
 
 # ### FLOW LOGS
