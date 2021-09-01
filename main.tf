@@ -1,11 +1,11 @@
 module "ssh_key" {
-  source        = "./ssh-key"
+  source        = "./modules/ssh-key"
   key_name      = "aws-test-key"
   priv_key_path = var.priv_key_path
 }
 
 module "east_hub_vpc" {
-  source    = "./vpc"
+  source    = "./modules/vpc"
   providers = { aws = aws.us_east_1 }
   for_each  = var.east_hub_vpc_cidrs
   vpc_cidr  = each.value
@@ -22,7 +22,7 @@ module "east_hub_vpc" {
 }
 
 module "east_spoke_vpc" {
-  source     = "./vpc"
+  source     = "./modules/vpc"
   providers  = { aws = aws.us_east_1 }
   for_each   = var.east_spke_vpc_cidrs
   vpc_cidr   = each.value
@@ -46,7 +46,7 @@ locals {
 }
 
 module "east_tgw" {
-  source     = "./transit-gateway"
+  source     = "./modules/transit-gateway"
   providers  = { aws = aws.us_east_1 }
   create_tgw = true
   name       = "EastTGW"
