@@ -1,3 +1,71 @@
+### -------------------------------------------------------------------------------------------- ###
+### PROVIDERS
+### -------------------------------------------------------------------------------------------- ###
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">=3.56"
+    }
+  }
+}
+
+locals {
+  aws_profile = var.aws_profile.sandbox
+}
+
+provider "aws" {
+  region                  = "us-east-1"
+  shared_credentials_file = var.credentials_file
+  profile                 = local.aws_profile
+
+  default_tags {
+    tags = {
+      Terraform   = "True"
+      Environemnt = "Test"
+      Owner       = "Dev"
+      Region      = "US-East-1"
+    }
+  }
+}
+
+provider "aws" {
+  alias                   = "us_east_1"
+  region                  = "us-east-1"
+  shared_credentials_file = var.credentials_file
+  profile                 = local.aws_profile
+
+  default_tags {
+    tags = {
+      Terraform   = "True"
+      Environemnt = "Test"
+      Owner       = "Dev"
+      Region      = "US-East-1"
+    }
+  }
+}
+
+provider "aws" {
+  alias                   = "us_west_2"
+  region                  = "us-west-2"
+  shared_credentials_file = var.credentials_file
+  profile                 = local.aws_profile
+
+  default_tags {
+    tags = {
+      Terraform   = "True"
+      Environemnt = "Test"
+      Owner       = "Dev"
+      Region      = "US-West-2"
+    }
+  }
+}
+
+### -------------------------------------------------------------------------------------------- ###
+### MODULES
+### -------------------------------------------------------------------------------------------- ###
+
 module "ssh_key" {
   source        = "./ssh-key"
   key_name      = "aws-test-key"
@@ -37,47 +105,75 @@ module "east_spoke_vpc" {
 }
 
 locals {
-  east_hub_vpc             = module.east_hub_vpc["vpc1"].vpc
-  east_spoke_vpc           = [for v in module.east_spoke_vpc : v.vpc]
+  east_hub_vpc             = module.east_hub_vpc["vpc1"].vpc_id
+  east_spoke_vpc           = [for v in module.east_spoke_vpc : v.vpc_id]
   east_hub_private_subnets = module.east_hub_vpc["vpc1"].private_subnets
   east_spoke_intra_subnets = [for v in module.east_spoke_vpc : v.intra_subnets]
 }
 
 module "east_tgw" {
-  source              = "./transit-gateway"
-  providers           = { aws = aws.us_east_1 }
-  create_tgw          = true
-  name                = "EastTGW"
-  create_vpc_attach   = true
-  vpc_ids             = flatten([local.east_hub_vpc, local.east_spoke_vpc])
-  subnet_ids          = concat([local.east_hub_private_subnets], local.east_spoke_intra_subnets)
-  create_route_tables = true
-  num_route_tables    = 2
+  source     = "./transit-gateway"
+  providers  = { aws = aws.us_east_1 }
+  create_tgw = true
+  name       = "EastTGW"
 
-  attach_tags = [
-    { Name = "Hub" },
-    { Name = "Spoke-1" },
-    { Name = "Spoke-2" },
-    { Name = "Spoke-3" }
-  ]
+  vpc_attachments = {
+    Hub = {
+      vpc_id               = local.east_hub_vpc
+      subnet_ids           = local.east_hub_private_subnets
+      default_asssociation = false
+      default_propagation  = false
+      tags = {
+        Purpose = "Attachment to Hub VPC"
+      }
+    },
+    Spoke1 = {
+      vpc_id               = local.east_spoke_vpc[0]
+      subnet_ids           = local.east_spoke_intra_subnets[0]
+      default_asssociation = false
+      default_propagation  = false
+    },
+    Spoke2 = {
+      vpc_id               = local.east_spoke_vpc[1]
+      subnet_ids           = local.east_spoke_intra_subnets[1]
+      default_asssociation = false
+      default_propagation  = false
+    },
+    Spoke3 = {
+      vpc_id               = local.east_spoke_vpc[2]
+      subnet_ids           = local.east_spoke_intra_subnets[2]
+      default_asssociation = false
+      default_propagation  = false
+    },
+  }
 
-  route_table_tags = [
-    { Name = "Hub" },
-    { Name = "Spoke" }
-  ]
-}
+  route_tables = {
+    Main = {
+      tags = { Purpose = "RT attached to All VPC" }
+    }
+  }
 
+  route_table_associations = {
+    Hub    = { rt = "Main" }
+    Spoke1 = { rt = "Main" }
+    Spoke2 = { rt = "Main" }
+    Spoke3 = { rt = "Main" }
+  }
 
-locals {
-  east_tgw_route_tables = module.east_tgw.route_tables
-  east_tgw_attachments  = module.east_tgw.attachments
-}
+  route_table_propagations = {
+    Hub    = { rt = "Main" }
+    Spoke1 = { rt = "Main" }
+    Spoke2 = { rt = "Main" }
+    Spoke3 = { rt = "Main" }
+  }
 
-module "hub_spoke_east" {
-  source           = "./hub-spoke"
-  providers        = { aws = aws.us_east_1 }
-  tgw_attachments  = local.east_tgw_attachments
-  tgw_route_tables = local.east_tgw_route_tables
+  tgw_routes = {
+    route1 = {
+      destination = "0.0.0.0/0"
+      attach_id   = "Hub"
+      rt_name     = "Main"
+    }
+  }
 }
 
 # locals {

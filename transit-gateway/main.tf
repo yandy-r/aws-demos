@@ -6,7 +6,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 2.7.0"
+      version = ">=3.56"
     }
   }
 }
@@ -34,72 +34,54 @@ resource "aws_ec2_transit_gateway" "this" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
-  count                                           = (var.create_vpc_attach && length(var.vpc_ids) > 0 && length(var.subnet_ids) > 0) && !var.create_custom_attach ? length(var.vpc_ids) : 0
-  transit_gateway_id                              = aws_ec2_transit_gateway.this[0].id
-  vpc_id                                          = var.vpc_ids[count.index]
-  subnet_ids                                      = var.subnet_ids[count.index]
-  transit_gateway_default_route_table_association = var.transit_gateway_default_route_table_association
-  transit_gateway_default_route_table_propagation = var.transit_gateway_default_route_table_propagation
+  for_each                                        = { for k, v in var.vpc_attachments : k => v if length(var.vpc_attachments) > 0 }
+  transit_gateway_id                              = lookup(each.value, "tgw_id", var.create_tgw ? aws_ec2_transit_gateway.this[0].id : null)
+  vpc_id                                          = each.value["vpc_id"]
+  subnet_ids                                      = each.value["subnet_ids"]
+  transit_gateway_default_route_table_association = lookup(each.value, "default_asssociation", false)
+  transit_gateway_default_route_table_propagation = lookup(each.value, "default_propagation", false)
 
   tags = merge(
     {
-      Name = "${var.name}-${count.index}"
+      Name = "${var.name}-${each.key}"
     },
     var.tags,
-    var.attach_tags[count.index]
+    lookup(each.value, "tags", null)
   )
 }
 
 resource "aws_ec2_transit_gateway_route_table" "this" {
-  count              = var.create_route_tables && var.num_route_tables > 0 ? var.num_route_tables : 0
+  for_each           = { for k, v in var.route_tables : k => v if length(var.route_tables) > 0 }
   transit_gateway_id = aws_ec2_transit_gateway.this[0].id
 
   tags = merge(
     {
-      Name = "${var.name}-${count.index}"
+      Name = "${var.name}-${each.key}"
     },
     var.tags,
-    var.route_table_tags[count.index]
+    lookup(each.value, "tags", null)
   )
 }
 
-# resource "aws_ec2_transit_gateway_route" "spoke_defaults" {
-#   count                          = 1
-#   destination_cidr_block         = "0.0.0.0/0"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[count.index].id
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.attach[0].id
-# }
+resource "aws_ec2_transit_gateway_route_table_association" "this" {
+  for_each                       = { for k, v in var.route_table_associations : k => v if length(var.route_table_associations) > 0 }
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.rt].id)
+}
 
-# resource "aws_ec2_transit_gateway_route" "black_hole" {
-#   count                          = 3
-#   destination_cidr_block         = var.rfc1918[count.index]
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes[0].id
-#   blackhole                      = "true"
-# }
+resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
+  for_each                       = { for k, v in var.route_table_propagations : k => v if length(var.route_table_propagations) > 0 }
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.rt].id)
+}
 
-# resource "aws_route" "hub_to_spokes_private" {
-#   count                  = 3
-#   route_table_id         = aws_route_table.private[0].id
-#   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
-#   transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
-#   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
-# }
-
-# resource "aws_route" "hub_to_spokes_public" {
-#   count                  = 3
-#   route_table_id         = aws_route_table.public[0].id
-#   destination_cidr_block = aws_vpc.vpcs[count.index + 1].cidr_block
-#   transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
-#   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
-# }
-
-# resource "aws_route" "tgw_spoke_defaults" {
-#   count                  = 3
-#   route_table_id         = aws_route_table.private[count.index + 1].id
-#   destination_cidr_block = "0.0.0.0/0"
-#   transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
-#   depends_on             = [aws_ec2_transit_gateway_vpc_attachment.attach]
-# }
+resource "aws_ec2_transit_gateway_route" "this" {
+  for_each                       = { for k, v in var.tgw_routes : k => v if length(var.tgw_routes) > 0 }
+  blackhole                      = lookup(each.value, "blackhole", null)
+  destination_cidr_block         = each.value.destination
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.value.attach_id].id
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.rt_name].id)
+}
 
 # ### FLOW LOGS
 

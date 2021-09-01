@@ -6,6 +6,10 @@ output "vpc" {
   value = aws_vpc.this[0].id
 }
 
+output "vpc_id" {
+  value = aws_vpc.this[0].id
+}
+
 output "vpc_cidr" {
   value = aws_vpc.this[0].cidr_block
 }

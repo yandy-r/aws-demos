@@ -5,15 +5,13 @@ variable "name" {
 }
 
 variable "tags" {
-  type        = map(string)
-  description = "Tags applied to all resources in module"
-  default     = {}
+  type    = map(string)
+  default = {}
 }
 
 variable "tgw_tags" {
-  type        = map(string)
-  description = "Tags applied to all resources in module"
-  default     = {}
+  type    = map(string)
+  default = {}
 }
 
 variable "create_tgw" {
@@ -51,57 +49,27 @@ variable "vpn_ecmp_support" {
   default = "enable"
 }
 
-variable "vpc_ids" {
-  type    = list(string)
-  default = []
+variable "vpc_attachments" {
+  type    = any
+  default = {}
 }
 
-variable "subnet_ids" {
-  type    = list(list(string))
-  default = []
+variable "route_tables" {
+  type    = any
+  default = {}
 }
 
-variable "create_vpc_attach" {
-  type    = bool
-  default = false
+variable "route_table_associations" {
+  type    = any
+  default = {}
 }
 
-variable "create_custom_attach" {
-  type    = bool
-  default = false
+variable "route_table_propagations" {
+  type    = any
+  default = {}
 }
 
-variable "transit_gateway_default_route_table_association" {
-  type    = bool
-  default = false
-}
-
-variable "transit_gateway_default_route_table_propagation" {
-  type    = bool
-  default = false
-}
-
-variable "custom_attach" {
-  type    = list(map(string))
-  default = []
-}
-
-variable "attach_tags" {
-  type    = list(map(string))
-  default = []
-}
-
-variable "create_route_tables" {
-  type    = bool
-  default = false
-}
-
-variable "num_route_tables" {
-  type    = number
-  default = 0
-}
-
-variable "route_table_tags" {
-  type    = list(map(string))
-  default = []
+variable "tgw_routes" {
+  type    = any
+  default = {}
 }
