@@ -1,7 +1,7 @@
 module "ssh_key" {
-  source            = "./ssh-key"
-  key_name          = "aws-test-key"
-  priv_ssh_key_path = var.priv_key_path
+  source        = "./ssh-key"
+  key_name      = "aws-test-key"
+  priv_key_path = var.priv_key_path
 }
 
 module "east_hub_vpc" {
