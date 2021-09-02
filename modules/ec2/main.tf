@@ -72,7 +72,7 @@ data "local_file" "ssh_key" {
 #   source_dest_check = true
 
 #   tags = {
-#     Name = "Hub Public"
+#     Name = "hub public"
 #   }
 # }
 
@@ -89,7 +89,7 @@ data "local_file" "ssh_key" {
 #   }
 
 #   tags = {
-#     Name = "Hub Bastion"
+#     Name = "hub bastion"
 #   }
 
 #   depends_on = [aws_key_pair.aws_test_key]
@@ -111,21 +111,21 @@ data "local_file" "ssh_key" {
 
 #   tags = element([
 #     {
-#       Name = "Hub Private"
+#       Name = "hub private"
 #     },
 #     {
-#       Name = "Spoke 1"
+#       Name = "spoke 1"
 #     },
 #     {
-#       Name = "Spoke 2"
+#       Name = "spoke 2"
 #     },
 #     {
-#       Name = "Spoke 3"
+#       Name = "spoke 3"
 #     }
 #   ], count.index)
 # }
 
-# ## Spoke VPC Instances
+# ## spoke VPC Instances
 
 # resource "aws_instance" "private" {
 #   count            = 4
@@ -141,16 +141,16 @@ data "local_file" "ssh_key" {
 
 #   tags = element([
 #     {
-#       Name = "Hub Private"
+#       Name = "hub private"
 #     },
 #     {
-#       Name = "Spoke 1"
+#       Name = "spoke 1"
 #     },
 #     {
-#       Name = "Spoke 2"
+#       Name = "spoke 2"
 #     },
 #     {
-#       Name = "Spoke 3"
+#       Name = "spoke 3"
 #     }
 #   ], count.index)
 

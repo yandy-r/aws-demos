@@ -33,7 +33,7 @@ terraform plan -o plan.tfplan
 terraform apply plan.tfplan
 ```
 
-## Connect to Bastion Host
+## Connect to bastion Host
 
 After **terraform** successfully deploys, there are outputs for each host public and private addresses. The only public address belongs to the bastion host. You can also find the public address in the AWS console. It is **important** that you have a copy of your private key on the machine, otherwise SSH won't work, but you know this already.
 

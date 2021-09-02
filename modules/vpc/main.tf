@@ -64,7 +64,7 @@ resource "aws_subnet" "public" {
 
   tags = merge(
     {
-      Name = "${var.name}-Public-${count.index + 1}"
+      Name = "${var.name}-public-${count.index + 1}"
     },
     var.tags,
     var.public_subnet_tags
@@ -96,7 +96,7 @@ resource "aws_route_table" "public" {
 
   tags = merge(
     {
-      Name = "${var.name}-Public-${count.index + 1}"
+      Name = "${var.name}-public-${count.index + 1}"
     },
     var.tags,
     var.public_route_table_tags,
@@ -118,7 +118,7 @@ resource "aws_subnet" "private" {
 
   tags = merge(
     {
-      Name = "${var.name}-Private-${count.index + 1}"
+      Name = "${var.name}-private-${count.index + 1}"
     },
     var.tags,
     var.private_subnet_tags
@@ -150,7 +150,7 @@ resource "aws_route_table" "private" {
 
   tags = merge(
     {
-      Name = "${var.name}-Private-${count.index + 1}"
+      Name = "${var.name}-private-${count.index + 1}"
     },
     var.tags,
     var.private_route_table_tags,
@@ -236,21 +236,21 @@ resource "aws_nat_gateway" "this" {
 # ### -------------------------------------------------------------------------------------------- ###
 
 # resource "aws_security_group" "hub_public" {
-#   description = "Hub instances Public SG"
+#   description = "hub instances public SG"
 #   vpc_id      = aws_vpc.vpcs.*.id[0]
 
 #   tags = {
-#     Name = "Hub Public"
+#     Name = "hub public"
 #   }
 # }
 
 
 # resource "aws_security_group" "hub_private" {
-#   description = "Hub instances Private SG"
+#   description = "hub instances private SG"
 #   vpc_id      = aws_vpc.vpcs.*.id[0]
 
 #   tags = {
-#     Name = "Hub Private"
+#     Name = "hub private"
 #   }
 # }
 
@@ -291,7 +291,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     public_rule_3 = {
-#       description              = "Allow ALL from Hub Private subnet"
+#       description              = "Allow ALL from hub private subnet"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -302,7 +302,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     public_rule_4 = {
-#       description              = "Allow ALL from Hub Public to self"
+#       description              = "Allow ALL from hub public to self"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -324,7 +324,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     private_rule_1 = {
-#       description              = "Allow all from Spoke VPC 1"
+#       description              = "Allow all from spoke VPC 1"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -335,7 +335,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     private_rule_2 = {
-#       description              = "Allow all from Spoke VPC 2"
+#       description              = "Allow all from spoke VPC 2"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -346,7 +346,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     private_rule_3 = {
-#       description              = "Allow all from Spoke VPC 3"
+#       description              = "Allow all from spoke VPC 3"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -357,7 +357,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     private_rule_4 = {
-#       description              = "Allow ALL from Hub Public subnet"
+#       description              = "Allow ALL from hub public subnet"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -368,7 +368,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     private_rule_5 = {
-#       description              = "Allow ALL from Hub Private (self)"
+#       description              = "Allow ALL from hub private (self)"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -418,7 +418,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     rule_2 = {
-#       description              = "Allow ALL from Hub"
+#       description              = "Allow ALL from hub"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -429,7 +429,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     rule_3 = {
-#       description              = "Allow ALL from Spoke 2"
+#       description              = "Allow ALL from spoke 2"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -465,7 +465,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     rule_2 = {
-#       description              = "Allow ALL from Hub"
+#       description              = "Allow ALL from hub"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -476,7 +476,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     rule_3 = {
-#       description              = "Allow ALL from Spoke 1"
+#       description              = "Allow ALL from spoke 1"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -512,7 +512,7 @@ resource "aws_nat_gateway" "this" {
 #     }
 
 #     rule_2 = {
-#       description              = "Allow ALL from Hub"
+#       description              = "Allow ALL from hub"
 #       type                     = "ingress"
 #       from_port                = 0
 #       to_port                  = 0
@@ -562,29 +562,29 @@ resource "aws_nat_gateway" "this" {
 # }
 
 # resource "aws_security_group" "spoke_1" {
-#   description = "Spoke 1 Private"
+#   description = "spoke 1 private"
 #   vpc_id      = aws_vpc.vpcs.*.id[1]
 
 #   tags = {
-#     Name = "Spoke 1"
+#     Name = "spoke 1"
 #   }
 # }
 
 # resource "aws_security_group" "spoke_2" {
-#   description = "Spoke 2 Private"
+#   description = "spoke 2 private"
 #   vpc_id      = aws_vpc.vpcs.*.id[2]
 
 #   tags = {
-#     Name = "Spoke 2"
+#     Name = "spoke 2"
 #   }
 # }
 
 # resource "aws_security_group" "spoke_3" {
-#   description = "Spoke 3 Private"
+#   description = "spoke 3 private"
 #   vpc_id      = aws_vpc.vpcs.*.id[3]
 
 #   tags = {
-#     Name = "Spoke 3"
+#     Name = "spoke 3"
 #   }
 # }
 
