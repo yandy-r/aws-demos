@@ -11,7 +11,10 @@
       ],
       "Resource": [
         "${bucket_arn}",
-        "${bucket_arn}/*"
+        "${bucket_arn}/*",
+        "arn:aws:s3:::packages.${region}.amazonaws.com/*",
+        "arn:aws:s3:::repo.${region}.amazonaws.com/*",
+        "arn:aws:s3:::amazonlinux.${region}.amazonaws.com/*"
       ],
       "Principal": "*"
     }

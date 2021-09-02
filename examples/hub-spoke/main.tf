@@ -247,46 +247,6 @@ module "east_ec2" {
   }
 }
 
-# locals {
-#   east_tgw_vpc_ids     = [for v in module.tgw_east.vpcs : v.id]
-#   east_subnets         = module.tgw_east.subnets
-#   private_east_subnets = module.tgw_east.subnets.private
-#   public_east_subnets  = module.tgw_east.subnets.public
-#   east_private_rts     = module.tgw_east.route_tables.private
-#   east_public_rts      = module.tgw_east.route_tables.public
-#   east_tgw             = module.tgw_east.tgw
-#   east_tgw_rts         = module.tgw_east.tgw_rts
-#   east_tgw_attach_id   = module.tgw_east.tgw_attach_id
-#   east_region          = module.tgw_east.aws_region
-#   east_hub_sgs         = module.tgw_east.hub_sgs
-#   east_spoke_sgs       = module.tgw_east.spoke_sgs
-
-#   all_east_tgw_rts = [
-#     aws_ec2_transit_gateway_route_table.east_to_west,
-#     module.tgw_east.tgw_rts[0],
-#     module.tgw_east.tgw_rts[1]
-#   ]
-
-#   west_tgw_vpc_ids     = [for v in module.tgw_west.vpcs : v.id]
-#   west_subnets         = module.tgw_west.subnets
-#   private_west_subnets = module.tgw_west.subnets.private
-#   public_west_subnets  = module.tgw_west.subnets.public
-#   west_private_rts     = module.tgw_west.route_tables.private
-#   west_public_rts      = module.tgw_west.route_tables.public
-#   west_tgw             = module.tgw_west.tgw
-#   west_tgw_rts         = module.tgw_west.tgw_rts
-#   west_tgw_attach_id   = module.tgw_west.tgw_attach_id
-#   west_region          = module.tgw_west.aws_region
-#   west_hub_sgs         = module.tgw_west.hub_sgs
-#   west_spoke_sgs       = module.tgw_west.spoke_sgs
-
-#   all_west_tgw_rts = [
-#     aws_ec2_transit_gateway_route_table.west_to_east,
-#     module.tgw_west.tgw_rts[0],
-#     module.tgw_west.tgw_rts[1]
-#   ]
-# }
-
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1
 #   peer_region             = local.west_region
