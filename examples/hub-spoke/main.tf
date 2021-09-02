@@ -4,6 +4,16 @@ module "ssh_key" {
   priv_key_path = var.priv_key_path
 }
 
+# data "aws_region" "current" {}
+# data "template_file" "s3_endpoint_policy" {
+#   template = file("${path.module}/templates/s3_endpoint_policy.json")
+
+#   vars = {
+#     bucket_arn = aws_s3_bucket.lab_data.arn
+#     region     = data.aws_region.current.name
+#   }
+# }
+
 module "east_hub_vpc" {
   source    = "../../modules/vpc"
   providers = { aws = aws.us_east_1 }
@@ -19,6 +29,13 @@ module "east_hub_vpc" {
     cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 128),
     cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 129)
   ]
+
+  vpc_endpoints = {
+    s3 = {
+      endpoint_type = "Gateway"
+      service_type  = "s3"
+    }
+  }
 }
 
 module "east_spoke_vpc" {

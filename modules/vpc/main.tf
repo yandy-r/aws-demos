@@ -231,38 +231,26 @@ resource "aws_nat_gateway" "this" {
   depends_on = [aws_internet_gateway.this]
 }
 
-# data "aws_region" "current" {}
-# data "template_file" "s3_endpoint_policy" {
-#   template = file("${path.module}/templates/s3_endpoint_policy.json")
+data "aws_region" "current" {}
+locals {
+  route_table_ids = concat(aws_route_table.public[*].id, aws_route_table.private[*].id, aws_route_table.intra[*].id)
+}
+resource "aws_vpc_endpoint" "this" {
+  for_each          = { for k, v in var.vpc_endpoints : k => v if length(var.vpc_endpoints) > 0 }
+  vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
+  service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
+  policy            = lookup(each.value, "policy", null)
+  route_table_ids   = lookup(each.value, "route_table_ids", local.route_table_ids)
 
-#   vars = {
-#     bucket_arn = aws_s3_bucket.lab_data.arn
-#     region     = data.aws_region.current.name
-#   }
-# }
-# resource "aws_vpc_endpoint" "s3" {
-#   count             = var.create_vpc_endpoint ? 1 : 0
-#   vpc_id            = aws_vpc.vpcs[0].id
-#   vpc_endpoint_type = "Gateway"
-#   service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
-#   policy            = data.template_file.s3_endpoint_policy.rendered
-
-#   tags = {
-#     Name = "S3 Endpoint"
-#   }
-# }
-
-# locals {
-#   hub_rts = [
-#     aws_route_table.public[0], aws_route_table.private[0]
-#   ]
-# }
-# resource "aws_vpc_endpoint_route_table_association" "s3" {
-#   for_each        = { for k, v in local.hub_rts : k => v.id }
-#   route_table_id  = each.value
-#   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
-# }
-
+  tags = merge(
+    {
+      Name = "${var.name}-endpoint-${each.key}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
 
 # ### -------------------------------------------------------------------------------------------- ###
 # ### SECURITY GROUPS

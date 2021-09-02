@@ -148,3 +148,8 @@ variable "intra_route_table_tags" {
   description = "Tags applied and merged with tags variable to VPC"
   default     = {}
 }
+
+variable "vpc_endpoints" {
+  type    = any
+  default = {}
+}
