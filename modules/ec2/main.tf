@@ -66,11 +66,11 @@ data "local_file" "ssh_key" {
 
 resource "aws_network_interface" "this" {
   for_each          = { for k, v in var.custom_eni_props : k => v if var.craate_custom_eni }
-  subnet_id         = each.value[each.key].subnet_id
-  security_groups   = lookup(each.value[each.key], "security_groups", null)
-  private_ips       = lookup(each.value[each.key], "private_ips", null)
-  source_dest_check = lookup(each.value[each.key], "source_dst_check", true)
-  # attachment        = lookup(each.value[each.key], "attachment", null)
+  subnet_id         = each.value["subnet_id"]
+  security_groups   = lookup(each.value, "security_groups", null)
+  private_ips       = lookup(each.value, "private_ips", null)
+  source_dest_check = lookup(each.value, "source_dst_check", true)
+  # attachment        = lookup(each.value, "attachment", null)
 
   tags = merge(
     {

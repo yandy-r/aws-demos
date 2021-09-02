@@ -37,31 +37,10 @@ module "east_spoke_vpc" {
 }
 
 locals {
-  vpc_ids = {
+  vpcs = {
     east = {
-      hubs   = { for k, v in module.east_hub_vpc : k => v.vpc_id }
-      spokes = { for k, v in module.east_spoke_vpc : k => v.vpc_id }
-    }
-  }
-  vpc_cidrs = {
-    east = {
-      hubs   = { for k, v in module.east_hub_vpc : k => v.vpc_cidr }
-      spokes = { for k, v in module.east_spoke_vpc : k => v.vpc_cidr }
-    }
-  }
-  private_subnet_ids = {
-    east = {
-      hubs = { for k, v in module.east_hub_vpc : k => v.private_subnet_ids }
-    }
-  }
-  public_subnet_ids = {
-    east = {
-      hubs = { for k, v in module.east_hub_vpc : k => v.public_subnet_ids }
-    }
-  }
-  intra_subnet_ids = {
-    east = {
-      spokes = { for k, v in module.east_spoke_vpc : k => v.intra_subnet_ids }
+      hubs   = { for k, v in module.east_hub_vpc : k => v.vpc }
+      spokes = { for k, v in module.east_spoke_vpc : k => v.vpc }
     }
   }
   private_subnets = {
@@ -89,8 +68,8 @@ module "east_tgw" {
 
   vpc_attachments = {
     hub1 = {
-      vpc_id               = local.vpc_ids.east.hubs["hub1"]
-      subnet_ids           = local.private_subnet_ids.east.hubs["hub1"]
+      vpc_id               = local.vpcs.east.hubs["hub1"].id
+      subnet_ids           = local.private_subnets.east.hubs["hub1"][*].id
       default_asssociation = false
       default_propagation  = false
       tags = {
@@ -98,20 +77,20 @@ module "east_tgw" {
       }
     },
     spoke1 = {
-      vpc_id               = local.vpc_ids.east.spokes["spoke1"]
-      subnet_ids           = local.intra_subnet_ids.east.spokes["spoke1"]
+      vpc_id               = local.vpcs.east.spokes["spoke1"].id
+      subnet_ids           = local.intra_subnets.east.spokes["spoke1"][*].id
       default_asssociation = false
       default_propagation  = false
     },
     spoke2 = {
-      vpc_id               = local.vpc_ids.east.spokes["spoke2"]
-      subnet_ids           = local.intra_subnet_ids.east.spokes["spoke2"]
+      vpc_id               = local.vpcs.east.spokes["spoke2"].id
+      subnet_ids           = local.intra_subnets.east.spokes["spoke2"][*].id
       default_asssociation = false
       default_propagation  = false
     },
     spoke3 = {
-      vpc_id               = local.vpc_ids.east.spokes["spoke3"]
-      subnet_ids           = local.intra_subnet_ids.east.spokes["spoke3"]
+      vpc_id               = local.vpcs.east.spokes["spoke3"].id
+      subnet_ids           = local.intra_subnets.east.spokes["spoke3"][*].id
       default_asssociation = false
       default_propagation  = false
     },
@@ -199,10 +178,6 @@ module "east_tgw" {
   }
 }
 
-output "test" {
-  value = local.public_subnets.east.hubs["hub1"]
-}
-
 module "east_ec2" {
   source        = "../../modules/ec2"
   providers     = { aws = aws.us_east_1 }
@@ -211,16 +186,65 @@ module "east_ec2" {
   priv_key      = module.ssh_key.priv_key
   priv_key_path = var.priv_key_path
 
-  # custom_eni_props = {
-  #   hub1 = {
-  #     subnet_id       = local.public_subnet_ids.east.hubs["hub1"]
-  #     security_groups = []
-  #     private_ips     = [cidrhost(local.public_subnets.east.hubs["hub1"].cidr_block, 10)]
-  #     tags = {
-  #       Attach = "For HUB1 Public ENI"
-  #     }
-  #   }
-  # }
+  craate_custom_eni = true
+  custom_eni_props = {
+    hub1_public1 = {
+      subnet_id       = local.public_subnets.east.hubs["hub1"][0].id
+      security_groups = null
+      private_ips     = [cidrhost(local.public_subnets.east.hubs["hub1"][0].cidr_block, 10)]
+      tags = {
+        Attach = "For HUB1 Public ENI"
+      }
+    }
+    spoke1_intra1 = {
+      subnet_id       = local.intra_subnets.east.spokes["spoke1"][0].id
+      security_groups = null
+      private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke1"][0].cidr_block, 10)]
+      tags = {
+        Attach = "For HUB1 Public ENI"
+      }
+    }
+    spoke1_intra2 = {
+      subnet_id       = local.intra_subnets.east.spokes["spoke1"][1].id
+      security_groups = null
+      private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke1"][1].cidr_block, 10)]
+      tags = {
+        Attach = "For HUB1 Public ENI"
+      }
+    }
+    spoke2_intra1 = {
+      subnet_id       = local.intra_subnets.east.spokes["spoke2"][0].id
+      security_groups = null
+      private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke2"][0].cidr_block, 10)]
+      tags = {
+        Attach = "For HUB1 Public ENI"
+      }
+    }
+    spoke2_intra2 = {
+      subnet_id       = local.intra_subnets.east.spokes["spoke2"][1].id
+      security_groups = null
+      private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke2"][1].cidr_block, 10)]
+      tags = {
+        Attach = "For HUB1 Public ENI"
+      }
+    }
+    spoke3_intra1 = {
+      subnet_id       = local.intra_subnets.east.spokes["spoke3"][0].id
+      security_groups = null
+      private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke3"][0].cidr_block, 10)]
+      tags = {
+        Attach = "For HUB1 Public ENI"
+      }
+    }
+    spoke3_intra2 = {
+      subnet_id       = local.intra_subnets.east.spokes["spoke3"][1].id
+      security_groups = null
+      private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke3"][1].cidr_block, 10)]
+      tags = {
+        Attach = "For HUB1 Public ENI"
+      }
+    }
+  }
 }
 
 # locals {
