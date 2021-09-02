@@ -1,11 +1,11 @@
 module "ssh_key" {
-  source        = "./modules/ssh-key"
+  source        = "../../modules/ssh-key"
   key_name      = "aws-test-key"
   priv_key_path = var.priv_key_path
 }
 
 module "east_hub_vpc" {
-  source    = "./modules/vpc"
+  source    = "../../modules/vpc"
   providers = { aws = aws.us_east_1 }
   for_each  = var.east_hub_vpc_cidrs
   vpc_cidr  = each.value
@@ -22,7 +22,7 @@ module "east_hub_vpc" {
 }
 
 module "east_spoke_vpc" {
-  source     = "./modules/vpc"
+  source     = "../../modules/vpc"
   providers  = { aws = aws.us_east_1 }
   for_each   = var.east_spke_vpc_cidrs
   vpc_cidr   = each.value
@@ -37,25 +37,60 @@ module "east_spoke_vpc" {
 }
 
 locals {
-  east_hub_vpc             = { for k, v in module.east_hub_vpc : k => v.vpc_id }
-  east_hub_cidr            = { for k, v in module.east_hub_vpc : k => v.vpc_cidr }
-  east_hub_private_subnets = { for k, v in module.east_hub_vpc : k => v.private_subnets }
-  east_hub_public_subnets  = { for k, v in module.east_hub_vpc : k => v.public_subnets }
-  east_spoke_vpc           = { for k, v in module.east_spoke_vpc : k => v.vpc_id }
-  east_spoke_cidr          = { for k, v in module.east_spoke_vpc : k => v.vpc_cidr }
-  east_spoke_intra_subnets = { for k, v in module.east_spoke_vpc : k => v.intra_subnets }
+  vpc_ids = {
+    east = {
+      hubs   = { for k, v in module.east_hub_vpc : k => v.vpc_id }
+      spokes = { for k, v in module.east_spoke_vpc : k => v.vpc_id }
+    }
+  }
+  vpc_cidrs = {
+    east = {
+      hubs   = { for k, v in module.east_hub_vpc : k => v.vpc_cidr }
+      spokes = { for k, v in module.east_spoke_vpc : k => v.vpc_cidr }
+    }
+  }
+  private_subnet_ids = {
+    east = {
+      hubs = { for k, v in module.east_hub_vpc : k => v.private_subnet_ids }
+    }
+  }
+  public_subnet_ids = {
+    east = {
+      hubs = { for k, v in module.east_hub_vpc : k => v.public_subnet_ids }
+    }
+  }
+  intra_subnet_ids = {
+    east = {
+      spokes = { for k, v in module.east_spoke_vpc : k => v.intra_subnet_ids }
+    }
+  }
+  private_subnets = {
+    east = {
+      hubs = { for k, v in module.east_hub_vpc : k => v.private_subnets }
+    }
+  }
+  public_subnets = {
+    east = {
+      hubs = { for k, v in module.east_hub_vpc : k => v.public_subnets }
+    }
+  }
+  intra_subnets = {
+    east = {
+      spokes = { for k, v in module.east_spoke_vpc : k => v.intra_subnets }
+    }
+  }
 }
 
 module "east_tgw" {
-  source     = "./modules/transit-gateway"
+  source     = "../../modules/transit-gateway"
   providers  = { aws = aws.us_east_1 }
   create_tgw = true
   name       = "east-tgw"
 
   vpc_attachments = {
-    hub = {
-      vpc_id               = local.east_hub_vpc["hub"]
-      subnet_ids           = local.east_hub_private_subnets["hub"]
+    hub1 = {
+      vpc_id               = local.vpc_ids.east.hubs["hub1"]
+      subnet_ids           = local.private_subnet_ids.east.hubs["hub1"]
       default_asssociation = false
       default_propagation  = false
       tags = {
@@ -63,28 +98,28 @@ module "east_tgw" {
       }
     },
     spoke1 = {
-      vpc_id               = local.east_spoke_vpc["spoke1"]
-      subnet_ids           = local.east_spoke_intra_subnets["spoke1"]
+      vpc_id               = local.vpc_ids.east.spokes["spoke1"]
+      subnet_ids           = local.intra_subnet_ids.east.spokes["spoke1"]
       default_asssociation = false
       default_propagation  = false
     },
     spoke2 = {
-      vpc_id               = local.east_spoke_vpc["spoke2"]
-      subnet_ids           = local.east_spoke_intra_subnets["spoke2"]
+      vpc_id               = local.vpc_ids.east.spokes["spoke2"]
+      subnet_ids           = local.intra_subnet_ids.east.spokes["spoke2"]
       default_asssociation = false
       default_propagation  = false
     },
     spoke3 = {
-      vpc_id               = local.east_spoke_vpc["spoke3"]
-      subnet_ids           = local.east_spoke_intra_subnets["spoke3"]
+      vpc_id               = local.vpc_ids.east.spokes["spoke3"]
+      subnet_ids           = local.intra_subnet_ids.east.spokes["spoke3"]
       default_asssociation = false
       default_propagation  = false
     },
   }
 
   route_tables = {
-    hub = {
-      tags = { Purpose = "RT attached to hub VPC" }
+    hubs = {
+      tags = { Purpose = "RT attached to hub1 VPC" }
     }
     spokes = {
       tags = { Purpose = "RT attached to spoke VPC" }
@@ -92,7 +127,7 @@ module "east_tgw" {
   }
 
   route_table_associations = {
-    hub    = { route_table_name = "hub" }
+    hub1   = { route_table_name = "hubs" }
     spoke1 = { route_table_name = "spokes" }
     spoke2 = { route_table_name = "spokes" }
     spoke3 = { route_table_name = "spokes" }
@@ -100,20 +135,20 @@ module "east_tgw" {
 
   route_table_propagations = {
     hub_to_spokes = {
-      attach_name      = "hub"
+      attach_name      = "hub1"
       route_table_name = "spokes"
     }
     spoke_1_to_hub = {
       attach_name      = "spoke1"
-      route_table_name = "hub"
+      route_table_name = "hubs"
     }
     spoke_2_to_hub = {
       attach_name      = "spoke2"
-      route_table_name = "hub"
+      route_table_name = "hubs"
     }
     spoke_3_to_hub = {
       attach_name      = "spoke3"
-      route_table_name = "hub"
+      route_table_name = "hubs"
     }
     spoke_1_to_2 = {
       attach_name      = "spoke1"
@@ -128,13 +163,13 @@ module "east_tgw" {
   tgw_routes = {
     spoke_default = {
       destination      = "0.0.0.0/0"
-      attach_id        = "hub"
+      attach_id        = "hub1"
       route_table_name = "spokes"
     }
     blackhole_1 = {
       destination      = "10.0.0.0/8"
       blackhole        = true
-      route_table_name = "hub"
+      route_table_name = "hubs"
     }
     blackhole_2 = {
       destination      = "10.0.0.0/8"
@@ -144,7 +179,7 @@ module "east_tgw" {
     blackhole_3 = {
       destination      = "172.16.0.0/12"
       blackhole        = true
-      route_table_name = "hub"
+      route_table_name = "hubs"
     }
     blackhole_4 = {
       destination      = "172.16.0.0/12"
@@ -154,7 +189,7 @@ module "east_tgw" {
     blackhole_5 = {
       destination      = "192.168.0.0/16"
       blackhole        = true
-      route_table_name = "hub"
+      route_table_name = "hubs"
     }
     blackhole_6 = {
       destination      = "192.168.0.0/16"
@@ -164,12 +199,28 @@ module "east_tgw" {
   }
 }
 
+output "test" {
+  value = local.public_subnets.east.hubs["hub1"]
+}
+
 module "east_ec2" {
-  source        = "./modules/ec2"
+  source        = "../../modules/ec2"
   providers     = { aws = aws.us_east_1 }
+  name          = "east-ec2"
   key_name      = "aws-test-key"
   priv_key      = module.ssh_key.priv_key
   priv_key_path = var.priv_key_path
+
+  # custom_eni_props = {
+  #   hub1 = {
+  #     subnet_id       = local.public_subnet_ids.east.hubs["hub1"]
+  #     security_groups = []
+  #     private_ips     = [cidrhost(local.public_subnets.east.hubs["hub1"].cidr_block, 10)]
+  #     tags = {
+  #       Attach = "For HUB1 Public ENI"
+  #     }
+  #   }
+  # }
 }
 
 # locals {

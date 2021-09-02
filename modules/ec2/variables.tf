@@ -29,3 +29,18 @@ variable "key_name" {
   type    = string
   default = ""
 }
+
+variable "craate_custom_eni" {
+  type    = bool
+  default = false
+}
+
+variable "custom_eni_props" {
+  type    = any
+  default = {}
+}
+
+variable "eni_tags" {
+  type    = map(string)
+  default = {}
+}

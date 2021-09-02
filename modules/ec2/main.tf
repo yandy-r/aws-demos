@@ -64,17 +64,22 @@ data "local_file" "ssh_key" {
   ]
 }
 
-# resource "aws_network_interface" "hub" {
-#   count             = 1
-#   subnet_id         = aws_subnet.public[0].id
-#   security_groups   = [aws_security_group.hub_public.id]
-#   private_ips       = [cidrhost(aws_subnet.public[count.index].cidr_block, 10)]
-#   source_dest_check = true
+resource "aws_network_interface" "this" {
+  for_each          = { for k, v in var.custom_eni_props : k => v if var.craate_custom_eni }
+  subnet_id         = each.value[each.key].subnet_id
+  security_groups   = lookup(each.value[each.key], "security_groups", null)
+  private_ips       = lookup(each.value[each.key], "private_ips", null)
+  source_dest_check = lookup(each.value[each.key], "source_dst_check", true)
+  # attachment        = lookup(each.value[each.key], "attachment", null)
 
-#   tags = {
-#     Name = "hub public"
-#   }
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-${each.key}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
 
 # resource "aws_instance" "hub_public" {
 #   count            = 1

@@ -27,7 +27,7 @@ variable "priv_key_path" {
 variable "east_hub_vpc_cidrs" {
   type = map(string)
   default = {
-    hub = "10.200.0.0/16"
+    hub1 = "10.200.0.0/16"
   }
 }
 
@@ -43,7 +43,7 @@ variable "east_spke_vpc_cidrs" {
 variable "east_hub_names" {
   type = map(string)
   default = {
-    hub = "hub"
+    hub1 = "hub1"
   }
 }
 

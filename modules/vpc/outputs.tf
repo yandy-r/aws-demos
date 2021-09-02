@@ -18,16 +18,28 @@ output "vpc_arn" {
   value = aws_vpc.this[0].arn
 }
 
-output "public_subnets" {
+output "public_subnet_ids" {
   value = aws_subnet.public[*].id
 }
 
-output "private_subnets" {
+output "private_subnet_ids" {
   value = aws_subnet.private[*].id
 }
 
-output "intra_subnets" {
+output "intra_subnet_ids" {
   value = aws_subnet.intra[*].id
+}
+
+output "public_subnets" {
+  value = aws_subnet.public[*]
+}
+
+output "private_subnets" {
+  value = aws_subnet.private[*]
+}
+
+output "intra_subnets" {
+  value = aws_subnet.intra[*]
 }
 
 output "public_route_table" {
