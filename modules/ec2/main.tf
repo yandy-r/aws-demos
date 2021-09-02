@@ -11,6 +11,11 @@ terraform {
   }
 }
 
+resource "aws_key_pair" "this" {
+  key_name   = var.key_name
+  public_key = var.priv_key.public_key_openssh
+}
+
 data "aws_ami" "amzn2_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -43,7 +48,7 @@ data "aws_ami" "ubuntu" {
 
 data "template_file" "cloud_config" {
   count    = length(var.hostnames)
-  template = file("${path.module}/templates/cloud-config.tpl")
+  template = file("${path.module}/cloud-config.tpl")
 
   vars = {
     hostname = var.hostnames[count.index]
@@ -52,9 +57,102 @@ data "template_file" "cloud_config" {
 }
 
 data "local_file" "ssh_key" {
-  filename = pathexpand("${var.priv_ssh_key_path}/${aws_key_pair.aws_test_key.key_name}")
+  filename = pathexpand("${var.priv_key_path}/${aws_key_pair.this.key_name}")
 
   depends_on = [
-    aws_key_pair.aws_test_key
+    aws_key_pair.this
   ]
 }
+
+# resource "aws_network_interface" "hub" {
+#   count             = 1
+#   subnet_id         = aws_subnet.public[0].id
+#   security_groups   = [aws_security_group.hub_public.id]
+#   private_ips       = [cidrhost(aws_subnet.public[count.index].cidr_block, 10)]
+#   source_dest_check = true
+
+#   tags = {
+#     Name = "Hub Public"
+#   }
+# }
+
+# resource "aws_instance" "hub_public" {
+#   count            = 1
+#   ami              = data.aws_ami.amzn2_linux.id
+#   instance_type    = "t3.medium"
+#   key_name         = aws_key_pair.aws_test_key.key_name
+#   user_data_base64 = base64encode(data.template_file.cloud_config[count.index].rendered)
+
+#   network_interface {
+#     network_interface_id = aws_network_interface.hub.*.id[0]
+#     device_index         = 0
+#   }
+
+#   tags = {
+#     Name = "Hub Bastion"
+#   }
+
+#   depends_on = [aws_key_pair.aws_test_key]
+# }
+
+# resource "aws_network_interface" "private" {
+#   count             = 4
+#   subnet_id         = aws_subnet.private[count.index].id
+#   private_ips       = [cidrhost(aws_subnet.private[count.index].cidr_block, 10)]
+#   source_dest_check = true
+
+#   security_groups = [
+#     [
+#       aws_security_group.hub_private.id,
+#       aws_security_group.spoke_1.id,
+#       aws_security_group.spoke_2.id,
+#       aws_security_group.spoke_3.id
+#   ][count.index]]
+
+#   tags = element([
+#     {
+#       Name = "Hub Private"
+#     },
+#     {
+#       Name = "Spoke 1"
+#     },
+#     {
+#       Name = "Spoke 2"
+#     },
+#     {
+#       Name = "Spoke 3"
+#     }
+#   ], count.index)
+# }
+
+# ## Spoke VPC Instances
+
+# resource "aws_instance" "private" {
+#   count            = 4
+#   ami              = data.aws_ami.amzn2_linux.id
+#   instance_type    = "t3.medium"
+#   key_name         = aws_key_pair.aws_test_key.key_name
+#   user_data_base64 = base64encode(data.template_file.cloud_config[count.index + 1].rendered)
+
+#   network_interface {
+#     network_interface_id = aws_network_interface.private[count.index].id
+#     device_index         = 0
+#   }
+
+#   tags = element([
+#     {
+#       Name = "Hub Private"
+#     },
+#     {
+#       Name = "Spoke 1"
+#     },
+#     {
+#       Name = "Spoke 2"
+#     },
+#     {
+#       Name = "Spoke 3"
+#     }
+#   ], count.index)
+
+#   depends_on = [aws_key_pair.aws_test_key]
+# }

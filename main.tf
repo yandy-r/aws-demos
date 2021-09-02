@@ -163,6 +163,14 @@ module "east_tgw" {
   }
 }
 
+module "east_ec2" {
+  source        = "./modules/ec2"
+  providers     = { aws = aws.us_east_1 }
+  key_name      = "aws-test-key"
+  priv_key      = module.ssh_key.priv_key
+  priv_key_path = var.priv_key_path
+}
+
 # locals {
 #   east_tgw_vpc_ids     = [for v in module.tgw_east.vpcs : v.id]
 #   east_subnets         = module.tgw_east.subnets
