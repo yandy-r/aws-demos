@@ -231,6 +231,39 @@ resource "aws_nat_gateway" "this" {
   depends_on = [aws_internet_gateway.this]
 }
 
+# data "aws_region" "current" {}
+# data "template_file" "s3_endpoint_policy" {
+#   template = file("${path.module}/templates/s3_endpoint_policy.json")
+
+#   vars = {
+#     bucket_arn = aws_s3_bucket.lab_data.arn
+#     region     = data.aws_region.current.name
+#   }
+# }
+# resource "aws_vpc_endpoint" "s3" {
+#   count             = var.create_vpc_endpoint ? 1 : 0
+#   vpc_id            = aws_vpc.vpcs[0].id
+#   vpc_endpoint_type = "Gateway"
+#   service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
+#   policy            = data.template_file.s3_endpoint_policy.rendered
+
+#   tags = {
+#     Name = "S3 Endpoint"
+#   }
+# }
+
+# locals {
+#   hub_rts = [
+#     aws_route_table.public[0], aws_route_table.private[0]
+#   ]
+# }
+# resource "aws_vpc_endpoint_route_table_association" "s3" {
+#   for_each        = { for k, v in local.hub_rts : k => v.id }
+#   route_table_id  = each.value
+#   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
+# }
+
+
 # ### -------------------------------------------------------------------------------------------- ###
 # ### SECURITY GROUPS
 # ### -------------------------------------------------------------------------------------------- ###
