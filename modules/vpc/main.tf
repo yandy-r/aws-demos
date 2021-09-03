@@ -52,7 +52,7 @@ locals {
 }
 
 resource "aws_internet_gateway" "this" {
-  count  = lookup(var.vpc, "create_inet_gw", true) || var.create_inet_gw ? 1 : 0
+  count  = lookup(var.vpc, "create_inet_gw", false) || var.create_inet_gw ? 1 : 0
   vpc_id = lookup(var.inet_gw, "vpc_id", local.vpc_id)
 
   tags = merge(
@@ -94,7 +94,7 @@ resource "aws_nat_gateway" "this" {
 }
 
 resource "aws_subnet" "public" {
-  count                   = length(var.public_subnets.cidr_blocks) > 0 ? length(var.public_subnets.cidr_blocks) : 0
+  count                   = length(lookup(var.public_subnets, "cidr_blocks", {})) > 0 ? length(var.public_subnets.cidr_blocks) : 0
   vpc_id                  = lookup(var.public_subnets, "vpc_id", local.vpc_id)
   cidr_block              = var.public_subnets.cidr_blocks[count.index]
   availability_zone       = lookup(var.public_subnets, "availability_zones", true) != true ? var.public_subnets.availability_zones[count.index] : local.azs.names[count.index]
@@ -110,7 +110,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_route_table" "public" {
-  count  = length(var.public_subnets.cidr_blocks) > 0 ? 1 : 0
+  count  = length(lookup(var.public_subnets, "cidr_blocks", {})) > 0 ? 1 : 0
   vpc_id = lookup(var.public_route_table, "vpc_id", local.vpc_id)
 
   tags = merge(
@@ -129,7 +129,7 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count                   = length(var.private_subnets.cidr_blocks) > 0 ? length(var.private_subnets.cidr_blocks) : 0
+  count                   = length(lookup(var.private_subnets, "cidr_blocks", {})) > 0 ? length(var.private_subnets.cidr_blocks) : 0
   vpc_id                  = lookup(var.private_subnets, "vpc_id", local.vpc_id)
   cidr_block              = var.private_subnets.cidr_blocks[count.index]
   availability_zone       = lookup(var.private_subnets, "availability_zones", true) != true ? var.private_subnets.availability_zones[count.index] : local.azs.names[count.index]
@@ -145,7 +145,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_route_table" "private" {
-  count  = length(var.private_subnets.cidr_blocks) > 0 ? 1 : 0
+  count  = length(lookup(var.private_subnets, "cidr_blocks", {})) > 0 ? 1 : 0
   vpc_id = lookup(var.private_route_table, "vpc_id", local.vpc_id)
 
   tags = merge(
@@ -164,7 +164,7 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_subnet" "intra" {
-  count                   = length(var.intra_subnets.cidr_blocks) > 0 ? length(var.intra_subnets.cidr_blocks) : 0
+  count                   = length(lookup(var.intra_subnets, "cidr_blocks", {})) > 0 ? length(var.intra_subnets.cidr_blocks) : 0
   vpc_id                  = lookup(var.intra_subnets, "vpc_id", local.vpc_id)
   cidr_block              = var.intra_subnets.cidr_blocks[count.index]
   availability_zone       = lookup(var.intra_subnets, "availability_zones", true) != true ? var.intra_subnets.availability_zones[count.index] : local.azs.names[count.index]
@@ -180,7 +180,7 @@ resource "aws_subnet" "intra" {
 }
 
 resource "aws_route_table" "intra" {
-  count  = length(var.intra_subnets.cidr_blocks) > 0 ? 1 : 0
+  count  = length(lookup(var.intra_subnets, "cidr_blocks", {})) > 0 ? 1 : 0
   vpc_id = lookup(var.intra_route_table, "vpc_id", local.vpc_id)
 
   tags = merge(

@@ -91,6 +91,53 @@ locals {
           ]
         }
       }
+      spoke1 = {
+        vpc_cidr                         = var.vpc_cidrs.east["spoke1"]
+        instance_tenancy                 = "default"
+        enable_dns_hostnames             = true
+        enable_dns_support               = true
+        enable_classiclink               = false
+        enable_classiclink_dns_support   = false
+        assign_generated_ipv6_cidr_block = false
+
+        intra_subnets = {
+          cidr_blocks = [
+            cidrsubnet(var.vpc_cidrs.east["spoke1"], 8, 128),
+            cidrsubnet(var.vpc_cidrs.east["spoke1"], 8, 129),
+          ]
+        }
+      }
+      spoke2 = {
+        vpc_cidr                         = var.vpc_cidrs.east["spoke2"]
+        instance_tenancy                 = "default"
+        enable_dns_hostnames             = true
+        enable_dns_support               = true
+        enable_classiclink               = false
+        enable_classiclink_dns_support   = false
+        assign_generated_ipv6_cidr_block = false
+
+        intra_subnets = {
+          cidr_blocks = [
+            cidrsubnet(var.vpc_cidrs.east["spoke2"], 8, 128),
+            cidrsubnet(var.vpc_cidrs.east["spoke2"], 8, 129),
+          ]
+        }
+      }
+      spoke3 = {
+        vpc_cidr                         = var.vpc_cidrs.east["spoke3"]
+        instance_tenancy                 = "default"
+        enable_dns_hostnames             = true
+        enable_dns_support               = true
+        enable_classiclink               = false
+        enable_classiclink_dns_support   = false
+        assign_generated_ipv6_cidr_block = false
+
+        intra_subnets = {
+          cidr_blocks = [
+            cidrsubnet(var.vpc_cidrs.east["spoke3"], 8, 128)
+          ]
+        }
+      }
     }
   }
 }
@@ -103,10 +150,10 @@ module "east_vpcs" {
   name               = "east-${each.key}"
   vpc                = each.value
   inet_gw            = {}
-  public_subnets     = lookup(each.value, "public_subnets", null)
-  public_route_table = lookup(each.value, "public_route_table", null)
-  private_subnets    = lookup(each.value, "private_subnets", null)
-  intra_subnets      = lookup(each.value, "intra_subnets", null)
+  public_subnets     = lookup(each.value, "public_subnets", {})
+  public_route_table = lookup(each.value, "public_route_table", {})
+  private_subnets    = lookup(each.value, "private_subnets", {})
+  intra_subnets      = lookup(each.value, "intra_subnets", {})
 
   vpc_endpoints = {
     s3 = {
