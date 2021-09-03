@@ -73,109 +73,107 @@ output "vpc_ids" {
 # }
 
 locals {
-  vpc_info = {
-    east = {
-      hub1 = {
-        vpc_cidr                         = var.vpc_cidrs.east["hub1"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
-        create_internet_gateway          = true
-        num_nat_gateway                  = 1
+  east_vpcs = {
+    hub1 = {
+      vpc_cidr                         = var.vpc_cidrs.east["hub1"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
+      create_internet_gateway          = true
+      num_nat_gateway                  = 1
 
-        internet_gateway = {
-          tags = {
-            Purpose = "Route stuff to the internet"
-          }
-        }
-
-        nat_gateway = {
-          tags = {
-            Purpose = "Route private stuff to the internet"
-          }
-        }
-
-        vpc_endpoints = {
-          s3 = {
-            endpoint_type = "Gateway"
-            service_type  = "s3"
-            tags = {
-              Purpose = "Hub VPC S3 Endpoint"
-            }
-          }
-        }
-
-        public_subnets = {
-          public1 = {
-            cidr_block              = "10.200.0.0/24"
-            availability_zone       = "us-east-1a"
-            map_public_ip_on_launch = true
-          }
-          public2 = {
-            cidr_block              = "10.200.1.0/24"
-            availability_zone       = "us-east-1b"
-            map_public_ip_on_launch = true
-          }
-        }
-        public_route_table = {
-          tags = {
-            Purpose = "Route to internet and other public services."
-          }
-        }
-
-        private_subnets = {
-          private1 = { cidr_block = "10.200.64.0/24", availability_zone = "us-east-1a" }
-          private2 = { cidr_block = "10.200.65.0/24", availability_zone = "us-east-1b" }
-        }
-
-        intra_subnets = {
-          intra1 = { cidr_block = "10.200.128.0/24", availability_zone = "us-east-1a" }
-          intra2 = { cidr_block = "10.200.129.0/24", availability_zone = "us-east-1b" }
+      internet_gateway = {
+        tags = {
+          Purpose = "Route stuff to the internet"
         }
       }
-      spoke1 = {
-        vpc_cidr                         = var.vpc_cidrs.east["spoke1"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
 
-        intra_subnets = {
-          intra1 = { cidr_block = "10.201.128.0/24", availability_zone = "us-east-1a" }
-          intra2 = { cidr_block = "10.201.129.0/24", availability_zone = "us-east-1b" }
+      nat_gateway = {
+        tags = {
+          Purpose = "Route private stuff to the internet"
         }
       }
-      spoke2 = {
-        vpc_cidr                         = var.vpc_cidrs.east["spoke2"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
 
-        intra_subnets = {
-          intra1 = { cidr_block = "10.202.128.0/24", availability_zone = "us-east-1a" }
-          intra2 = { cidr_block = "10.202.129.0/24", availability_zone = "us-east-1b" }
+      vpc_endpoints = {
+        s3 = {
+          endpoint_type = "Gateway"
+          service_type  = "s3"
+          tags = {
+            Purpose = "Hub VPC S3 Endpoint"
+          }
         }
       }
-      spoke3 = {
-        vpc_cidr                         = var.vpc_cidrs.east["spoke3"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
 
-        intra_subnets = {
-          intra1 = { cidr_block = "10.203.128.0/24" }
+      public_subnets = {
+        public1 = {
+          cidr_block              = "10.200.0.0/24"
+          availability_zone       = "us-east-1a"
+          map_public_ip_on_launch = true
         }
+        public2 = {
+          cidr_block              = "10.200.1.0/24"
+          availability_zone       = "us-east-1b"
+          map_public_ip_on_launch = true
+        }
+      }
+      public_route_table = {
+        tags = {
+          Purpose = "Route to internet and other public services."
+        }
+      }
+
+      private_subnets = {
+        private1 = { cidr_block = "10.200.64.0/24", availability_zone = "us-east-1a" }
+        private2 = { cidr_block = "10.200.65.0/24", availability_zone = "us-east-1b" }
+      }
+
+      intra_subnets = {
+        intra1 = { cidr_block = "10.200.128.0/24", availability_zone = "us-east-1a" }
+        intra2 = { cidr_block = "10.200.129.0/24", availability_zone = "us-east-1b" }
+      }
+    }
+    spoke1 = {
+      vpc_cidr                         = var.vpc_cidrs.east["spoke1"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
+
+      intra_subnets = {
+        intra1 = { cidr_block = "10.201.128.0/24", availability_zone = "us-east-1a" }
+        intra2 = { cidr_block = "10.201.129.0/24", availability_zone = "us-east-1b" }
+      }
+    }
+    spoke2 = {
+      vpc_cidr                         = var.vpc_cidrs.east["spoke2"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
+
+      intra_subnets = {
+        intra1 = { cidr_block = "10.202.128.0/24", availability_zone = "us-east-1a" }
+        intra2 = { cidr_block = "10.202.129.0/24", availability_zone = "us-east-1b" }
+      }
+    }
+    spoke3 = {
+      vpc_cidr                         = var.vpc_cidrs.east["spoke3"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
+
+      intra_subnets = {
+        intra1 = { cidr_block = "10.203.128.0/24" }
       }
     }
   }
@@ -184,7 +182,7 @@ locals {
 module "east_vpcs" {
   source             = "../../modules/vpc"
   providers          = { aws = aws.us_east_1 }
-  for_each           = local.vpc_info.east
+  for_each           = local.east_vpcs
   name               = "east-${each.key}"
   vpc                = each.value
   internet_gateway   = lookup(each.value, "internet_gateway", {})
@@ -197,7 +195,7 @@ module "east_vpcs" {
 }
 
 # module "east_transit_gateway" {
-
+#   source = "../../modules/transit-gateway"
 # }
 # module "east_tgw" {
 #   source     = "../../modules/transit-gateway"
