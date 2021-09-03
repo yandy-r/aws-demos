@@ -65,6 +65,9 @@ locals {
 # }
 
 locals {
+  east_s3_endpoint_policy = module.east_data.s3_endpoint_policy
+}
+locals {
   east_vpcs = {
     hub1 = {
       vpc_cidr                         = var.vpc_cidrs.east["hub1"]
@@ -83,7 +86,7 @@ locals {
         s3 = {
           endpoint_type = "Gateway"
           service_type  = "s3"
-          policy        = merge(module.east_data.s3_endpoint_policy, jsonencode({}))
+          policy        = local.east_s3_endpoint_policy
           tags = {
             Purpose = "Hub VPC S3 Endpoint"
           }

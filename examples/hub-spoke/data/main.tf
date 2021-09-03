@@ -14,15 +14,48 @@ terraform {
 data "aws_region" "this" {}
 
 locals {
-  s3_endpoint_policy = jsondecode(data.template_file.s3_endpoint_policy.rendered)
+  s3_endpoint_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "AllowYumRepos",
+        "Principal" : "*",
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:*"
+        ],
+        "Resource" : [
+          "arn:aws:s3:::packages.${data.aws_region.this.name}.amazonaws.com/*",
+          "arn:aws:s3:::repo.${data.aws_region.this.name}.amazonaws.com/*",
+          "arn:aws:s3:::amazonlinux.${data.aws_region.this.name}.amazonaws.com/*"
+        ]
+      }
+    ]
+  })
 }
-data "template_file" "s3_endpoint_policy" {
-  template = file("${path.module}/s3_endpoint_policy.json")
 
-  vars = {
-    region = data.aws_region.this.name
+### -------------------------------------------------------------------------------------------- ###
+### THERE'S A BUG HERE, NEED TO INVESTIGATE AND REPORT
+### POLLICY MENTIONES THAT CAN'T ADD PRINCIPALS BUT AWS POLICY REQUIRES IT
+### -------------------------------------------------------------------------------------------- ###
+data "aws_iam_policy_document" "s3_endpoint_policy" {
+  statement {
+    sid     = "AllowYumRepoAccess"
+    actions = ["s3:*"]
+    effect  = "Allow"
+    resources = [
+      "arn:aws:s3:::packages.${data.aws_region.this.name}.amazonaws.com/*",
+      "arn:aws:s3:::repo.${data.aws_region.this.name}.amazonaws.com/*",
+      "arn:aws:s3:::amazonlinux.${data.aws_region.this.name}.amazonaws.com/*"
+    ]
   }
 }
+
+resource "aws_iam_policy" "s3_endpoint_policy" {
+  name   = "s3_endpoint_policy"
+  policy = data.aws_iam_policy_document.s3_endpoint_policy.json
+}
+### -------------------------------------------------------------------------------------------- ###
 
 # data "aws_ami" "amzn2_linux" {
 #   most_recent = true
