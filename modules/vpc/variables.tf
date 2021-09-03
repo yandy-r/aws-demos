@@ -14,61 +14,19 @@ variable "tags" {
   default     = {}
 }
 
-variable "create_vpc" {
-  type    = bool
-  default = true
+variable "vpc" {
+  type    = any
+  default = {}
 }
 
-variable "vpc_cidr" {
-  type    = string
-  default = ""
-}
-
-variable "vpc_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "instance_tenancy" {
-  type    = string
-  default = "default"
-}
-
-variable "enable_dns_hostnames" {
-  type    = bool
-  default = true
-}
-
-variable "enable_dns_support" {
-  type    = bool
-  default = true
-}
-
-variable "enable_classiclink" {
+variable "create_inet_gw" {
   type    = bool
   default = false
 }
 
-variable "enable_classiclink_dns_support" {
-  type    = bool
-  default = false
-}
-
-variable "assign_generated_ipv6_cidr_block" {
-  type    = bool
-  default = false
-}
-
-variable "create_igw" {
-  type    = bool
-  default = true
-}
-
-variable "igw_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
+variable "inet_gw" {
+  type    = any
+  default = {}
 }
 
 variable "azs" {
@@ -77,19 +35,13 @@ variable "azs" {
 }
 
 variable "public_subnets" {
-  type    = list(string)
-  default = []
+  type    = any
+  default = {}
 }
 
-variable "public_subnet_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "map_public_ip_on_launch" {
-  type    = bool
-  default = true
+variable "public_route_table" {
+  type    = any
+  default = {}
 }
 
 variable "private_subnets" {

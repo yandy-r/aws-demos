@@ -3,63 +3,67 @@
 ### -------------------------------------------------------------------------------------------- ###
 
 output "vpc" {
-  value = aws_vpc.this[0]
+  value = local.vpc
 }
 
 output "vpc_id" {
-  value = aws_vpc.this[0].id
+  value = local.vpc_id
 }
 
 output "vpc_cidr" {
-  value = aws_vpc.this[0].cidr_block
+  value = local.vpc_cidr
 }
 
-output "vpc_arn" {
-  value = aws_vpc.this[0].arn
+output "inet_gw_id" {
+  value = local.inet_gw_id
 }
 
 output "public_subnet_ids" {
-  value = aws_subnet.public[*].id
+  value = local.public_subnet_ids
 }
 
-output "private_subnet_ids" {
-  value = aws_subnet.private[*].id
+output "public_route_table_ids" {
+  value = local.public_subnet_ids
 }
 
-output "intra_subnet_ids" {
-  value = aws_subnet.intra[*].id
-}
+# output "private_subnet_ids" {
+#   value = aws_subnet.private[*].id
+# }
 
-output "public_subnets" {
-  value = aws_subnet.public[*]
-}
+# output "intra_subnet_ids" {
+#   value = aws_subnet.intra[*].id
+# }
 
-output "private_subnets" {
-  value = aws_subnet.private[*]
-}
+# output "public_subnets" {
+#   value = [for v in aws_subnet.public : v]
+# }
 
-output "intra_subnets" {
-  value = aws_subnet.intra[*]
-}
+# output "private_subnets" {
+#   value = aws_subnet.private[*]
+# }
 
-output "public_route_table" {
-  value = aws_route_table.public[*].id
-}
+# output "intra_subnets" {
+#   value = aws_subnet.intra[*]
+# }
 
-output "private_route_table" {
-  value = aws_route_table.private[*].id
-}
+# output "public_route_table" {
+#   value = aws_route_table.public[*].id
+# }
 
-output "intra_route_table" {
-  value = aws_route_table.intra[*].id
-}
+# output "private_route_table" {
+#   value = aws_route_table.private[*].id
+# }
 
-output "igw_id" {
-  description = "The ID of the Internet Gateway"
-  value       = concat(aws_internet_gateway.this[*].id, [""])[0]
-}
+# output "intra_route_table" {
+#   value = aws_route_table.intra[*].id
+# }
 
-output "natgw_id" {
-  description = "The ID of the NAT Gateway"
-  value       = aws_nat_gateway.this[*].id
-}
+# output "igw_id" {
+#   description = "The ID of the Internet Gateway"
+#   value       = concat(aws_internet_gateway.this[*].id, [""])[0]
+# }
+
+# output "natgw_id" {
+#   description = "The ID of the NAT Gateway"
+#   value       = aws_nat_gateway.this[*].id
+# }
