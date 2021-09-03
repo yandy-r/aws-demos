@@ -4,15 +4,10 @@ module "ssh_key" {
   priv_key_path = var.priv_key_path
 }
 
-# data "aws_region" "current" {}
-# data "template_file" "s3_endpoint_policy" {
-#   template = file("${path.module}/templates/s3_endpoint_policy.json")
-
-#   vars = {
-#     bucket_arn = aws_s3_bucket.lab_data.arn
-#     region     = data.aws_region.current.name
-#   }
-# }
+module "east_data" {
+  source    = "./data"
+  providers = { aws = aws.us_east_1 }
+}
 
 locals {
   vpc_ids = {
@@ -88,6 +83,7 @@ locals {
         s3 = {
           endpoint_type = "Gateway"
           service_type  = "s3"
+          policy        = merge(module.east_data.s3_endpoint_policy, jsonencode({}))
           tags = {
             Purpose = "Hub VPC S3 Endpoint"
           }
@@ -263,6 +259,36 @@ locals {
           attach_name      = "hub1"
           route_table_name = "spokes"
         }
+        blackhole_1 = {
+          destination      = "10.0.0.0/8"
+          blackhole        = true
+          route_table_name = "hubs"
+        }
+        blackhole_2 = {
+          destination      = "10.0.0.0/8"
+          blackhole        = true
+          route_table_name = "spokes"
+        }
+        blackhole_3 = {
+          destination      = "172.16.0.0/12"
+          blackhole        = true
+          route_table_name = "hubs"
+        }
+        blackhole_4 = {
+          destination      = "172.16.0.0/12"
+          blackhole        = true
+          route_table_name = "spokes"
+        }
+        blackhole_5 = {
+          destination      = "192.168.0.0/16"
+          blackhole        = true
+          route_table_name = "hubs"
+        }
+        blackhole_6 = {
+          destination      = "192.168.0.0/16"
+          blackhole        = true
+          route_table_name = "spokes"
+        }
       }
     }
   }
@@ -280,51 +306,6 @@ module "east_transit_gateway" {
   route_table_propagations = lookup(each.value, "route_table_propagations", {})
   transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
 }
-
-# module "east_tgw" {
-#   source     = "../../modules/transit-gateway"
-#   providers  = { aws = aws.us_east_1 }
-#   create_tgw = true
-#   name       = "east-tgw"
-
-#   tgw_routes = {
-#     spoke_default = {
-#       destination      = "0.0.0.0/0"
-#       attach_id        = "hub1"
-#       route_table_name = "spokes"
-#     }
-#     blackhole_1 = {
-#       destination      = "10.0.0.0/8"
-#       blackhole        = true
-#       route_table_name = "hubs"
-#     }
-#     blackhole_2 = {
-#       destination      = "10.0.0.0/8"
-#       blackhole        = true
-#       route_table_name = "spokes"
-#     }
-#     blackhole_3 = {
-#       destination      = "172.16.0.0/12"
-#       blackhole        = true
-#       route_table_name = "hubs"
-#     }
-#     blackhole_4 = {
-#       destination      = "172.16.0.0/12"
-#       blackhole        = true
-#       route_table_name = "spokes"
-#     }
-#     blackhole_5 = {
-#       destination      = "192.168.0.0/16"
-#       blackhole        = true
-#       route_table_name = "hubs"
-#     }
-#     blackhole_6 = {
-#       destination      = "192.168.0.0/16"
-#       blackhole        = true
-#       route_table_name = "spokes"
-#     }
-#   }
-# }
 
 locals {
   routes = {
@@ -353,67 +334,6 @@ resource "aws_route" "east_routes" {
 #   key_name      = "aws-test-key"
 #   priv_key      = module.ssh_key.priv_key
 #   priv_key_path = var.priv_key_path
-
-#   craate_custom_eni = true
-#   custom_eni_props = {
-#     hub1_public1 = {
-#       subnet_id       = local.public_subnets.east.hubs["hub1"][0].id
-#       security_groups = null
-#       private_ips     = [cidrhost(local.public_subnets.east.hubs["hub1"][0].cidr_block, 10)]
-#       tags = {
-#         Attach = "For HUB1 Public ENI"
-#       }
-#     }
-#     spoke1_intra1 = {
-#       subnet_id       = local.intra_subnets.east.spokes["spoke1"][0].id
-#       security_groups = null
-#       private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke1"][0].cidr_block, 10)]
-#       tags = {
-#         Attach = "For HUB1 Public ENI"
-#       }
-#     }
-#     spoke1_intra2 = {
-#       subnet_id       = local.intra_subnets.east.spokes["spoke1"][1].id
-#       security_groups = null
-#       private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke1"][1].cidr_block, 10)]
-#       tags = {
-#         Attach = "For HUB1 Public ENI"
-#       }
-#     }
-#     spoke2_intra1 = {
-#       subnet_id       = local.intra_subnets.east.spokes["spoke2"][0].id
-#       security_groups = null
-#       private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke2"][0].cidr_block, 10)]
-#       tags = {
-#         Attach = "For HUB1 Public ENI"
-#       }
-#     }
-#     spoke2_intra2 = {
-#       subnet_id       = local.intra_subnets.east.spokes["spoke2"][1].id
-#       security_groups = null
-#       private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke2"][1].cidr_block, 10)]
-#       tags = {
-#         Attach = "For HUB1 Public ENI"
-#       }
-#     }
-#     spoke3_intra1 = {
-#       subnet_id       = local.intra_subnets.east.spokes["spoke3"][0].id
-#       security_groups = null
-#       private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke3"][0].cidr_block, 10)]
-#       tags = {
-#         Attach = "For HUB1 Public ENI"
-#       }
-#     }
-#     spoke3_intra2 = {
-#       subnet_id       = local.intra_subnets.east.spokes["spoke3"][1].id
-#       security_groups = null
-#       private_ips     = [cidrhost(local.intra_subnets.east.spokes["spoke3"][1].cidr_block, 10)]
-#       tags = {
-#         Attach = "For HUB1 Public ENI"
-#       }
-#     }
-#   }
-# }
 
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1
