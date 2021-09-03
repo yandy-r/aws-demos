@@ -10,36 +10,7 @@ module "east_data" {
 }
 
 locals {
-  vpc_ids = {
-    east = { for k, v in module.east_vpcs : k => v.vpc_id }
-  }
-  vpc_cidrs = {
-    east = { for k, v in module.east_vpcs : k => v.vpc_cidr }
-  }
-  internet_gateway_ids = {
-    east = { for k, v in module.east_vpcs : k => v.internet_gateway_id }
-  }
-  nat_gateway_ids = {
-    east = { for k, v in module.east_vpcs : k => v.nat_gateway_id }
-  }
-  public_subnet_ids = {
-    east = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
-  }
-  public_route_table_ids = {
-    east = { for k, v in module.east_vpcs : k => v.public_route_table_id }
-  }
-  private_subnet_ids = {
-    east = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
-  }
-  private_route_table_ids = {
-    east = { for k, v in module.east_vpcs : k => v.private_route_table_id }
-  }
-  intra_subnet_ids = {
-    east = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
-  }
-  intra_route_table_ids = {
-    east = { for k, v in module.east_vpcs : k => v.intra_route_table_id }
-  }
+  east_s3_endpoint_policy = module.east_data.s3_endpoint_policy
 }
 
 # output "vpc_ids" {
@@ -64,9 +35,6 @@ locals {
 #   value = local.intra_route_table_ids
 # }
 
-locals {
-  east_s3_endpoint_policy = module.east_data.s3_endpoint_policy
-}
 locals {
   east_vpcs = {
     hub1 = {
@@ -178,6 +146,39 @@ module "east_vpcs" {
   private_subnets    = lookup(each.value, "private_subnets", {})
   intra_subnets      = lookup(each.value, "intra_subnets", {})
   vpc_endpoints      = lookup(each.value, "vpc_endpoints", {})
+}
+
+locals {
+  vpc_ids = {
+    east = { for k, v in module.east_vpcs : k => v.vpc_id }
+  }
+  vpc_cidrs = {
+    east = { for k, v in module.east_vpcs : k => v.vpc_cidr }
+  }
+  internet_gateway_ids = {
+    east = { for k, v in module.east_vpcs : k => v.internet_gateway_id }
+  }
+  nat_gateway_ids = {
+    east = { for k, v in module.east_vpcs : k => v.nat_gateway_id }
+  }
+  public_subnet_ids = {
+    east = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
+  }
+  public_route_table_ids = {
+    east = { for k, v in module.east_vpcs : k => v.public_route_table_id }
+  }
+  private_subnet_ids = {
+    east = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
+  }
+  private_route_table_ids = {
+    east = { for k, v in module.east_vpcs : k => v.private_route_table_id }
+  }
+  intra_subnet_ids = {
+    east = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
+  }
+  intra_route_table_ids = {
+    east = { for k, v in module.east_vpcs : k => v.intra_route_table_id }
+  }
 }
 
 locals {
