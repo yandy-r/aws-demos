@@ -29,6 +29,21 @@ variable "inet_gw" {
   default = {}
 }
 
+variable "nat_eip" {
+  type    = any
+  default = {}
+}
+
+variable "nat_gw" {
+  type    = any
+  default = {}
+}
+
+variable "num_nat_gw" {
+  type    = number
+  default = 0
+}
+
 variable "azs" {
   type    = list(string)
   default = []
@@ -45,60 +60,23 @@ variable "public_route_table" {
 }
 
 variable "private_subnets" {
-  type    = list(string)
-  default = []
+  type    = any
+  default = {}
+}
+
+variable "private_route_table" {
+  type    = any
+  default = {}
 }
 
 variable "intra_subnets" {
-  type    = list(string)
-  default = []
+  type    = any
+  default = {}
 }
 
-variable "private_subnet_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "intra_subnet_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "nat_gateway_count" {
-  type    = number
-  default = 1
-}
-
-variable "nat_eip_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "nat_gateway_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "public_route_table_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "private_route_table_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
-}
-
-variable "intra_route_table_tags" {
-  type        = map(string)
-  description = "Tags applied and merged with tags variable to VPC"
-  default     = {}
+variable "intra_route_table" {
+  type    = any
+  default = {}
 }
 
 variable "vpc_endpoints" {

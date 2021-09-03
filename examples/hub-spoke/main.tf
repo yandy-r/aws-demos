@@ -16,22 +16,22 @@ module "ssh_key" {
 
 locals {
   vpcs = {
-    east = { for k, v in module.east_hub_vpc : k => v.vpc }
+    east = { for k, v in module.east_vpcs : k => v.vpc }
   }
   vpc_ids = {
-    east = { for k, v in module.east_hub_vpc : k => v.vpc_id }
+    east = { for k, v in module.east_vpcs : k => v.vpc_id }
   }
   vpc_cidrs = {
-    east = { for k, v in module.east_hub_vpc : k => v.vpc_cidr }
+    east = { for k, v in module.east_vpcs : k => v.vpc_cidr }
   }
   inet_gw_ids = {
-    east = { for k, v in module.east_hub_vpc : k => v.inet_gw_id }
+    east = { for k, v in module.east_vpcs : k => v.inet_gw_id }
   }
   public_subnet_ids = {
-    east = { for k, v in module.east_hub_vpc : k => v.public_subnet_ids }
+    east = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
   }
   public_route_table_ids = {
-    east = { for k, v in module.east_hub_vpc : k => v.public_route_table_ids }
+    east = { for k, v in module.east_vpcs : k => v.public_route_table_ids }
   }
 }
 
@@ -41,19 +41,19 @@ locals {
 output "vpc_ids" {
   value = local.vpc_ids
 }
-output "vpc_cidrs" {
-  value = local.vpc_cidrs
-}
-output "inet_gw_ids" {
-  value = local.inet_gw_ids
-}
-output "public_subnet_ids" {
-  value = local.public_subnet_ids
-}
+# output "vpc_cidrs" {
+#   value = local.vpc_cidrs
+# }
+# output "inet_gw_ids" {
+#   value = local.inet_gw_ids
+# }
+# output "public_subnet_ids" {
+#   value = local.public_subnet_ids
+# }
 
 locals {
   vpc_info = {
-    east_hubs = {
+    east = {
       hub1 = {
         vpc_cidr                         = var.vpc_cidrs.east["hub1"]
         instance_tenancy                 = "default"
@@ -63,37 +63,50 @@ locals {
         enable_classiclink_dns_support   = false
         assign_generated_ipv6_cidr_block = false
         create_inet_gw                   = true
-        inet_gw_tags = {
-          Name = "Hub1InetGW"
+        num_nat_gw                       = 1
+
+        public_subnets = {
+          cidr_blocks = [
+            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 0),
+            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 1),
+          ]
+          availability_zones      = ["us-east-1c", "us-east-1d"]
+          map_public_ip_on_launch = true
         }
-        create_nat_gw = true
+        public_route_table = {
+          tags = {
+            Purpose = "Route to internet and other public services."
+          }
+        }
+        private_subnets = {
+          cidr_blocks = [
+            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 64),
+            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 65),
+          ]
+        }
+        intra_subnets = {
+          cidr_blocks = [
+            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 128),
+            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 129),
+          ]
+        }
       }
     }
   }
 }
 
-module "east_hub_vpc" {
+module "east_vpcs" {
   source    = "../../modules/vpc"
   providers = { aws = aws.us_east_1 }
-  for_each  = local.vpc_info.east_hubs
+  for_each  = local.vpc_info.east
 
-  name = "east-${each.key}"
-  vpc  = each.value
-
-  create_inet_gw = true
-  inet_gw        = {}
-  public_subnets = {
-    cidr_blocks = [
-      cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 0),
-      cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 1),
-    ]
-    availability_zones      = ["us-east-1c", "us-east-1d"]
-    map_public_ip_on_launch = true
-  }
-  # private_subnets = [
-  #   cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 128),
-  #   cidrsubnet(var.east_hub_vpc_cidrs[each.key], 8, 129)
-  # ]
+  name               = "east-${each.key}"
+  vpc                = each.value
+  inet_gw            = {}
+  public_subnets     = lookup(each.value, "public_subnets", null)
+  public_route_table = lookup(each.value, "public_route_table", null)
+  private_subnets    = lookup(each.value, "private_subnets", null)
+  intra_subnets      = lookup(each.value, "intra_subnets", null)
 
   vpc_endpoints = {
     s3 = {
