@@ -19,10 +19,6 @@ data "aws_availability_zones" "azs" {
   state = "available"
 }
 
-locals {
-  azs = data.aws_availability_zones.azs
-}
-
 resource "aws_vpc" "this" {
   count                            = length(var.vpc) > 0 ? 1 : 0
   cidr_block                       = var.vpc["vpc_cidr"]
@@ -43,16 +39,17 @@ resource "aws_vpc" "this" {
 }
 
 locals {
+  azs                    = data.aws_availability_zones.azs
   vpc_id                 = one(aws_vpc.this[*].id)
   vpc_cidr               = one(aws_vpc.this[*].cidr_block)
-  internet_gateway_id    = one(aws_internet_gateway.this[*].id)
   nat_gateway_id         = aws_nat_gateway.this[*].id
-  public_subnet_ids      = [for v in aws_subnet.public : v]
-  public_route_table_id  = one(aws_route_table.public[*].id)
-  private_subnet_ids     = [for v in aws_subnet.private : v]
-  private_route_table_id = one(aws_route_table.private[*].id)
-  intra_subnet_ids       = [for v in aws_subnet.intra : v]
+  intra_subnet_ids       = [for v in aws_subnet.intra : v.id]
+  public_subnet_ids      = [for v in aws_subnet.public : v.id]
+  private_subnet_ids     = [for v in aws_subnet.private : v.id]
+  internet_gateway_id    = one(aws_internet_gateway.this[*].id)
   intra_route_table_id   = one(aws_route_table.intra[*].id)
+  public_route_table_id  = one(aws_route_table.public[*].id)
+  private_route_table_id = one(aws_route_table.private[*].id)
   route_table_ids        = compact([local.public_route_table_id, local.private_route_table_id, local.intra_route_table_id])
 }
 

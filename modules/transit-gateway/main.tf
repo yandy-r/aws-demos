@@ -16,30 +16,40 @@ terraform {
 ### -------------------------------------------------------------------------------------------- ###
 
 resource "aws_ec2_transit_gateway" "this" {
-  count                           = var.create_tgw ? 1 : 0
-  amazon_side_asn                 = var.amazon_side_asn
-  auto_accept_shared_attachments  = var.auto_accept_shared_attachments
-  default_route_table_association = var.default_route_table_association
-  default_route_table_propagation = var.default_route_table_propagation
-  dns_support                     = var.dns_support
-  vpn_ecmp_support                = var.vpn_ecmp_support
+  count                           = length(var.transit_gateway) > 0 ? 1 : 0
+  dns_support                     = lookup(var.transit_gateway, "dns_support", "enable")
+  description                     = lookup(var.transit_gateway, "description", null)
+  amazon_side_asn                 = lookup(var.transit_gateway, "amazon_side_asn", 64512)
+  vpn_ecmp_support                = lookup(var.transit_gateway, "vpn_ecmp_support", "enable")
+  auto_accept_shared_attachments  = lookup(var.transit_gateway, "auto_accept_shared_attachments", "disable")
+  default_route_table_association = lookup(var.transit_gateway, "default_route_table_association", "disable")
+  default_route_table_propagation = lookup(var.transit_gateway, "default_route_table_propagation", "disable")
 
   tags = merge(
     {
-      Name = "${var.name}-${count.index + 1}"
+      Name = "${var.name}"
     },
     var.tags,
-    var.tgw_tags,
+    lookup(var.transit_gateway, "tags", null)
   )
 }
 
+locals {
+  transit_gateway_id = one(aws_ec2_transit_gateway.this[*].id)
+  vpc_attachment_ids = { for k, v in aws_ec2_transit_gateway_vpc_attachment.this : k => v.id }
+  route_table_ids    = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
+}
+
 resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
-  for_each                                        = { for k, v in var.vpc_attachments : k => v if length(var.vpc_attachments) > 0 }
-  transit_gateway_id                              = lookup(each.value, "tgw_id", var.create_tgw ? aws_ec2_transit_gateway.this[0].id : null)
+  for_each                                        = var.vpc_attachments
   vpc_id                                          = each.value["vpc_id"]
   subnet_ids                                      = each.value["subnet_ids"]
-  transit_gateway_default_route_table_association = lookup(each.value, "default_asssociation", false)
-  transit_gateway_default_route_table_propagation = lookup(each.value, "default_propagation", false)
+  transit_gateway_id                              = lookup(each.value, "transit_gateway_id", local.transit_gateway_id)
+  ipv6_support                                    = lookup(each.value, "ipv6_support", "disable")
+  dns_support                                     = lookup(each.value, "dns_support", "enable")
+  appliance_mode_support                          = lookup(each.value, "appliance_mode_support", "disable")
+  transit_gateway_default_route_table_association = lookup(each.value, "transit_gateway_default_route_table_association", false)
+  transit_gateway_default_route_table_propagation = lookup(each.value, "transit_gateway_default_route_table_propagation", false)
 
   tags = merge(
     {
@@ -51,8 +61,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 }
 
 resource "aws_ec2_transit_gateway_route_table" "this" {
-  for_each           = { for k, v in var.route_tables : k => v if length(var.route_tables) > 0 }
-  transit_gateway_id = aws_ec2_transit_gateway.this[0].id
+  for_each           = var.route_tables
+  transit_gateway_id = lookup(each.value, "transit_gateway_id", local.transit_gateway_id)
 
   tags = merge(
     {
@@ -64,23 +74,23 @@ resource "aws_ec2_transit_gateway_route_table" "this" {
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "this" {
-  for_each                       = { for k, v in var.route_table_associations : k => v if length(var.route_table_associations) > 0 }
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.route_table_name].id)
+  for_each                       = var.route_table_associations
+  transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", local.vpc_attachment_ids[each.key])
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), local.route_table_ids[each.value.route_table_name])
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
-  for_each                       = { for k, v in var.route_table_propagations : k => v if length(var.route_table_propagations) > 0 }
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.value.attach_name].id
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.route_table_name].id)
+  for_each                       = var.route_table_propagations
+  transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", local.vpc_attachment_ids[each.value.attach_name])
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), local.route_table_ids[each.value.route_table_name])
 }
 
 resource "aws_ec2_transit_gateway_route" "this" {
-  for_each                       = { for k, v in var.tgw_routes : k => v if length(var.tgw_routes) > 0 }
+  for_each                       = var.transit_gateway_routes
   blackhole                      = lookup(each.value, "blackhole", null)
   destination_cidr_block         = each.value.destination
-  transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? aws_ec2_transit_gateway_vpc_attachment.this[each.value.attach_id].id : null
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), aws_ec2_transit_gateway_route_table.this[each.value.route_table_name].id)
+  transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? local.vpc_attachment_ids[each.value.attach_name] : null
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), local.route_table_ids[each.value.route_table_name])
 }
 
 # ### FLOW LOGS

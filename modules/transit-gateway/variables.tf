@@ -9,44 +9,9 @@ variable "tags" {
   default = {}
 }
 
-variable "tgw_tags" {
-  type    = map(string)
+variable "transit_gateway" {
+  type    = any
   default = {}
-}
-
-variable "create_tgw" {
-  type    = bool
-  default = true
-}
-
-variable "amazon_side_asn" {
-  type    = string
-  default = "64512"
-}
-
-variable "auto_accept_shared_attachments" {
-  type    = string
-  default = "disable"
-}
-
-variable "default_route_table_association" {
-  type    = string
-  default = "disable"
-}
-
-variable "default_route_table_propagation" {
-  type    = string
-  default = "disable"
-}
-
-variable "dns_support" {
-  type    = string
-  default = "enable"
-}
-
-variable "vpn_ecmp_support" {
-  type    = string
-  default = "enable"
 }
 
 variable "vpc_attachments" {
@@ -69,7 +34,7 @@ variable "route_table_propagations" {
   default = {}
 }
 
-variable "tgw_routes" {
+variable "transit_gateway_routes" {
   type    = any
   default = {}
 }
