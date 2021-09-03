@@ -45,8 +45,8 @@ resource "aws_vpc" "this" {
 locals {
   vpc_id                 = one(aws_vpc.this[*].id)
   vpc_cidr               = one(aws_vpc.this[*].cidr_block)
-  inet_gw_id             = one(aws_internet_gateway.this[*].id)
-  nat_gw_id              = aws_nat_gateway.this[*].id
+  internet_gateway_id    = one(aws_internet_gateway.this[*].id)
+  nat_gateway_id         = aws_nat_gateway.this[*].id
   public_subnet_ids      = [for v in aws_subnet.public : v]
   public_route_table_id  = one(aws_route_table.public[*].id)
   private_subnet_ids     = [for v in aws_subnet.private : v]
@@ -57,20 +57,20 @@ locals {
 }
 
 resource "aws_internet_gateway" "this" {
-  count  = lookup(var.vpc, "create_inet_gw", false) || var.create_inet_gw ? 1 : 0
-  vpc_id = lookup(var.inet_gw, "vpc_id", local.vpc_id)
+  count  = lookup(var.vpc, "create_internet_gateway", false) || var.create_internet_gateway ? 1 : 0
+  vpc_id = lookup(var.internet_gateway, "vpc_id", local.vpc_id)
 
   tags = merge(
     {
       Name = "${var.name}"
     },
     var.tags,
-    lookup(var.inet_gw, "tags", null)
+    lookup(var.internet_gateway, "tags", null)
   )
 }
 
 resource "aws_eip" "nat" {
-  count = lookup(var.vpc, "num_nat_gw", 0) > 0 ? var.vpc["num_nat_gw"] : var.num_nat_gw > 0 ? var.num_nat_gw : 0
+  count = lookup(var.vpc, "num_nat_gateway", 0) > 0 ? var.vpc["num_nat_gateway"] : var.num_nat_gateway > 0 ? var.num_nat_gateway : 0
   vpc   = true
 
   tags = merge(
@@ -83,7 +83,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "this" {
-  count         = lookup(var.vpc, "num_nat_gw", 0) > 0 ? var.vpc["num_nat_gw"] : var.num_nat_gw > 0 ? var.num_nat_gw : 0
+  count         = lookup(var.vpc, "num_nat_gateway", 0) > 0 ? var.vpc["num_nat_gateway"] : var.num_nat_gateway > 0 ? var.num_nat_gateway : 0
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = element([for v in aws_subnet.public : v.id], count.index)
 
@@ -92,7 +92,7 @@ resource "aws_nat_gateway" "this" {
       Name = "${var.name}-natgw-${count.index + 1}"
     },
     var.tags,
-    lookup(var.nat_gw, "tags", null)
+    lookup(var.nat_gateway, "tags", null)
   )
 
   depends_on = [aws_internet_gateway.this]
@@ -211,15 +211,15 @@ resource "aws_route_table_association" "intra" {
   route_table_id = aws_route_table.intra[0].id
 }
 
-resource "aws_route" "inet_gw_default" {
+resource "aws_route" "internet_gateway_default" {
   count                  = length(aws_internet_gateway.this) > 0 ? 1 : 0
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.this[0].id
 }
 
-resource "aws_route" "nat_gw_default" {
-  count                  = lookup(var.vpc, "num_nat_gw", 0) > 0 ? var.vpc["num_nat_gw"] : var.num_nat_gw > 0 ? var.num_nat_gw : 0
+resource "aws_route" "nat_gateway_default" {
+  count                  = lookup(var.vpc, "num_nat_gateway", 0) > 0 ? var.vpc["num_nat_gateway"] : var.num_nat_gateway > 0 ? var.num_nat_gateway : 0
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.this[0].id

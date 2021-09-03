@@ -21,11 +21,11 @@ locals {
   vpc_cidrs = {
     east = { for k, v in module.east_vpcs : k => v.vpc_cidr }
   }
-  inet_gw_ids = {
-    east = { for k, v in module.east_vpcs : k => v.inet_gw_id }
+  internet_gateway_ids = {
+    east = { for k, v in module.east_vpcs : k => v.internet_gateway_id }
   }
-  nat_gw_ids = {
-    east = { for k, v in module.east_vpcs : k => v.nat_gw_id }
+  nat_gateway_ids = {
+    east = { for k, v in module.east_vpcs : k => v.nat_gateway_id }
   }
   public_subnet_ids = {
     east = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
@@ -56,8 +56,8 @@ output "vpc_ids" {
 # output "vpc_cidrs" {
 #   value = local.vpc_cidrs
 # }
-# output "inet_gw_ids" {
-#   value = local.inet_gw_ids
+# output "internet_gateway_ids" {
+#   value = local.internet_gateway_ids
 # }
 # output "public_subnet_ids" {
 #   value = local.public_subnet_ids
@@ -83,16 +83,16 @@ locals {
         enable_classiclink               = false
         enable_classiclink_dns_support   = false
         assign_generated_ipv6_cidr_block = false
-        create_inet_gw                   = true
-        num_nat_gw                       = 1
+        create_internet_gateway          = true
+        num_nat_gateway                  = 1
 
-        inet_gw = {
+        internet_gateway = {
           tags = {
             Purpose = "Route stuff to the internet"
           }
         }
 
-        nat_gw = {
+        nat_gateway = {
           tags = {
             Purpose = "Route private stuff to the internet"
           }
@@ -187,8 +187,8 @@ module "east_vpcs" {
   for_each           = local.vpc_info.east
   name               = "east-${each.key}"
   vpc                = each.value
-  inet_gw            = lookup(each.value, "inet_gw", {})
-  nat_gw             = lookup(each.value, "nat_gw", {})
+  internet_gateway   = lookup(each.value, "internet_gateway", {})
+  nat_gateway        = lookup(each.value, "nat_gateway", {})
   public_subnets     = lookup(each.value, "public_subnets", {})
   public_route_table = lookup(each.value, "public_route_table", {})
   private_subnets    = lookup(each.value, "private_subnets", {})
@@ -196,26 +196,9 @@ module "east_vpcs" {
   vpc_endpoints      = lookup(each.value, "vpc_endpoints", {})
 }
 
-locals {
-  routes = {
-    east = {
-      east_public_test = {
-        destination_cidr_block = "10.0.0.0/8"
-        gateway_id             = local.inet_gw_ids.east["hub1"]
-        route_table_id         = local.public_route_table_ids.east["hub1"]
-      }
-    }
-  }
-}
+# module "east_transit_gateway" {
 
-resource "aws_route" "east_routes" {
-  provider               = aws.us_east_1
-  for_each               = local.routes.east
-  route_table_id         = each.value["route_table_id"]
-  destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
-  gateway_id             = lookup(each.value, "gateway_id", null)
-}
-
+# }
 # module "east_tgw" {
 #   source     = "../../modules/transit-gateway"
 #   providers  = { aws = aws.us_east_1 }
@@ -333,6 +316,26 @@ resource "aws_route" "east_routes" {
 #     }
 #   }
 # }
+
+locals {
+  routes = {
+    east = {
+      east_public_test = {
+        destination_cidr_block = "10.0.0.0/8"
+        gateway_id             = local.internet_gateway_ids.east["hub1"]
+        route_table_id         = local.public_route_table_ids.east["hub1"]
+      }
+    }
+  }
+}
+
+resource "aws_route" "east_routes" {
+  provider               = aws.us_east_1
+  for_each               = local.routes.east
+  route_table_id         = each.value["route_table_id"]
+  destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
+  gateway_id             = lookup(each.value, "gateway_id", null)
+}
 
 # module "east_ec2" {
 #   source        = "../../modules/ec2"

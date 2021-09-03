@@ -19,12 +19,12 @@ variable "vpc" {
   default = {}
 }
 
-variable "create_inet_gw" {
+variable "create_internet_gateway" {
   type    = bool
   default = false
 }
 
-variable "inet_gw" {
+variable "internet_gateway" {
   type    = any
   default = {}
 }
@@ -34,12 +34,12 @@ variable "nat_eip" {
   default = {}
 }
 
-variable "nat_gw" {
+variable "nat_gateway" {
   type    = any
   default = {}
 }
 
-variable "num_nat_gw" {
+variable "num_nat_gateway" {
   type    = number
   default = 0
 }
