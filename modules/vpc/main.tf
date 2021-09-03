@@ -226,11 +226,19 @@ resource "aws_route" "nat_gw_default" {
 }
 
 resource "aws_route" "this" {
-  for_each               = var.routes
-  route_table_id         = lookup(each.value, "route_table_id", null)
-  destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
-  gateway_id             = lookup(each.value, "gateway_id", null)
-  nat_gateway_id         = lookup(each.value, "nat_gateway_id", null)
+  for_each                  = var.routes
+  route_table_id            = lookup(each.value, "route_table_id", null)
+  destination_cidr_block    = lookup(each.value, "destination_cidr_block", null)
+  gateway_id                = lookup(each.value, "gateway_id", null)
+  nat_gateway_id            = lookup(each.value, "nat_gateway_id", null)
+  instance_id               = lookup(each.value, "instance_id", null)
+  local_gateway_id          = lookup(each.value, "local_gateway_id", null)
+  vpc_endpoint_id           = lookup(each.value, "vpc_endpoint_id", null)
+  transit_gateway_id        = lookup(each.value, "transit_gateway_id", null)
+  carrier_gateway_id        = lookup(each.value, "carrier_gateway_id", null)
+  network_interface_id      = lookup(each.value, "network_interface_id", null)
+  egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
+  vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
 }
 
 
