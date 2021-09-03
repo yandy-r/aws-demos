@@ -31,19 +31,19 @@ locals {
     east = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
   }
   public_route_table_ids = {
-    east = { for k, v in module.east_vpcs : k => v.public_route_table_ids }
+    east = { for k, v in module.east_vpcs : k => v.public_route_table_id }
   }
   private_subnet_ids = {
     east = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
   }
   private_route_table_ids = {
-    east = { for k, v in module.east_vpcs : k => v.private_route_table_ids }
+    east = { for k, v in module.east_vpcs : k => v.private_route_table_id }
   }
   intra_subnet_ids = {
     east = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
   }
   intra_route_table_ids = {
-    east = { for k, v in module.east_vpcs : k => v.intra_route_table_ids }
+    east = { for k, v in module.east_vpcs : k => v.intra_route_table_id }
   }
 }
 
@@ -109,14 +109,17 @@ locals {
         }
 
         public_subnets = {
-          cidr_blocks = [
-            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 0),
-            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 1),
-          ]
-          availability_zones      = ["us-east-1c", "us-east-1d"]
-          map_public_ip_on_launch = true
+          public1 = {
+            cidr_block              = "10.200.0.0/24"
+            availability_zone       = "us-east-1a"
+            map_public_ip_on_launch = true
+          }
+          public2 = {
+            cidr_block              = "10.200.1.0/24"
+            availability_zone       = "us-east-1b"
+            map_public_ip_on_launch = true
+          }
         }
-
         public_route_table = {
           tags = {
             Purpose = "Route to internet and other public services."
@@ -124,17 +127,13 @@ locals {
         }
 
         private_subnets = {
-          cidr_blocks = [
-            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 64),
-            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 65),
-          ]
+          private1 = { cidr_block = "10.200.64.0/24", availability_zone = "us-east-1a" }
+          private2 = { cidr_block = "10.200.65.0/24", availability_zone = "us-east-1b" }
         }
 
         intra_subnets = {
-          cidr_blocks = [
-            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 128),
-            cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 129),
-          ]
+          intra1 = { cidr_block = "10.200.128.0/24", availability_zone = "us-east-1a" }
+          intra2 = { cidr_block = "10.200.129.0/24", availability_zone = "us-east-1b" }
         }
       }
       spoke1 = {
@@ -147,10 +146,8 @@ locals {
         assign_generated_ipv6_cidr_block = false
 
         intra_subnets = {
-          cidr_blocks = [
-            cidrsubnet(var.vpc_cidrs.east["spoke1"], 8, 128),
-            cidrsubnet(var.vpc_cidrs.east["spoke1"], 8, 129),
-          ]
+          intra1 = { cidr_block = "10.201.128.0/24", availability_zone = "us-east-1a" }
+          intra2 = { cidr_block = "10.201.129.0/24", availability_zone = "us-east-1b" }
         }
       }
       spoke2 = {
@@ -163,10 +160,8 @@ locals {
         assign_generated_ipv6_cidr_block = false
 
         intra_subnets = {
-          cidr_blocks = [
-            cidrsubnet(var.vpc_cidrs.east["spoke2"], 8, 128),
-            cidrsubnet(var.vpc_cidrs.east["spoke2"], 8, 129),
-          ]
+          intra1 = { cidr_block = "10.202.128.0/24", availability_zone = "us-east-1a" }
+          intra2 = { cidr_block = "10.202.129.0/24", availability_zone = "us-east-1b" }
         }
       }
       spoke3 = {
@@ -179,9 +174,7 @@ locals {
         assign_generated_ipv6_cidr_block = false
 
         intra_subnets = {
-          cidr_blocks = [
-            cidrsubnet(var.vpc_cidrs.east["spoke3"], 8, 128)
-          ]
+          intra1 = { cidr_block = "10.203.128.0/24" }
         }
       }
     }
@@ -208,8 +201,8 @@ locals {
     east = {
       east_public_test = {
         destination_cidr_block = "10.0.0.0/8"
-        gateway_id             = local.inet_gw_ids.east["hub1"][0]
-        route_table_id         = local.public_route_table_ids.east["hub1"][0]
+        gateway_id             = local.inet_gw_ids.east["hub1"]
+        route_table_id         = local.public_route_table_ids.east["hub1"]
       }
     }
   }

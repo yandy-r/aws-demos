@@ -43,17 +43,17 @@ resource "aws_vpc" "this" {
 }
 
 locals {
-  vpc_id                  = element(concat(aws_vpc.this[*].id, [""]), 0)
-  vpc_cidr                = aws_vpc.this[*].cidr_block
-  inet_gw_id              = aws_internet_gateway.this[*].id
-  nat_gw_id               = aws_nat_gateway.this[*].id
-  public_subnet_ids       = aws_subnet.public[*].id
-  public_route_table_ids  = aws_route_table.public[*].id
-  private_subnet_ids      = aws_subnet.private[*].id
-  private_route_table_ids = aws_route_table.private[*].id
-  intra_subnet_ids        = aws_subnet.intra[*].id
-  intra_route_table_ids   = aws_route_table.intra[*].id
-  route_table_ids         = compact(concat(local.public_route_table_ids, local.private_route_table_ids, local.intra_route_table_ids))
+  vpc_id                 = one(aws_vpc.this[*].id)
+  vpc_cidr               = one(aws_vpc.this[*].cidr_block)
+  inet_gw_id             = one(aws_internet_gateway.this[*].id)
+  nat_gw_id              = aws_nat_gateway.this[*].id
+  public_subnet_ids      = [for v in aws_subnet.public : v]
+  public_route_table_id  = one(aws_route_table.public[*].id)
+  private_subnet_ids     = [for v in aws_subnet.private : v]
+  private_route_table_id = one(aws_route_table.private[*].id)
+  intra_subnet_ids       = [for v in aws_subnet.intra : v]
+  intra_route_table_id   = one(aws_route_table.intra[*].id)
+  route_table_ids        = compact([local.public_route_table_id, local.private_route_table_id, local.intra_route_table_id])
 }
 
 resource "aws_internet_gateway" "this" {
@@ -85,7 +85,7 @@ resource "aws_eip" "nat" {
 resource "aws_nat_gateway" "this" {
   count         = lookup(var.vpc, "num_nat_gw", 0) > 0 ? var.vpc["num_nat_gw"] : var.num_nat_gw > 0 ? var.num_nat_gw : 0
   allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
+  subnet_id     = element([for v in aws_subnet.public : v.id], count.index)
 
   tags = merge(
     {
@@ -98,24 +98,32 @@ resource "aws_nat_gateway" "this" {
   depends_on = [aws_internet_gateway.this]
 }
 
+resource "random_shuffle" "subnet_azs" {
+  input        = local.azs.names
+  result_count = length(local.azs.names)
+}
+resource "random_integer" "this" {
+  min = 1
+  max = length(local.azs.names) - 1
+}
 resource "aws_subnet" "public" {
-  count                   = length(lookup(var.public_subnets, "cidr_blocks", {})) > 0 ? length(var.public_subnets.cidr_blocks) : 0
-  vpc_id                  = lookup(var.public_subnets, "vpc_id", local.vpc_id)
-  cidr_block              = var.public_subnets.cidr_blocks[count.index]
-  availability_zone       = lookup(var.public_subnets, "availability_zones", true) != true ? var.public_subnets.availability_zones[count.index] : local.azs.names[count.index]
-  map_public_ip_on_launch = lookup(var.public_subnets, "map_public_ip_on_launch", true)
+  for_each                = var.public_subnets
+  vpc_id                  = lookup(each.value, "vpc_id", local.vpc_id)
+  cidr_block              = each.value["cidr_block"]
+  availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
+  map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", true)
 
   tags = merge(
     {
-      Name = "${var.name}-public-${count.index + 1}"
+      Name = "${var.name}-${each.key}"
     },
     var.tags,
-    lookup(var.public_subnets, "tags", null)
+    lookup(each.value, "tags", null)
   )
 }
 
 resource "aws_route_table" "public" {
-  count  = length(lookup(var.public_subnets, "cidr_blocks", {})) > 0 ? 1 : 0
+  count  = length(var.public_subnets) > 0 ? 1 : 0
   vpc_id = lookup(var.public_route_table, "vpc_id", local.vpc_id)
 
   tags = merge(
@@ -128,29 +136,29 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  for_each       = { for k, v in aws_subnet.public : k => v if length(aws_subnet.public) > 0 }
+  for_each       = aws_subnet.public
   subnet_id      = each.value.id
   route_table_id = aws_route_table.public[0].id
 }
 
 resource "aws_subnet" "private" {
-  count                   = length(lookup(var.private_subnets, "cidr_blocks", {})) > 0 ? length(var.private_subnets.cidr_blocks) : 0
-  vpc_id                  = lookup(var.private_subnets, "vpc_id", local.vpc_id)
-  cidr_block              = var.private_subnets.cidr_blocks[count.index]
-  availability_zone       = lookup(var.private_subnets, "availability_zones", true) != true ? var.private_subnets.availability_zones[count.index] : local.azs.names[count.index]
-  map_public_ip_on_launch = lookup(var.private_subnets, "map_public_ip_on_launch", false)
+  for_each                = var.private_subnets
+  vpc_id                  = lookup(each.value, "vpc_id", local.vpc_id)
+  cidr_block              = each.value["cidr_block"]
+  availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
+  map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", false)
 
   tags = merge(
     {
-      Name = "${var.name}-private-${count.index + 1}"
+      Name = "${var.name}-${each.key}"
     },
     var.tags,
-    lookup(var.private_subnets, "tags", null)
+    lookup(each.value, "tags", null)
   )
 }
 
 resource "aws_route_table" "private" {
-  count  = length(lookup(var.private_subnets, "cidr_blocks", {})) > 0 ? 1 : 0
+  count  = length(var.private_subnets) > 0 ? 1 : 0
   vpc_id = lookup(var.private_route_table, "vpc_id", local.vpc_id)
 
   tags = merge(
@@ -163,29 +171,29 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route_table_association" "private" {
-  for_each       = { for k, v in aws_subnet.private : k => v if length(aws_subnet.private) > 0 }
+  for_each       = aws_subnet.private
   subnet_id      = each.value.id
   route_table_id = aws_route_table.private[0].id
 }
 
 resource "aws_subnet" "intra" {
-  count                   = length(lookup(var.intra_subnets, "cidr_blocks", {})) > 0 ? length(var.intra_subnets.cidr_blocks) : 0
-  vpc_id                  = lookup(var.intra_subnets, "vpc_id", local.vpc_id)
-  cidr_block              = var.intra_subnets.cidr_blocks[count.index]
-  availability_zone       = lookup(var.intra_subnets, "availability_zones", true) != true ? var.intra_subnets.availability_zones[count.index] : local.azs.names[count.index]
-  map_public_ip_on_launch = lookup(var.intra_subnets, "map_public_ip_on_launch", false)
+  for_each                = var.intra_subnets
+  vpc_id                  = lookup(each.value, "vpc_id", local.vpc_id)
+  cidr_block              = each.value["cidr_block"]
+  availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
+  map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", false)
 
   tags = merge(
     {
-      Name = "${var.name}-intra-${count.index + 1}"
+      Name = "${var.name}-${each.key}"
     },
     var.tags,
-    lookup(var.intra_subnets, "tags", null)
+    lookup(each.value, "tags", null)
   )
 }
 
 resource "aws_route_table" "intra" {
-  count  = length(lookup(var.intra_subnets, "cidr_blocks", {})) > 0 ? 1 : 0
+  count  = length(var.intra_subnets) > 0 ? 1 : 0
   vpc_id = lookup(var.intra_route_table, "vpc_id", local.vpc_id)
 
   tags = merge(
@@ -198,7 +206,7 @@ resource "aws_route_table" "intra" {
 }
 
 resource "aws_route_table_association" "intra" {
-  for_each       = { for k, v in aws_subnet.intra : k => v if length(aws_subnet.intra) > 0 }
+  for_each       = aws_subnet.intra
   subnet_id      = each.value.id
   route_table_id = aws_route_table.intra[0].id
 }

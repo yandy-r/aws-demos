@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.13"
+  required_version = ">= 0.15"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -9,7 +9,7 @@ terraform {
 }
 
 locals {
-  aws_profile = var.aws_profile.dev
+  aws_profile = var.aws_profile.sandbox
 }
 
 provider "aws" {
