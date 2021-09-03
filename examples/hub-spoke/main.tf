@@ -15,9 +15,6 @@ module "ssh_key" {
 # }
 
 locals {
-  vpcs = {
-    east = { for k, v in module.east_vpcs : k => v.vpc }
-  }
   vpc_ids = {
     east = { for k, v in module.east_vpcs : k => v.vpc_id }
   }
@@ -32,6 +29,18 @@ locals {
   }
   public_route_table_ids = {
     east = { for k, v in module.east_vpcs : k => v.public_route_table_ids }
+  }
+  private_subnet_ids = {
+    east = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
+  }
+  private_route_table_ids = {
+    east = { for k, v in module.east_vpcs : k => v.private_route_table_ids }
+  }
+  intra_subnet_ids = {
+    east = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
+  }
+  intra_route_table_ids = {
+    east = { for k, v in module.east_vpcs : k => v.intra_route_table_ids }
   }
 }
 
@@ -49,6 +58,9 @@ output "vpc_ids" {
 # }
 # output "public_subnet_ids" {
 #   value = local.public_subnet_ids
+# }
+# output "public_route_table_ids" {
+#   value = local.public_route_table_ids
 # }
 
 locals {
@@ -146,10 +158,18 @@ module "east_vpcs" {
   source    = "../../modules/vpc"
   providers = { aws = aws.us_east_1 }
   for_each  = local.vpc_info.east
-
-  name               = "east-${each.key}"
-  vpc                = each.value
-  inet_gw            = {}
+  name      = "east-${each.key}"
+  vpc       = each.value
+  inet_gw = {
+    tags = {
+      Purpose = "Route stuff to the internet"
+    }
+  }
+  nat_gw = {
+    tags = {
+      Purpose = "Route private stuff to the internet"
+    }
+  }
   public_subnets     = lookup(each.value, "public_subnets", {})
   public_route_table = lookup(each.value, "public_route_table", {})
   private_subnets    = lookup(each.value, "private_subnets", {})
@@ -161,6 +181,25 @@ module "east_vpcs" {
       service_type  = "s3"
     }
   }
+}
+
+locals {
+  route_info = {
+    east = {
+      test = {
+        destination_cidr_block = "10.0.0.0/8"
+        gateway_id             = local.inet_gw_ids.east["hub1"][0]
+        route_table_id         = local.public_route_table_ids.east["hub1"][0]
+      }
+    }
+  }
+}
+
+resource "aws_route" "east_routes" {
+  for_each               = local.route_info.east
+  route_table_id         = each.value["route_table_id"]
+  destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
+  gateway_id             = lookup(each.value, "gateway_id", null)
 }
 
 # module "east_tgw" {

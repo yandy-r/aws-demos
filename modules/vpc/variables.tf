@@ -79,6 +79,11 @@ variable "intra_route_table" {
   default = {}
 }
 
+variable "routes" {
+  type    = any
+  default = {}
+}
+
 variable "vpc_endpoints" {
   type    = any
   default = {}

@@ -43,12 +43,15 @@ resource "aws_vpc" "this" {
 }
 
 locals {
-  vpc                    = element(aws_vpc.this[*], 0)
-  vpc_id                 = element(aws_vpc.this[*].id, 0)
-  vpc_cidr               = element(aws_vpc.this[*].cidr_block, 0)
-  inet_gw_id             = aws_internet_gateway.this[*].id
-  public_subnet_ids      = aws_subnet.public[*].id
-  public_route_table_ids = aws_route_table.public[*].id
+  vpc_id                  = element(concat(aws_vpc.this[*].id, [""]), 0)
+  vpc_cidr                = aws_vpc.this[*].cidr_block
+  inet_gw_id              = aws_internet_gateway.this[*].id
+  public_subnet_ids       = aws_subnet.public[*].id
+  public_route_table_ids  = aws_route_table.public[*].id
+  private_subnet_ids      = aws_subnet.private[*].id
+  private_route_table_ids = aws_route_table.public[*].id
+  intra_subnet_ids        = aws_subnet.intra[*].id
+  intra_route_table_ids   = aws_route_table.intra[*].id
 }
 
 resource "aws_internet_gateway" "this" {
@@ -197,6 +200,28 @@ resource "aws_route_table_association" "intra" {
   subnet_id      = each.value.id
   route_table_id = aws_route_table.intra[0].id
 }
+
+resource "aws_route" "inet_gw_default" {
+  count                  = length(aws_internet_gateway.this) > 0 ? 1 : 0
+  route_table_id         = aws_route_table.public[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.this[0].id
+}
+
+resource "aws_route" "nat_gw_default" {
+  count                  = lookup(var.vpc, "num_nat_gw", 0) > 0 ? var.vpc["num_nat_gw"] : var.num_nat_gw > 0 ? var.num_nat_gw : 0
+  route_table_id         = aws_route_table.private[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_nat_gateway.this[0].id
+}
+
+resource "aws_route" "this" {
+  count                  = length(var.routes) > 0 ? length(var.routes) : 0
+  route_table_id         = var.routes["route_table_id"]
+  destination_cidr_block = lookup(var.routes, "destination_cidr_block", null)
+  gateway_id             = lookup(var.routes, "gateway_id", null)
+}
+
 
 # data "aws_region" "current" {}
 # locals {
