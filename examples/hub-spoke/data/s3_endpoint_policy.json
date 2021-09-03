@@ -2,7 +2,9 @@
   "Version": "2008-10-17",
   "Statement": [
     {
+      "Sid": "AllowYumRepos",
       "Effect": "Allow",
+      "Principal": "*",
       "Action": [
         "s3:*"
       ],
@@ -10,8 +12,7 @@
         "arn:aws:s3:::packages.${region}.amazonaws.com/*",
         "arn:aws:s3:::repo.${region}.amazonaws.com/*",
         "arn:aws:s3:::amazonlinux.${region}.amazonaws.com/*"
-      ],
-      "Principal": "*"
+      ]
     }
   ]
 }
