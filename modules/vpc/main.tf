@@ -218,17 +218,17 @@ resource "aws_route" "nat_gw_default" {
 }
 
 resource "aws_route" "this" {
-  count                  = length(var.routes) > 0 ? 1 : 0
-  route_table_id         = var.routes["route_table_id"]
-  destination_cidr_block = lookup(var.routes, "destination_cidr_block", null)
-  gateway_id             = lookup(var.routes, "gateway_id", null)
-  nat_gateway_id         = lookup(var.routes, "nat_gateway_id", null)
+  for_each               = var.routes
+  route_table_id         = lookup(each.value, "route_table_id", null)
+  destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
+  gateway_id             = lookup(each.value, "gateway_id", null)
+  nat_gateway_id         = lookup(each.value, "nat_gateway_id", null)
 }
 
 
 data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "this" {
-  for_each          = { for k, v in var.vpc_endpoints : k => v if lookup(var.vpc, "create_vcp_endpoints", false) }
+  for_each          = var.vpc_endpoints
   vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")

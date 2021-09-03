@@ -85,7 +85,28 @@ locals {
         assign_generated_ipv6_cidr_block = false
         create_inet_gw                   = true
         num_nat_gw                       = 1
-        create_vcp_endpoints             = true
+
+        inet_gw = {
+          tags = {
+            Purpose = "Route stuff to the internet"
+          }
+        }
+
+        nat_gw = {
+          tags = {
+            Purpose = "Route private stuff to the internet"
+          }
+        }
+
+        vpc_endpoints = {
+          s3 = {
+            endpoint_type = "Gateway"
+            service_type  = "s3"
+            tags = {
+              Purpose = "Hub VPC S3 Endpoint"
+            }
+          }
+        }
 
         public_subnets = {
           cidr_blocks = [
@@ -95,17 +116,20 @@ locals {
           availability_zones      = ["us-east-1c", "us-east-1d"]
           map_public_ip_on_launch = true
         }
+
         public_route_table = {
           tags = {
             Purpose = "Route to internet and other public services."
           }
         }
+
         private_subnets = {
           cidr_blocks = [
             cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 64),
             cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 65),
           ]
         }
+
         intra_subnets = {
           cidr_blocks = [
             cidrsubnet(var.vpc_cidrs.east["hub1"], 8, 128),
@@ -165,35 +189,18 @@ locals {
 }
 
 module "east_vpcs" {
-  source    = "../../modules/vpc"
-  providers = { aws = aws.us_east_1 }
-  for_each  = local.vpc_info.east
-  name      = "east-${each.key}"
-  vpc       = each.value
-  inet_gw = {
-    tags = {
-      Purpose = "Route stuff to the internet"
-    }
-  }
-  nat_gw = {
-    tags = {
-      Purpose = "Route private stuff to the internet"
-    }
-  }
+  source             = "../../modules/vpc"
+  providers          = { aws = aws.us_east_1 }
+  for_each           = local.vpc_info.east
+  name               = "east-${each.key}"
+  vpc                = each.value
+  inet_gw            = lookup(each.value, "inet_gw", {})
+  nat_gw             = lookup(each.value, "nat_gw", {})
   public_subnets     = lookup(each.value, "public_subnets", {})
   public_route_table = lookup(each.value, "public_route_table", {})
   private_subnets    = lookup(each.value, "private_subnets", {})
   intra_subnets      = lookup(each.value, "intra_subnets", {})
-
-  vpc_endpoints = {
-    s3 = {
-      endpoint_type = "Gateway"
-      service_type  = "s3"
-      tags = {
-        Purpose = "Hub VPC S3 Endpoint"
-      }
-    }
-  }
+  vpc_endpoints      = lookup(each.value, "vpc_endpoints", {})
 }
 
 locals {
@@ -215,13 +222,6 @@ resource "aws_route" "east_routes" {
   destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
   gateway_id             = lookup(each.value, "gateway_id", null)
 }
-
-# module "routes" {
-#   source    = "../../modules/vpc"
-#   providers = { aws = aws.us_east_1 }
-#   for_each  = local.routes.east
-#   routes    = each.value
-# }
 
 # module "east_tgw" {
 #   source     = "../../modules/transit-gateway"
