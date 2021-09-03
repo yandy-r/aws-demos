@@ -35,7 +35,7 @@ resource "aws_vpc" "this" {
 
   tags = merge(
     {
-      Name = "${var.name}-${count.index + 1}"
+      Name = "${var.name}"
     },
     var.tags,
     lookup(var.vpc, "tags", null)
