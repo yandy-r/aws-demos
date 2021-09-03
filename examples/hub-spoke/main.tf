@@ -24,6 +24,9 @@ locals {
   inet_gw_ids = {
     east = { for k, v in module.east_vpcs : k => v.inet_gw_id }
   }
+  nat_gw_ids = {
+    east = { for k, v in module.east_vpcs : k => v.nat_gw_id }
+  }
   public_subnet_ids = {
     east = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
   }
@@ -195,20 +198,30 @@ module "east_vpcs" {
 
 locals {
   routes = {
-    east_public_test = {
-      destination_cidr_block = "10.0.0.0/8"
-      gateway_id             = local.inet_gw_ids.east["hub1"][0]
-      route_table_id         = local.public_route_table_ids.east["hub1"][0]
+    east = {
+      east_public_test = {
+        destination_cidr_block = "10.0.0.0/8"
+        gateway_id             = local.inet_gw_ids.east["hub1"][0]
+        route_table_id         = local.public_route_table_ids.east["hub1"][0]
+      }
     }
   }
 }
 
 resource "aws_route" "east_routes" {
-  for_each               = local.routes
+  provider               = aws.us_east_1
+  for_each               = local.routes.east
   route_table_id         = each.value["route_table_id"]
   destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
   gateway_id             = lookup(each.value, "gateway_id", null)
 }
+
+# module "routes" {
+#   source    = "../../modules/vpc"
+#   providers = { aws = aws.us_east_1 }
+#   for_each  = local.routes.east
+#   routes    = each.value
+# }
 
 # module "east_tgw" {
 #   source     = "../../modules/transit-gateway"

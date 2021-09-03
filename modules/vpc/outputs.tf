@@ -14,6 +14,10 @@ output "inet_gw_id" {
   value = local.inet_gw_id
 }
 
+output "nat_gw_id" {
+  value = local.nat_gw_id
+}
+
 output "public_subnet_ids" {
   value = local.public_subnet_ids
 }

@@ -46,10 +46,11 @@ locals {
   vpc_id                  = element(concat(aws_vpc.this[*].id, [""]), 0)
   vpc_cidr                = aws_vpc.this[*].cidr_block
   inet_gw_id              = aws_internet_gateway.this[*].id
+  nat_gw_id               = aws_nat_gateway.this[*].id
   public_subnet_ids       = aws_subnet.public[*].id
   public_route_table_ids  = aws_route_table.public[*].id
   private_subnet_ids      = aws_subnet.private[*].id
-  private_route_table_ids = aws_route_table.public[*].id
+  private_route_table_ids = aws_route_table.private[*].id
   intra_subnet_ids        = aws_subnet.intra[*].id
   intra_route_table_ids   = aws_route_table.intra[*].id
   route_table_ids         = compact(concat(local.public_route_table_ids, local.private_route_table_ids, local.intra_route_table_ids))
@@ -217,10 +218,11 @@ resource "aws_route" "nat_gw_default" {
 }
 
 resource "aws_route" "this" {
-  count                  = length(var.routes) > 0 ? length(var.routes) : 0
+  count                  = length(var.routes) > 0 ? 1 : 0
   route_table_id         = var.routes["route_table_id"]
   destination_cidr_block = lookup(var.routes, "destination_cidr_block", null)
   gateway_id             = lookup(var.routes, "gateway_id", null)
+  nat_gateway_id         = lookup(var.routes, "nat_gateway_id", null)
 }
 
 
