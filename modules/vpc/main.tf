@@ -52,6 +52,7 @@ locals {
   private_route_table_ids = aws_route_table.public[*].id
   intra_subnet_ids        = aws_subnet.intra[*].id
   intra_route_table_ids   = aws_route_table.intra[*].id
+  route_table_ids         = compact(concat(local.public_route_table_ids, local.private_route_table_ids, local.intra_route_table_ids))
 }
 
 resource "aws_internet_gateway" "this" {
@@ -212,7 +213,7 @@ resource "aws_route" "nat_gw_default" {
   count                  = lookup(var.vpc, "num_nat_gw", 0) > 0 ? var.vpc["num_nat_gw"] : var.num_nat_gw > 0 ? var.num_nat_gw : 0
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_nat_gateway.this[0].id
+  nat_gateway_id         = aws_nat_gateway.this[0].id
 }
 
 resource "aws_route" "this" {
@@ -223,26 +224,23 @@ resource "aws_route" "this" {
 }
 
 
-# data "aws_region" "current" {}
-# locals {
-#   route_table_ids = concat(aws_route_table.public[*].id, aws_route_table.private[*].id, aws_route_table.intra[*].id)
-# }
-# resource "aws_vpc_endpoint" "this" {
-#   for_each          = { for k, v in var.vpc_endpoints : k => v if length(var.vpc_endpoints) > 0 }
-#   vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
-#   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
-#   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
-#   policy            = lookup(each.value, "policy", null)
-#   route_table_ids   = lookup(each.value, "route_table_ids", local.route_table_ids)
+data "aws_region" "current" {}
+resource "aws_vpc_endpoint" "this" {
+  for_each          = { for k, v in var.vpc_endpoints : k => v if lookup(var.vpc, "create_vcp_endpoints", false) }
+  vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
+  service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
+  policy            = lookup(each.value, "policy", null)
+  route_table_ids   = lookup(each.value, "route_table_ids", local.route_table_ids)
 
-#   tags = merge(
-#     {
-#       Name = "${var.name}-endpoint-${each.key}"
-#     },
-#     var.tags,
-#     lookup(each.value, "tags", null)
-#   )
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-endpoint-${each.key}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
 
 # ### -------------------------------------------------------------------------------------------- ###
 # ### SECURITY GROUPS

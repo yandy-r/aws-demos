@@ -62,6 +62,12 @@ output "vpc_ids" {
 # output "public_route_table_ids" {
 #   value = local.public_route_table_ids
 # }
+# output "private_route_table_ids" {
+#   value = local.private_route_table_ids
+# }
+# output "intra_route_table_ids" {
+#   value = local.intra_route_table_ids
+# }
 
 locals {
   vpc_info = {
@@ -76,6 +82,7 @@ locals {
         assign_generated_ipv6_cidr_block = false
         create_inet_gw                   = true
         num_nat_gw                       = 1
+        create_vcp_endpoints             = true
 
         public_subnets = {
           cidr_blocks = [
@@ -179,24 +186,25 @@ module "east_vpcs" {
     s3 = {
       endpoint_type = "Gateway"
       service_type  = "s3"
-    }
-  }
-}
-
-locals {
-  route_info = {
-    east = {
-      test = {
-        destination_cidr_block = "10.0.0.0/8"
-        gateway_id             = local.inet_gw_ids.east["hub1"][0]
-        route_table_id         = local.public_route_table_ids.east["hub1"][0]
+      tags = {
+        Purpose = "Hub VPC S3 Endpoint"
       }
     }
   }
 }
 
+locals {
+  routes = {
+    east_public_test = {
+      destination_cidr_block = "10.0.0.0/8"
+      gateway_id             = local.inet_gw_ids.east["hub1"][0]
+      route_table_id         = local.public_route_table_ids.east["hub1"][0]
+    }
+  }
+}
+
 resource "aws_route" "east_routes" {
-  for_each               = local.route_info.east
+  for_each               = local.routes
   route_table_id         = each.value["route_table_id"]
   destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
   gateway_id             = lookup(each.value, "gateway_id", null)
