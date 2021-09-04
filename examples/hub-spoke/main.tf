@@ -1,6 +1,6 @@
 module "ssh_key" {
   source        = "../../modules/ssh-key"
-  key_name      = "aws-test-key"
+  key_name      = var.key_name
   priv_key_path = var.priv_key_path
 }
 
@@ -90,6 +90,15 @@ locals {
           ]
         }
         private1 = {
+          ingress = [
+            {
+              description = "Allow ALL sourced from self"
+              from_port   = 0
+              to_port     = 0
+              protocol    = "-1"
+              self        = true
+            }
+          ]
           egress = [
             {
               description      = "Allow all out"
@@ -102,6 +111,15 @@ locals {
           ]
         }
         intra1 = {
+          ingress = [
+            {
+              description = "Allow ALL sourced from self"
+              from_port   = 0
+              to_port     = 0
+              protocol    = "-1"
+              self        = true
+            }
+          ]
           egress = [
             {
               description      = "Allow all out"
@@ -170,6 +188,15 @@ locals {
 
       security_groups = {
         intra1 = {
+          ingress = [
+            {
+              description = "Allow ALL sourced from self"
+              from_port   = 0
+              to_port     = 0
+              protocol    = "-1"
+              self        = true
+            }
+          ]
           egress = [
             {
               description      = "Allow all out"
@@ -199,6 +226,15 @@ locals {
 
       security_groups = {
         intra1 = {
+          ingress = [
+            {
+              description = "Allow ALL sourced from self"
+              from_port   = 0
+              to_port     = 0
+              protocol    = "-1"
+              self        = true
+            }
+          ]
           egress = [
             {
               description      = "Allow all out"
@@ -227,6 +263,15 @@ locals {
 
       security_groups = {
         intra1 = {
+          ingress = [
+            {
+              description = "Allow ALL sourced from self"
+              from_port   = 0
+              to_port     = 0
+              protocol    = "-1"
+              self        = true
+            }
+          ]
           egress = [
             {
               description      = "Allow all out"
@@ -445,14 +490,24 @@ resource "aws_route" "east_routes" {
   gateway_id             = lookup(each.value, "gateway_id", null)
 }
 
-# module "east_ec2" {
-#   source        = "../../modules/ec2"
-#   providers     = { aws = aws.us_east_1 }
-#   name          = "east-ec2"
-#   key_name      = "aws-test-key"
-#   priv_key      = module.ssh_key.priv_key
-#   priv_key_path = var.priv_key_path
-
+module "east_ec2" {
+  source        = "../../modules/ec2"
+  providers     = { aws = aws.us_east_1 }
+  name          = "east-ec2"
+  key_name      = "aws-test-key"
+  priv_key      = module.ssh_key.priv_key
+  priv_key_path = var.priv_key_path
+  network_interfaces = {
+    hub1 = {
+      source_dest_check = true
+      subnet_id         = local.public_subnet_ids.east["hub1"][0]
+      private_ips       = ["10.200.0.10"]
+      security_groups   = [local.security_group_ids.east.hub1["public1"]]
+      description       = "Bastion 1 Public Interface"
+      tags              = { Purpose = "Bastion 1 Public Interface" }
+    }
+  }
+}
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1
 #   peer_region             = local.west_region

@@ -30,12 +30,7 @@ variable "key_name" {
   default = ""
 }
 
-variable "craate_custom_eni" {
-  type    = bool
-  default = false
-}
-
-variable "custom_eni_props" {
+variable "network_interfaces" {
   type    = any
   default = {}
 }

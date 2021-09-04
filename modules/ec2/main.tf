@@ -17,12 +17,24 @@ resource "aws_key_pair" "this" {
 }
 
 resource "aws_network_interface" "this" {
-  for_each          = { for k, v in var.custom_eni_props : k => v if var.craate_custom_eni }
-  subnet_id         = each.value["subnet_id"]
-  security_groups   = lookup(each.value, "security_groups", null)
-  private_ips       = lookup(each.value, "private_ips", null)
-  source_dest_check = lookup(each.value, "source_dst_check", true)
-  # attachment        = lookup(each.value, "attachment", null)
+  for_each           = var.network_interfaces
+  subnet_id          = each.value["subnet_id"]
+  description        = lookup(each.value, "description", null)
+  private_ips        = lookup(each.value, "private_ips", null)
+  private_ips_count  = lookup(each.value, "private_ips_count", null)
+  ipv6_addresses     = lookup(each.value, "ipv6_addresses", null)
+  ipv6_address_count = lookup(each.value, "ipv6_address_count", null)
+  source_dest_check  = lookup(each.value, "source_dest_check", true)
+  security_groups    = lookup(each.value, "security_groups", null)
+  interface_type     = lookup(each.value, "interface_type", null)
+
+  dynamic "attachment" {
+    for_each = lookup(each.value, "attachment", {})
+    content {
+      instance     = attachment.value["instance"]
+      device_index = attachment.value["device_index"]
+    }
+  }
 
   tags = merge(
     {

@@ -2,6 +2,11 @@
 ### GENERAL
 ### -------------------------------------------------------------------------------------------- ###
 
+variable "key_name" {
+  type    = string
+  default = "aws-test-key"
+}
+
 variable "aws_profile" {
   type = map(string)
 }
