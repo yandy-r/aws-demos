@@ -1,12 +1,12 @@
 #!/bin/bash
 
-WEST_BASTION="$(jq -r '.resources[] |
-select(.name == "hub_public") |
+EAST_BASTION="$(jq -r '.resources[] |
+select(.name == "this") |
 select(.type == "aws_instance") |
-select(.module == "module.tgw_west") |
+select(.module == "module.west_ec2") |
 .instances[0].attributes.public_ip' <terraform.tfstate)"
 
 ssh -o "StrictHostKeyChecking no" \
   -o "UserKnownHostsFile /dev/null" \
-  -i keys/aws-test-key \
-  ec2-user@"${WEST_BASTION}"
+  -i ${HOME}/.aws-keys/aws-test-key \
+  ec2-user@"${EAST_BASTION}"

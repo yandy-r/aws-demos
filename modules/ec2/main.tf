@@ -11,6 +11,10 @@ terraform {
   }
 }
 
+locals {
+  network_interface_ids = { for k, v in aws_network_interface.this : k => v.id }
+}
+
 resource "aws_key_pair" "this" {
   key_name   = var.key_name
   public_key = var.priv_key.public_key_openssh
@@ -45,23 +49,32 @@ resource "aws_network_interface" "this" {
   )
 }
 
-# resource "aws_instance" "hub_public" {
-#   count            = 1
-#   ami              = data.aws_ami.amzn2_linux.id
-#   instance_type    = "t3.medium"
-#   key_name         = aws_key_pair.aws_test_key.key_name
-#   user_data_base64 = base64encode(data.template_file.cloud_config[count.index].rendered)
+resource "aws_instance" "this" {
+  for_each         = var.aws_instances
+  ami              = each.value["ami"]
+  instance_type    = lookup(each.value, "instance_type", "t3.micro")
+  key_name         = aws_key_pair.this.key_name
+  user_data_base64 = lookup(each.value, "user_data", null)
 
-#   network_interface {
-#     network_interface_id = aws_network_interface.hub.*.id[0]
-#     device_index         = 0
-#   }
+  dynamic "network_interface" {
+    for_each = lookup(each.value, "network_interface", {})
+    content {
+      network_interface_id = network_interface.value["network_interface_id"]
+      device_index         = lookup(network_interface.value, "device_index", 0)
+    }
+  }
 
-#   tags = {
-#     Name = "hub bastion"
-#   }
+  tags = merge(
+    {
+      Name = "${var.name}-${each.key}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
 
-#   depends_on = [aws_key_pair.aws_test_key]
+  depends_on = [aws_key_pair.this]
+}
+
 # }
 
 # resource "aws_network_interface" "private" {

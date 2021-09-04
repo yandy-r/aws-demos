@@ -5,12 +5,24 @@ module "ssh_key" {
 }
 
 module "east_data" {
-  source    = "./data"
-  providers = { aws = aws.us_east_1 }
+  source             = "./data"
+  providers          = { aws = aws.us_east_1 }
+  get_amzn_ami       = true
+  key_name           = var.key_name
+  priv_key_path      = var.priv_key_path
+  instance_hostnames = ["hub_bastion1"]
+
+  depends_on = [
+    module.ssh_key
+  ]
 }
 
 locals {
   east_s3_endpoint_policy = module.east_data.s3_endpoint_policy
+  amzn_ami                = module.east_data.amzn_ami
+  amzn_cloud_config       = module.east_data.amzn_cloud_config
+  ubuntu_ami              = module.east_data.ubuntu_ami
+  ubuntu_cloud_config     = module.east_data.ubuntu_cloud_config
 }
 
 # output "vpc_ids" {
@@ -490,21 +502,38 @@ resource "aws_route" "east_routes" {
   gateway_id             = lookup(each.value, "gateway_id", null)
 }
 
+locals {
+  network_interface_ids = {
+    east = { for k, v in module.east_ec2.network_interface_ids : k => v }
+  }
+}
 module "east_ec2" {
-  source        = "../../modules/ec2"
-  providers     = { aws = aws.us_east_1 }
-  name          = "east-ec2"
-  key_name      = "aws-test-key"
-  priv_key      = module.ssh_key.priv_key
-  priv_key_path = var.priv_key_path
+  source    = "../../modules/ec2"
+  providers = { aws = aws.us_east_1 }
+  name      = "east-ec2"
+  key_name  = var.key_name
+  priv_key  = module.ssh_key.priv_key
+
   network_interfaces = {
-    hub1 = {
+    hub_bastion1 = {
       source_dest_check = true
       subnet_id         = local.public_subnet_ids.east["hub1"][0]
       private_ips       = ["10.200.0.10"]
       security_groups   = [local.security_group_ids.east.hub1["public1"]]
       description       = "Bastion 1 Public Interface"
       tags              = { Purpose = "Bastion 1 Public Interface" }
+    }
+  }
+
+  aws_instances = {
+    hub_bastion1 = {
+      ami           = local.amzn_ami
+      instance_type = "t3.medium"
+      user_data     = local.amzn_cloud_config[0]
+      network_interface = [{
+        network_interface_id = local.network_interface_ids.east["hub_bastion1"]
+        device_index         = 0
+      }]
     }
   }
 }

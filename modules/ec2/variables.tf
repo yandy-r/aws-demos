@@ -35,7 +35,7 @@ variable "network_interfaces" {
   default = {}
 }
 
-variable "eni_tags" {
-  type    = map(string)
+variable "aws_instances" {
+  type    = any
   default = {}
 }
