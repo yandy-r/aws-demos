@@ -41,3 +41,7 @@ output "intra_subnet_ids" {
 output "intra_route_table_id" {
   value = local.intra_route_table_id
 }
+
+output "security_group_ids" {
+  value = local.security_group_ids
+}

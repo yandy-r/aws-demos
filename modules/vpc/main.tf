@@ -51,6 +51,7 @@ locals {
   public_route_table_id  = one(aws_route_table.public[*].id)
   private_route_table_id = one(aws_route_table.private[*].id)
   route_table_ids        = compact([local.public_route_table_id, local.private_route_table_id, local.intra_route_table_id])
+  security_group_ids     = { for k, v in aws_security_group.this : k => v.id }
 }
 
 resource "aws_internet_gateway" "this" {
@@ -242,7 +243,7 @@ resource "aws_route" "this" {
 data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "this" {
   for_each          = var.vpc_endpoints
-  vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id            = lookup(each.value, "vpc_id", local.vpc_id)
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
   policy            = lookup(each.value, "policy", null)
@@ -261,24 +262,45 @@ resource "aws_vpc_endpoint" "this" {
 # ### SECURITY GROUPS
 # ### -------------------------------------------------------------------------------------------- ###
 
-# resource "aws_security_group" "hub_public" {
-#   description = "hub instances public SG"
-#   vpc_id      = aws_vpc.vpcs.*.id[0]
+resource "aws_security_group" "this" {
+  for_each    = var.security_groups
+  description = lookup(each.value, "description", null)
+  vpc_id      = lookup(each.value, "vpc_id", local.vpc_id)
 
-#   tags = {
-#     Name = "hub public"
-#   }
-# }
+  egress = [for v in lookup(each.value, "egress", []) : {
+    from_port        = v["from_port"]
+    to_port          = v["to_port"]
+    protocol         = v["protocol"]
+    self             = lookup(v, "self", null)
+    description      = lookup(v, "description", null)
+    cidr_blocks      = lookup(v, "cidr_blocks", null)
+    ipv6_cidr_blocks = lookup(v, "ipv6_cidr_blocks", null)
+    prefix_list_ids  = lookup(v, "prefix_list_ids", null)
+    security_groups  = lookup(v, "security_groups", null)
+    }
+  ]
 
+  ingress = [for v in lookup(each.value, "ingress", []) : {
+    from_port        = v["from_port"]
+    to_port          = v["to_port"]
+    protocol         = v["protocol"]
+    self             = lookup(v, "self", null)
+    description      = lookup(v, "description", null)
+    cidr_blocks      = lookup(v, "cidr_blocks", null)
+    ipv6_cidr_blocks = lookup(v, "ipv6_cidr_blocks", null)
+    prefix_list_ids  = lookup(v, "prefix_list_ids", null)
+    security_groups  = lookup(v, "security_groups", null)
+    }
+  ]
 
-# resource "aws_security_group" "hub_private" {
-#   description = "hub instances private SG"
-#   vpc_id      = aws_vpc.vpcs.*.id[0]
-
-#   tags = {
-#     Name = "hub private"
-#   }
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-${each.key}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
 
 # locals {
 #   hub_rules = {

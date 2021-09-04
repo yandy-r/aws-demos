@@ -34,6 +34,9 @@ locals {
 # output "intra_route_table_ids" {
 #   value = local.intra_route_table_ids
 # }
+output "security_group_ids" {
+  value = local.security_group_ids
+}
 
 locals {
   east_vpcs = {
@@ -49,6 +52,68 @@ locals {
       num_nat_gateway                  = 1
       nat_gateway                      = { tags = { Purpose = "Route private stuff to the internet" } }
       internet_gateway                 = { tags = { Purpose = "Route stuff to the internet" } }
+
+      security_groups = {
+        public1 = {
+          egress = [
+            {
+              description      = "Allow all out"
+              from_port        = 0
+              to_port          = 0
+              protocol         = "-1"
+              cidr_blocks      = ["0.0.0.0/0"]
+              ipv6_cidr_blocks = ["::/0"]
+            }
+          ]
+          ingress = [
+            {
+              description = "Allow ALL sourced from self"
+              from_port   = 0
+              to_port     = 0
+              protocol    = "-1"
+              self        = true
+            },
+            {
+              description = "Allow ICMP from home"
+              from_port   = -1
+              to_port     = -1
+              protocol    = "icmp"
+              cidr_blocks = [var.self_public_ip]
+            },
+            {
+              description = "Allow SSH from home"
+              from_port   = 22
+              to_port     = 22
+              protocol    = "tcp"
+              cidr_blocks = [var.self_public_ip]
+            }
+          ]
+        }
+        private1 = {
+          egress = [
+            {
+              description      = "Allow all out"
+              from_port        = 0
+              to_port          = 0
+              protocol         = "-1"
+              cidr_blocks      = ["0.0.0.0/0"]
+              ipv6_cidr_blocks = ["::/0"]
+            }
+          ]
+        }
+        intra1 = {
+          egress = [
+            {
+              description      = "Allow all out"
+              from_port        = 0
+              to_port          = 0
+              protocol         = "-1"
+              cidr_blocks      = ["0.0.0.0/0"]
+              ipv6_cidr_blocks = ["::/0"]
+            }
+          ]
+        }
+      }
 
       vpc_endpoints = {
         s3 = {
@@ -102,6 +167,21 @@ locals {
         intra1 = { cidr_block = "10.201.128.0/24", availability_zone = "us-east-1a" }
         intra2 = { cidr_block = "10.201.129.0/24", availability_zone = "us-east-1b" }
       }
+
+      security_groups = {
+        intra1 = {
+          egress = [
+            {
+              description      = "Allow all out"
+              from_port        = 0
+              to_port          = 0
+              protocol         = "-1"
+              cidr_blocks      = ["0.0.0.0/0"]
+              ipv6_cidr_blocks = ["::/0"]
+            }
+          ]
+        }
+      }
     }
     spoke2 = {
       vpc_cidr                         = var.vpc_cidrs.east["spoke2"]
@@ -116,6 +196,21 @@ locals {
         intra1 = { cidr_block = "10.202.128.0/24", availability_zone = "us-east-1a" }
         intra2 = { cidr_block = "10.202.129.0/24", availability_zone = "us-east-1b" }
       }
+
+      security_groups = {
+        intra1 = {
+          egress = [
+            {
+              description      = "Allow all out"
+              from_port        = 0
+              to_port          = 0
+              protocol         = "-1"
+              cidr_blocks      = ["0.0.0.0/0"]
+              ipv6_cidr_blocks = ["::/0"]
+            }
+          ]
+        }
+      }
     }
     spoke3 = {
       vpc_cidr                         = var.vpc_cidrs.east["spoke3"]
@@ -128,6 +223,21 @@ locals {
 
       intra_subnets = {
         intra1 = { cidr_block = "10.203.128.0/24" }
+      }
+
+      security_groups = {
+        intra1 = {
+          egress = [
+            {
+              description      = "Allow all out"
+              from_port        = 0
+              to_port          = 0
+              protocol         = "-1"
+              cidr_blocks      = ["0.0.0.0/0"]
+              ipv6_cidr_blocks = ["::/0"]
+            }
+          ]
+        }
       }
     }
   }
@@ -146,6 +256,7 @@ module "east_vpcs" {
   private_subnets    = lookup(each.value, "private_subnets", {})
   intra_subnets      = lookup(each.value, "intra_subnets", {})
   vpc_endpoints      = lookup(each.value, "vpc_endpoints", {})
+  security_groups    = lookup(each.value, "security_groups", {})
 }
 
 locals {
@@ -178,6 +289,9 @@ locals {
   }
   intra_route_table_ids = {
     east = { for k, v in module.east_vpcs : k => v.intra_route_table_id }
+  }
+  security_group_ids = {
+    east = { for k, v in module.east_vpcs : k => v.security_group_ids }
   }
 }
 

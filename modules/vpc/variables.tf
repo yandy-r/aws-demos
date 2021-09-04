@@ -88,3 +88,8 @@ variable "vpc_endpoints" {
   type    = any
   default = {}
 }
+
+variable "security_groups" {
+  type    = any
+  default = {}
+}
