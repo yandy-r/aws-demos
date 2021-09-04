@@ -6,8 +6,8 @@ output "vpc_id" {
   value = local.vpc_id
 }
 
-output "vpc_cidr" {
-  value = local.vpc_cidr
+output "cidr_block" {
+  value = local.cidr_block
 }
 
 output "internet_gateway_id" {

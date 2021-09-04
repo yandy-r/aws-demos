@@ -21,7 +21,7 @@ data "aws_availability_zones" "azs" {
 
 resource "aws_vpc" "this" {
   count                            = length(var.vpc) > 0 ? 1 : 0
-  cidr_block                       = var.vpc["vpc_cidr"]
+  cidr_block                       = var.vpc["cidr_block"]
   instance_tenancy                 = lookup(var.vpc, "instance_tenancy", "default")
   enable_dns_hostnames             = lookup(var.vpc, "enable_dns_hostnames", true)
   enable_dns_support               = lookup(var.vpc, "enable_dns_support", true)
@@ -41,7 +41,7 @@ resource "aws_vpc" "this" {
 locals {
   azs                    = data.aws_availability_zones.azs
   vpc_id                 = one(aws_vpc.this[*].id)
-  vpc_cidr               = one(aws_vpc.this[*].cidr_block)
+  cidr_block             = one(aws_vpc.this[*].cidr_block)
   nat_gateway_id         = aws_nat_gateway.this[*].id
   intra_subnet_ids       = [for v in aws_subnet.intra : v.id]
   public_subnet_ids      = [for v in aws_subnet.public : v.id]

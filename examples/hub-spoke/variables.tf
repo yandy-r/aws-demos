@@ -24,7 +24,7 @@ variable "priv_key_path" {
 ### VPC
 ### -------------------------------------------------------------------------------------------- ###
 
-variable "vpc_cidrs" {
+variable "cidr_blocks" {
   type = any
   default = {
     east = {

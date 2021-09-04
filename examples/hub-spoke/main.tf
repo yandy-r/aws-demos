@@ -16,8 +16,8 @@ locals {
 # output "vpc_ids" {
 #   value = local.vpc_ids
 # }
-# output "vpc_cidrs" {
-#   value = local.vpc_cidrs
+# output "cidr_blocks" {
+#   value = local.vpc_cidr_blocks
 # }
 # output "internet_gateway_ids" {
 #   value = local.internet_gateway_ids
@@ -41,7 +41,7 @@ output "security_group_ids" {
 locals {
   east_vpcs = {
     hub1 = {
-      vpc_cidr                         = var.vpc_cidrs.east["hub1"]
+      cidr_block                       = var.cidr_blocks.east["hub1"]
       instance_tenancy                 = "default"
       enable_dns_hostnames             = true
       enable_dns_support               = true
@@ -155,7 +155,7 @@ locals {
       }
     }
     spoke1 = {
-      vpc_cidr                         = var.vpc_cidrs.east["spoke1"]
+      cidr_block                       = var.cidr_blocks.east["spoke1"]
       instance_tenancy                 = "default"
       enable_dns_hostnames             = true
       enable_dns_support               = true
@@ -184,7 +184,7 @@ locals {
       }
     }
     spoke2 = {
-      vpc_cidr                         = var.vpc_cidrs.east["spoke2"]
+      cidr_block                       = var.cidr_blocks.east["spoke2"]
       instance_tenancy                 = "default"
       enable_dns_hostnames             = true
       enable_dns_support               = true
@@ -213,7 +213,7 @@ locals {
       }
     }
     spoke3 = {
-      vpc_cidr                         = var.vpc_cidrs.east["spoke3"]
+      cidr_block                       = var.cidr_blocks.east["spoke3"]
       instance_tenancy                 = "default"
       enable_dns_hostnames             = true
       enable_dns_support               = true
@@ -263,8 +263,8 @@ locals {
   vpc_ids = {
     east = { for k, v in module.east_vpcs : k => v.vpc_id }
   }
-  vpc_cidrs = {
-    east = { for k, v in module.east_vpcs : k => v.vpc_cidr }
+  vpc_cidr_blocks = {
+    east = { for k, v in module.east_vpcs : k => v.cidr_block }
   }
   internet_gateway_ids = {
     east = { for k, v in module.east_vpcs : k => v.internet_gateway_id }
