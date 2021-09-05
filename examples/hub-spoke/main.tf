@@ -496,41 +496,41 @@ module "east_security_groups" {
 }
 
 locals {
-  east_ec2_output = {
-    network_interface_ids = {
-      east = { for k, v in module.east_ec2.network_interface_ids : k => v }
-    }
-  }
-}
-module "east_ec2" {
-  source    = "../../modules/ec2"
-  providers = { aws = aws.us_east_1 }
-  name      = "east-ec2"
-  key_name  = var.key_name
-  priv_key  = module.ssh_key.priv_key
-
-  network_interfaces = {
+  east_ec2_interfaces_input = {
     hub_bastion1 = {
       source_dest_check = true
       subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
-      private_ips       = ["10.200.0.10"]
+      private_ips       = [cidrhost(local.east_vpc_output.public_subnet_ids["hub1"][0], 10)]
       security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
       description       = "Bastion 1 Public Interface"
       tags              = { Purpose = "Bastion 1 Public Interface" }
     }
   }
-
-  aws_instances = {
+  east_ec2_output = {
+    network_interface_ids = { for k, v in module.east_ec2.network_interface_ids : k => v }
+  }
+}
+locals {
+  east_ec2_instances_input = {
     hub_bastion1 = {
       ami           = local.east_data.amzn_ami
       instance_type = "t3.medium"
       user_data     = local.east_data.amzn_cloud_config[0]
       network_interface = [{
-        network_interface_id = local.east_ec2_output.network_interface_ids.east["hub_bastion1"]
+        network_interface_id = local.east_ec2_output.network_interface_ids["hub_bastion1"]
         device_index         = 0
       }]
     }
   }
+}
+module "east_ec2" {
+  source             = "../../modules/ec2"
+  providers          = { aws = aws.us_east_1 }
+  name               = "east-ec2"
+  key_name           = var.key_name
+  priv_key           = module.ssh_key.priv_key
+  network_interfaces = { for k, v in local.east_ec2_interfaces_input : k => v }
+  aws_instances      = { for k, v in local.east_ec2_instances_input : k => v }
 }
 
 
