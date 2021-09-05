@@ -27,7 +27,7 @@ locals {
         "Resource" : [
           "arn:aws:s3:::packages.${data.aws_region.this.name}.amazonaws.com/*",
           "arn:aws:s3:::repo.${data.aws_region.this.name}.amazonaws.com/*",
-          "arn:aws:s3:::amazonlinux.${data.aws_region.this.name}.amazonaws.com/*"
+          "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.this.name}/*"
         ]
       }
     ]
@@ -46,7 +46,7 @@ data "aws_iam_policy_document" "s3_endpoint_policy" {
     resources = [
       "arn:aws:s3:::packages.${data.aws_region.this.name}.amazonaws.com/*",
       "arn:aws:s3:::repo.${data.aws_region.this.name}.amazonaws.com/*",
-      "arn:aws:s3:::amazonlinux.${data.aws_region.this.name}.amazonaws.com/*"
+      "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.this.name}/*"
     ]
   }
 }
