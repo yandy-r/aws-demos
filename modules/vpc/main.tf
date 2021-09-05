@@ -262,170 +262,48 @@ resource "aws_vpc_endpoint" "this" {
 # ### -------------------------------------------------------------------------------------------- ###
 
 resource "aws_security_group" "this" {
-  for_each    = var.security_groups
+  for_each    = { for k, v in var.security_groups : k => v }
   description = lookup(each.value, "description", null)
-  vpc_id      = lookup(each.value, "vpc_id", local.vpc_id)
+  vpc_id      = lookup(each.value, "vpc_id", local.vpc_id[0])
 
-  egress = [for v in lookup(each.value, "egress", []) : {
-    from_port        = v["from_port"]
-    to_port          = v["to_port"]
-    protocol         = v["protocol"]
-    self             = lookup(v, "self", null)
-    description      = lookup(v, "description", null)
-    cidr_blocks      = lookup(v, "cidr_blocks", null)
-    ipv6_cidr_blocks = lookup(v, "ipv6_cidr_blocks", null)
-    prefix_list_ids  = lookup(v, "prefix_list_ids", null)
-    security_groups  = lookup(v, "security_groups", null)
+  dynamic "egress" {
+    for_each = lookup(each.value, "egress", {})
+    content {
+      from_port        = egress.value["from_port"]
+      to_port          = egress.value["to_port"]
+      protocol         = egress.value["protocol"]
+      self             = lookup(egress.value, "self", null)
+      description      = lookup(egress.value, "description", null)
+      cidr_blocks      = lookup(egress.value, "cidr_blocks", null)
+      ipv6_cidr_blocks = lookup(egress.value, "ipv6_cidr_blocks", null)
+      prefix_list_ids  = lookup(egress.value, "prefix_list_ids", null)
+      security_groups  = lookup(egress.value, "security_groups", null)
     }
-  ]
+  }
 
-  ingress = [for v in lookup(each.value, "ingress", []) : {
-    from_port        = v["from_port"]
-    to_port          = v["to_port"]
-    protocol         = v["protocol"]
-    self             = lookup(v, "self", null)
-    description      = lookup(v, "description", null)
-    cidr_blocks      = lookup(v, "cidr_blocks", null)
-    ipv6_cidr_blocks = lookup(v, "ipv6_cidr_blocks", null)
-    prefix_list_ids  = lookup(v, "prefix_list_ids", null)
-    security_groups  = lookup(v, "security_groups", null)
+  dynamic "ingress" {
+    for_each = lookup(each.value, "ingress", {})
+    content {
+      from_port        = ingress.value["from_port"]
+      to_port          = ingress.value["to_port"]
+      protocol         = ingress.value["protocol"]
+      self             = lookup(ingress.value, "self", null)
+      description      = lookup(ingress.value, "description", null)
+      cidr_blocks      = lookup(ingress.value, "cidr_blocks", null)
+      ipv6_cidr_blocks = lookup(ingress.value, "ipv6_cidr_blocks", null)
+      prefix_list_ids  = lookup(ingress.value, "prefix_list_ids", null)
+      security_groups  = lookup(ingress.value, "security_groups", null)
     }
-  ]
+  }
 
   tags = merge(
     {
-      Name = "${var.name}-${each.key}"
+      Name = "${var.name}-${lookup(each.value, "name", "sg-${each.key}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
   )
 }
-
-# locals {
-#   hub_rules = {
-
-#     public_egress = {
-#       description              = "Allow all outbound"
-#       type                     = "egress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["0.0.0.0/0"]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.hub_public.id
-#     }
-
-#     public_rule_1 = {
-#       description              = "Allow SSH from HOME/Office IP"
-#       type                     = "ingress"
-#       from_port                = 22
-#       to_port                  = 22
-#       protocol                 = "tcp"
-#       cidr_blocks              = [var.self_public_ip]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.hub_public.id
-#     }
-
-#     public_rule_2 = {
-#       description              = "Allow ICMP from HOME/Office IP"
-#       type                     = "ingress"
-#       from_port                = -1
-#       to_port                  = -1
-#       protocol                 = "icmp"
-#       cidr_blocks              = [var.self_public_ip]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.hub_public.id
-#     }
-
-#     public_rule_3 = {
-#       description              = "Allow ALL from hub private subnet"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       source_security_group_id = aws_security_group.hub_private.id
-#       cidr_blocks              = null
-#       security_group_id        = aws_security_group.hub_public.id
-#     }
-
-#     public_rule_4 = {
-#       description              = "Allow ALL from hub public to self"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       source_security_group_id = aws_security_group.hub_public.id
-#       cidr_blocks              = null
-#       security_group_id        = aws_security_group.hub_public.id
-#     }
-
-#     private_egress = {
-#       description              = "Allow all outbound"
-#       type                     = "egress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["0.0.0.0/0"]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.hub_private.id
-#     }
-
-#     private_rule_1 = {
-#       description              = "Allow all from spoke VPC 1"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[1].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.hub_private.id
-#     }
-
-#     private_rule_2 = {
-#       description              = "Allow all from spoke VPC 2"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[2].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.hub_private.id
-#     }
-
-#     private_rule_3 = {
-#       description              = "Allow all from spoke VPC 3"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[3].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.hub_private.id
-#     }
-
-#     private_rule_4 = {
-#       description              = "Allow ALL from hub public subnet"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       source_security_group_id = aws_security_group.hub_public.id
-#       cidr_blocks              = null
-#       security_group_id        = aws_security_group.hub_private.id
-#     }
-
-#     private_rule_5 = {
-#       description              = "Allow ALL from hub private (self)"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       source_security_group_id = aws_security_group.hub_private.id
-#       cidr_blocks              = null
-#       security_group_id        = aws_security_group.hub_private.id
-#     }
-#   }
-# }
 
 # resource "aws_security_group_rule" "hub_rules" {
 #   for_each                 = local.hub_rules

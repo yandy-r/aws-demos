@@ -25,181 +25,13 @@ locals {
   ubuntu_cloud_config     = module.east_data.ubuntu_cloud_config
 }
 
-# locals {
-#   east_vpcs = {
-#     hub1 = {
-
-
-#       security_groups = {
-#         public1 = {
-#           egress = [
-#             {
-#               description      = "Allow all out"
-#               from_port        = 0
-#               to_port          = 0
-#               protocol         = "-1"
-#               cidr_blocks      = ["0.0.0.0/0"]
-#               ipv6_cidr_blocks = ["::/0"]
-#             }
-#           ]
-#           ingress = [
-#             {
-#               description = "Allow ALL sourced from self"
-#               from_port   = 0
-#               to_port     = 0
-#               protocol    = "-1"
-#               self        = true
-#             },
-#             {
-#               description = "Allow ICMP from home"
-#               from_port   = -1
-#               to_port     = -1
-#               protocol    = "icmp"
-#               cidr_blocks = [var.self_public_ip]
-#             },
-#             {
-#               description = "Allow SSH from home"
-#               from_port   = 22
-#               to_port     = 22
-#               protocol    = "tcp"
-#               cidr_blocks = [var.self_public_ip]
-#             }
-#           ]
-#         }
-#         private1 = {
-#           ingress = [
-#             {
-#               description = "Allow ALL sourced from self"
-#               from_port   = 0
-#               to_port     = 0
-#               protocol    = "-1"
-#               self        = true
-#             }
-#           ]
-#           egress = [
-#             {
-#               description      = "Allow all out"
-#               from_port        = 0
-#               to_port          = 0
-#               protocol         = "-1"
-#               cidr_blocks      = ["0.0.0.0/0"]
-#               ipv6_cidr_blocks = ["::/0"]
-#             }
-#           ]
-#         }
-#         intra1 = {
-#           ingress = [
-#             {
-#               description = "Allow ALL sourced from self"
-#               from_port   = 0
-#               to_port     = 0
-#               protocol    = "-1"
-#               self        = true
-#             }
-#           ]
-#           egress = [
-#             {
-#               description      = "Allow all out"
-#               from_port        = 0
-#               to_port          = 0
-#               protocol         = "-1"
-#               cidr_blocks      = ["0.0.0.0/0"]
-#               ipv6_cidr_blocks = ["::/0"]
-#             }
-#           ]
-#         }
-#       }
-#     }
-
-#     security_groups = {
-#       intra1 = {
-#         ingress = [
-#           {
-#             description = "Allow ALL sourced from self"
-#             from_port   = 0
-#             to_port     = 0
-#             protocol    = "-1"
-#             self        = true
-#           }
-#         ]
-#         egress = [
-#           {
-#             description      = "Allow all out"
-#             from_port        = 0
-#             to_port          = 0
-#             protocol         = "-1"
-#             cidr_blocks      = ["0.0.0.0/0"]
-#             ipv6_cidr_blocks = ["::/0"]
-#           }
-#         ]
-#       }
-#     }
-#   }
-
-#   intra_subnets = {
-#     intra1 = { cidr_block = "10.202.128.0/24", availability_zone = "us-east-1a" }
-#     intra2 = { cidr_block = "10.202.129.0/24", availability_zone = "us-east-1b" }
-#   }
-
-#   security_groups = {
-#     intra1 = {
-#       ingress = [
-#         {
-#           description = "Allow ALL sourced from self"
-#           from_port   = 0
-#           to_port     = 0
-#           protocol    = "-1"
-#           self        = true
-#         }
-#       ]
-#       egress = [
-#         {
-#           description      = "Allow all out"
-#           from_port        = 0
-#           to_port          = 0
-#           protocol         = "-1"
-#           cidr_blocks      = ["0.0.0.0/0"]
-#           ipv6_cidr_blocks = ["::/0"]
-#         }
-#       ]
-#     }
-#   }
-# }
-# intra_subnets = {
-#   intra1 = { cidr_block = "10.203.128.0/24" }
-# }
-
-# security_groups = {
-#   intra1 = {
-#     ingress = [
-#       {
-#         description = "Allow ALL sourced from self"
-#         from_port   = 0
-#         to_port     = 0
-#         protocol    = "-1"
-#         self        = true
-#       }
-#     ]
-#     egress = [
-#       {
-#         description      = "Allow all out"
-#         from_port        = 0
-#         to_port          = 0
-#         protocol         = "-1"
-#         cidr_blocks      = ["0.0.0.0/0"]
-#         ipv6_cidr_blocks = ["::/0"]
-#       }
-#     ]
-#   }
-# }
-
 locals {
   east = {
     input = {
       vpcs = {
         hub1 = {
           vpc = [{
-            name                             = "east-hub"
+            name                             = "hub"
             cidr_block                       = var.cidr_blocks.east["hub1"]
             instance_tenancy                 = "default"
             enable_dns_hostnames             = true
@@ -269,6 +101,88 @@ locals {
               Name = "hub-s3-endpoint"
             }
           }]
+          security_groups = [
+            {
+              name = "hub1-public"
+              egress = [
+                {
+                  description      = "Allow all out"
+                  from_port        = 0
+                  to_port          = 0
+                  protocol         = "-1"
+                  cidr_blocks      = ["0.0.0.0/0"]
+                  ipv6_cidr_blocks = ["::/0"]
+                }
+              ]
+              ingress = [
+                {
+                  description = "Allow ALL sourced from self"
+                  from_port   = 0
+                  to_port     = 0
+                  protocol    = "-1"
+                  self        = true
+                },
+                {
+                  description = "Allow ICMP from home"
+                  from_port   = -1
+                  to_port     = -1
+                  protocol    = "icmp"
+                  cidr_blocks = [var.self_public_ip]
+                },
+                {
+                  description = "Allow SSH from home"
+                  from_port   = 22
+                  to_port     = 22
+                  protocol    = "tcp"
+                  cidr_blocks = [var.self_public_ip]
+                }
+              ]
+            },
+            {
+              name = "hub1-private"
+              ingress = [
+                {
+                  description = "Allow ALL sourced from self"
+                  from_port   = 0
+                  to_port     = 0
+                  protocol    = "-1"
+                  self        = true
+                }
+              ]
+              egress = [
+                {
+                  description      = "Allow all out"
+                  from_port        = 0
+                  to_port          = 0
+                  protocol         = "-1"
+                  cidr_blocks      = ["0.0.0.0/0"]
+                  ipv6_cidr_blocks = ["::/0"]
+                }
+              ]
+            },
+            {
+              name = "hub1-intra"
+              ingress = [
+                {
+                  description = "Allow ALL sourced from self"
+                  from_port   = 0
+                  to_port     = 0
+                  protocol    = "-1"
+                  self        = true
+                }
+              ]
+              egress = [
+                {
+                  description      = "Allow all out"
+                  from_port        = 0
+                  to_port          = 0
+                  protocol         = "-1"
+                  cidr_blocks      = ["0.0.0.0/0"]
+                  ipv6_cidr_blocks = ["::/0"]
+                }
+              ]
+            }
+          ]
         }
         spoke1 = {
           vpc = [{
@@ -296,6 +210,31 @@ locals {
           intra_route_table = [{
             name = "spoke1-intra-1"
           }]
+
+          security_groups = [
+            {
+              name = "spoke1-intra1"
+              ingress = [
+                {
+                  description = "Allow ALL sourced from self"
+                  from_port   = 0
+                  to_port     = 0
+                  protocol    = "-1"
+                  self        = true
+                }
+              ]
+              egress = [
+                {
+                  description      = "Allow all out"
+                  from_port        = 0
+                  to_port          = 0
+                  protocol         = "-1"
+                  cidr_blocks      = ["0.0.0.0/0"]
+                  ipv6_cidr_blocks = ["::/0"]
+                }
+              ]
+            }
+          ]
         }
         spoke2 = {
           vpc = [{
@@ -323,6 +262,31 @@ locals {
           intra_route_table = [{
             name = "spoke2-intra-1"
           }]
+
+          security_groups = [
+            {
+              name = "spoke2-intra1"
+              ingress = [
+                {
+                  description = "Allow ALL sourced from self"
+                  from_port   = 0
+                  to_port     = 0
+                  protocol    = "-1"
+                  self        = true
+                }
+              ]
+              egress = [
+                {
+                  description      = "Allow all out"
+                  from_port        = 0
+                  to_port          = 0
+                  protocol         = "-1"
+                  cidr_blocks      = ["0.0.0.0/0"]
+                  ipv6_cidr_blocks = ["::/0"]
+                }
+              ]
+            }
+          ]
         }
         spoke3 = {
           vpc = [{
@@ -343,6 +307,31 @@ locals {
           intra_route_table = [{
             name = "spoke3-intra-1"
           }]
+
+          security_groups = [
+            {
+              name = "spoke3-intra1"
+              ingress = [
+                {
+                  description = "Allow ALL sourced from self"
+                  from_port   = 0
+                  to_port     = 0
+                  protocol    = "-1"
+                  self        = true
+                }
+              ]
+              egress = [
+                {
+                  description      = "Allow all out"
+                  from_port        = 0
+                  to_port          = 0
+                  protocol         = "-1"
+                  cidr_blocks      = ["0.0.0.0/0"]
+                  ipv6_cidr_blocks = ["::/0"]
+                }
+              ]
+            }
+          ]
         }
       }
     }
@@ -351,39 +340,42 @@ locals {
 
 locals {
   output = {
-    vpc_ids                 = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
-    public_route_table_ids  = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
-    public_subnet_ids       = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
-    private_route_table_ids = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
-    private_subnet_ids      = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
-    intra_route_table_ids   = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
-    intra_subnet_ids        = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
-    route_table_ids         = { for k, v in module.east_vpcs : k => v.route_table_ids }
+    east = {
+      vpc_ids                 = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
+      public_route_table_ids  = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
+      public_subnet_ids       = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
+      private_route_table_ids = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
+      private_subnet_ids      = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
+      intra_route_table_ids   = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
+      intra_subnet_ids        = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
+      route_table_ids         = { for k, v in module.east_vpcs : k => v.route_table_ids }
+      security_group_ids      = { for k, v in module.east_vpcs : k => v.security_group_ids }
+    }
   }
 }
 output "vpc_ids" {
-  value = local.output.vpc_ids
+  value = local.output.east.vpc_ids
 }
 output "public_subnet_ids" {
-  value = local.output.public_subnet_ids
+  value = local.output.east.public_subnet_ids
 }
 output "public_route_table_ids" {
-  value = local.output.public_route_table_ids
+  value = local.output.east.public_route_table_ids
 }
 output "private_subnet_ids" {
-  value = local.output.private_subnet_ids
+  value = local.output.east.private_subnet_ids
 }
 output "private_route_table_ids" {
-  value = local.output.private_route_table_ids
+  value = local.output.east.private_route_table_ids
 }
 output "intra_subnet_ids" {
-  value = local.output.intra_subnet_ids
+  value = local.output.east.intra_subnet_ids
 }
 output "intra_route_table_ids" {
-  value = local.output.intra_route_table_ids
+  value = local.output.east.intra_route_table_ids
 }
 output "route_table_ids" {
-  value = local.output.route_table_ids
+  value = local.output.east.route_table_ids
 }
 
 module "east_vpcs" {
@@ -401,6 +393,7 @@ module "east_vpcs" {
   internet_gateway    = lookup(each.value, "internet_gateway", {})
   nat_gateway         = lookup(each.value, "nat_gateway", {})
   vpc_endpoints       = lookup(each.value, "vpc_endpoints", {})
+  security_groups     = lookup(each.value, "security_groups", {})
 }
 
 # locals {
@@ -553,41 +546,42 @@ module "east_vpcs" {
 #   gateway_id             = lookup(each.value, "gateway_id", null)
 # }
 
-# locals {
-#   network_interface_ids = {
-#     east = { for k, v in module.east_ec2.network_interface_ids : k => v }
-#   }
-# }
-# module "east_ec2" {
-#   source    = "../../modules/ec2"
-#   providers = { aws = aws.us_east_1 }
-#   name      = "east-ec2"
-#   key_name  = var.key_name
-#   priv_key  = module.ssh_key.priv_key
+locals {
+  network_interface_ids = {
+    east = { for k, v in module.east_ec2.network_interface_ids : k => v }
+  }
+}
+module "east_ec2" {
+  source    = "../../modules/ec2"
+  providers = { aws = aws.us_east_1 }
+  name      = "east-ec2"
+  key_name  = var.key_name
+  priv_key  = module.ssh_key.priv_key
 
-#   network_interfaces = {
-#     hub_bastion1 = {
-#       source_dest_check = true
-#       subnet_id         = local.public_subnet_ids.east["hub1"][0]
-#       private_ips       = ["10.200.0.10"]
-#       security_groups   = [local.security_group_ids.east.hub1["public1"]]
-#       description       = "Bastion 1 Public Interface"
-#       tags              = { Purpose = "Bastion 1 Public Interface" }
-#     }
-#   }
+  network_interfaces = {
+    hub_bastion1 = {
+      source_dest_check = true
+      subnet_id         = local.output.east.public_subnet_ids["hub1"][0]
+      private_ips       = ["10.200.0.10"]
+      security_groups   = [local.output.east.security_group_ids["hub1"][0]]
+      description       = "Bastion 1 Public Interface"
+      tags              = { Purpose = "Bastion 1 Public Interface" }
+    }
+  }
 
-#   aws_instances = {
-#     hub_bastion1 = {
-#       ami           = local.amzn_ami
-#       instance_type = "t3.medium"
-#       user_data     = local.amzn_cloud_config[0]
-#       network_interface = [{
-#         network_interface_id = local.network_interface_ids.east["hub_bastion1"]
-#         device_index         = 0
-#       }]
-#     }
-#   }
-# }
+  aws_instances = {
+    hub_bastion1 = {
+      ami           = local.amzn_ami
+      instance_type = "t3.medium"
+      user_data     = local.amzn_cloud_config[0]
+      network_interface = [{
+        network_interface_id = local.network_interface_ids.east["hub_bastion1"]
+        device_index         = 0
+      }]
+    }
+  }
+}
+
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1
 #   peer_region             = local.west_region

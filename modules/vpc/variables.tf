@@ -81,5 +81,5 @@ variable "vpc_endpoints" {
 
 variable "security_groups" {
   type    = any
-  default = {}
+  default = []
 }
