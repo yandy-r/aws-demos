@@ -40,8 +40,8 @@ resource "aws_vpc" "this" {
 
 locals {
   azs                    = data.aws_availability_zones.azs
-  vpc_id                 = { for k, v in aws_vpc.this : k => v.id }
-  cidr_block             = { for k, v in aws_vpc.this : k => v.cidr_block }
+  vpc_id                 = [for v in aws_vpc.this : v.id]
+  cidr_block             = [for v in aws_vpc.this : v.cidr_block]
   internet_gateway_id    = [for v in aws_internet_gateway.this : v.id]
   nat_gateway_id         = [for v in aws_nat_gateway.this : v.id]
   intra_subnet_ids       = [for v in aws_subnet.intra : v.id]
@@ -246,7 +246,7 @@ resource "aws_vpc_endpoint" "this" {
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
   policy            = lookup(each.value, "policy", null)
-  route_table_ids   = lookup(each.value, "route_table_ids", [])
+  route_table_ids   = lookup(each.value, "route_table_ids", local.route_table_ids)
 
   tags = merge(
     {
