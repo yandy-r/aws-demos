@@ -56,7 +56,7 @@ locals {
 
 resource "aws_internet_gateway" "this" {
   for_each = { for k, v in var.internet_gateway : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", local.vpc_id[each.key])
+  vpc_id   = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
 
   tags = merge(
     {
@@ -106,7 +106,7 @@ resource "random_integer" "this" {
 }
 resource "aws_subnet" "public" {
   for_each                = { for k, v in var.public_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id                  = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", true)
@@ -122,7 +122,7 @@ resource "aws_subnet" "public" {
 
 resource "aws_route_table" "public" {
   for_each = { for k, v in var.public_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id   = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
 
   tags = merge(
     {
@@ -141,7 +141,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_subnet" "private" {
   for_each                = { for k, v in var.private_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id                  = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", true)
@@ -157,7 +157,7 @@ resource "aws_subnet" "private" {
 
 resource "aws_route_table" "private" {
   for_each = { for k, v in var.private_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id   = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
 
   tags = merge(
     {
@@ -176,7 +176,7 @@ resource "aws_route_table_association" "private" {
 
 resource "aws_subnet" "intra" {
   for_each                = { for k, v in var.intra_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id                  = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", false)
@@ -192,7 +192,7 @@ resource "aws_subnet" "intra" {
 
 resource "aws_route_table" "intra" {
   for_each = { for k, v in var.intra_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id   = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
 
   tags = merge(
     {
@@ -242,7 +242,7 @@ resource "aws_route" "this" {
 data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "this" {
   for_each          = { for k, v in var.vpc_endpoints : k => v }
-  vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  vpc_id            = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
   policy            = lookup(each.value, "policy", null)
@@ -264,7 +264,7 @@ resource "aws_vpc_endpoint" "this" {
 resource "aws_security_group" "this" {
   for_each    = { for k, v in var.security_groups : k => v }
   description = lookup(each.value, "description", null)
-  vpc_id      = lookup(each.value, "vpc_id", local.vpc_id[0])
+  vpc_id      = lookup(each.value, "vpc_id", element(concat(local.vpc_id, [""]), 0))
 
   dynamic "egress" {
     for_each = lookup(each.value, "egress", {})
@@ -316,202 +316,6 @@ resource "aws_security_group_rule" "security_group_rules" {
   source_security_group_id = lookup(each.value, "source_security_group_id", null)
   security_group_id        = lookup(each.value, "security_group_id", null)
 }
-
-# locals {
-#   spoke_1_rules = {
-
-#     egress = {
-#       description              = "Allow all outbound"
-#       type                     = "egress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["0.0.0.0/0"]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_1.id
-#     }
-
-#     rule_1 = {
-#       description              = "Allow ALL from self"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = null
-#       source_security_group_id = aws_security_group.spoke_1.id
-#       security_group_id        = aws_security_group.spoke_1.id
-#     }
-
-#     rule_2 = {
-#       description              = "Allow ALL from hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[0].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_1.id
-#     }
-
-#     rule_3 = {
-#       description              = "Allow ALL from spoke 2"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[2].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_1.id
-#     }
-#   }
-
-#   spoke_2_rules = {
-
-#     egress = {
-#       description              = "Allow all outbound"
-#       type                     = "egress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["0.0.0.0/0"]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_2.id
-#     }
-
-#     rule_1 = {
-#       description              = "Allow ALL from self"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = null
-#       source_security_group_id = aws_security_group.spoke_2.id
-#       security_group_id        = aws_security_group.spoke_2.id
-#     }
-
-#     rule_2 = {
-#       description              = "Allow ALL from hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[0].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_2.id
-#     }
-
-#     rule_3 = {
-#       description              = "Allow ALL from spoke 1"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[1].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_2.id
-#     }
-#   }
-
-#   spoke_3_rules = {
-
-#     egress = {
-#       description              = "Allow all outbound"
-#       type                     = "egress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["0.0.0.0/0"]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_3.id
-#     }
-
-#     rule_1 = {
-#       description              = "Allow ALL from self"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = null
-#       source_security_group_id = aws_security_group.spoke_3.id
-#       security_group_id        = aws_security_group.spoke_3.id
-#     }
-
-#     rule_2 = {
-#       description              = "Allow ALL from hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = [aws_vpc.vpcs[0].cidr_block]
-#       source_security_group_id = null
-#       security_group_id        = aws_security_group.spoke_3.id
-#     }
-#   }
-# }
-
-
-# resource "aws_security_group_rule" "spoke_1_rules" {
-#   for_each                 = local.spoke_1_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }
-
-# resource "aws_security_group_rule" "spoke_2_rules" {
-#   for_each                 = local.spoke_2_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }
-
-# resource "aws_security_group_rule" "spoke_3_rules" {
-#   for_each                 = local.spoke_3_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }
-
-# resource "aws_security_group" "spoke_1" {
-#   description = "spoke 1 private"
-#   vpc_id      = aws_vpc.vpcs.*.id[1]
-
-#   tags = {
-#     Name = "spoke 1"
-#   }
-# }
-
-# resource "aws_security_group" "spoke_2" {
-#   description = "spoke 2 private"
-#   vpc_id      = aws_vpc.vpcs.*.id[2]
-
-#   tags = {
-#     Name = "spoke 2"
-#   }
-# }
-
-# resource "aws_security_group" "spoke_3" {
-#   description = "spoke 3 private"
-#   vpc_id      = aws_vpc.vpcs.*.id[3]
-
-#   tags = {
-#     Name = "spoke 3"
-#   }
-# }
 
 # ### -------------------------------------------------------------------------------------------- ###
 # ### S3
