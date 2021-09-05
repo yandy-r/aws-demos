@@ -305,17 +305,17 @@ resource "aws_security_group" "this" {
   )
 }
 
-# resource "aws_security_group_rule" "hub_rules" {
-#   for_each                 = local.hub_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }
+resource "aws_security_group_rule" "security_group_rules" {
+  for_each                 = { for k, v in var.security_group_rules : k => v }
+  description              = lookup(each.value, "description", null)
+  type                     = lookup(each.value, "type", null)
+  from_port                = lookup(each.value, "from_port", null)
+  to_port                  = lookup(each.value, "to_port", null)
+  protocol                 = lookup(each.value, "protocol", null)
+  cidr_blocks              = lookup(each.value, "cidr_blocks", null)
+  source_security_group_id = lookup(each.value, "source_security_group_id", null)
+  security_group_id        = lookup(each.value, "security_group_id", null)
+}
 
 # locals {
 #   spoke_1_rules = {

@@ -83,3 +83,8 @@ variable "security_groups" {
   type    = any
   default = []
 }
+
+variable "security_group_rules" {
+  type    = any
+  default = []
+}
