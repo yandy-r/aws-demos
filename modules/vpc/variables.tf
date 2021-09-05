@@ -26,22 +26,12 @@ variable "create_internet_gateway" {
 
 variable "internet_gateway" {
   type    = any
-  default = {}
-}
-
-variable "nat_eip" {
-  type    = any
-  default = {}
+  default = []
 }
 
 variable "nat_gateway" {
   type    = any
-  default = {}
-}
-
-variable "num_nat_gateway" {
-  type    = number
-  default = 0
+  default = []
 }
 
 variable "azs" {
@@ -51,7 +41,7 @@ variable "azs" {
 
 variable "public_subnets" {
   type    = any
-  default = {}
+  default = []
 }
 
 variable "public_route_table" {
@@ -61,7 +51,7 @@ variable "public_route_table" {
 
 variable "private_subnets" {
   type    = any
-  default = {}
+  default = []
 }
 
 variable "private_route_table" {
@@ -71,7 +61,7 @@ variable "private_route_table" {
 
 variable "intra_subnets" {
   type    = any
-  default = {}
+  default = []
 }
 
 variable "intra_route_table" {
