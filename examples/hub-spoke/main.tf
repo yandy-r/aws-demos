@@ -195,199 +195,190 @@ locals {
 
 locals {
   east = {
-    output = {
-      vpc_ids                = [for k, v in module.east_vpcs.vpc_id : v]
-      public_route_table_ids = [for v in module.east_vpcs.public_route_table_id : v]
-      route_table_ids        = [for v in module.east_vpcs.route_table_ids : v]
+    input = {
+      vpcs = {
+        hub1 = {
+          vpc = [{
+            name                             = "east-hub"
+            cidr_block                       = var.cidr_blocks.east["hub1"]
+            instance_tenancy                 = "default"
+            enable_dns_hostnames             = true
+            enable_dns_support               = true
+            enable_classiclink               = false
+            enable_classiclink_dns_support   = false
+            assign_generated_ipv6_cidr_block = false
+          }],
+          internet_gateway = [{}]
+          nat_gateway      = [{}]
+
+          public_subnets = [
+            {
+              name                    = "hub-public-1"
+              cidr_block              = "10.200.0.0/24"
+              availability_zone       = "us-east-1a"
+              map_public_ip_on_launch = true
+            },
+            {
+              name                    = "hub-public-2"
+              cidr_block              = "10.200.1.0/24"
+              availability_zone       = "us-east-1b"
+              map_public_ip_on_launch = true
+            }
+          ]
+          public_route_table = [{
+            name = "hub-public-1"
+          }]
+
+          private_subnets = [
+            {
+              name              = "hub-private-1"
+              cidr_block        = "10.200.64.0/24",
+              availability_zone = "us-east-1a"
+            },
+            {
+              name              = "hub-private-2"
+              cidr_block        = "10.200.65.0/24",
+              availability_zone = "us-east-1b"
+            }
+          ]
+          private_route_table = [{
+            name = "hub-private-1"
+          }]
+
+          intra_subnets = [
+            {
+              name              = "hub-intra-1"
+              cidr_block        = "10.200.128.0/24",
+              availability_zone = "us-east-1a"
+            },
+            {
+              name              = "hub-intra-2"
+              cidr_block        = "10.200.129.0/24",
+              availability_zone = "us-east-1b"
+            }
+          ]
+          intra_route_table = [{
+            name = "hub-intra-1"
+          }]
+
+          vpc_endpoints = [{
+            endpoint_type   = "Gateway"
+            service_type    = "s3"
+            policy          = local.east_s3_endpoint_policy
+            route_table_ids = ""
+            tags = {
+              Name = "hub-s3-endpoint"
+            }
+          }]
+        }
+        spoke1 = {
+          vpc = [{
+            name                             = "spoke1"
+            cidr_block                       = var.cidr_blocks.east["spoke1"]
+            instance_tenancy                 = "default"
+            enable_dns_hostnames             = true
+            enable_dns_support               = true
+            enable_classiclink               = false
+            enable_classiclink_dns_support   = false
+            assign_generated_ipv6_cidr_block = false
+          }]
+          intra_subnets = [
+            {
+              name              = "spoke1-intra-1"
+              cidr_block        = "10.201.128.0/24",
+              availability_zone = "us-east-1a"
+            },
+            {
+              name              = "spoke1-intra-2"
+              cidr_block        = "10.201.129.0/24",
+              availability_zone = "us-east-1b"
+            },
+          ]
+          intra_route_table = [{
+            name = "spoke1-intra-1"
+          }]
+        }
+        spoke2 = {
+          vpc = [{
+            name                             = "spoke2"
+            cidr_block                       = var.cidr_blocks.east["spoke2"]
+            instance_tenancy                 = "default"
+            enable_dns_hostnames             = true
+            enable_dns_support               = true
+            enable_classiclink               = false
+            enable_classiclink_dns_support   = false
+            assign_generated_ipv6_cidr_block = false
+          }]
+          intra_subnets = [
+            {
+              name              = "spoke2-intra-1"
+              cidr_block        = "10.202.128.0/24",
+              availability_zone = "us-east-1a"
+            },
+            {
+              name              = "spoke2-intra-2"
+              cidr_block        = "10.202.129.0/24",
+              availability_zone = "us-east-1b"
+            }
+          ]
+          intra_route_table = [{
+            name = "spoke2-intra-1"
+          }]
+        }
+        spoke3 = {
+          vpc = [{
+            name                             = "spoke3"
+            cidr_block                       = var.cidr_blocks.east["spoke3"]
+            instance_tenancy                 = "default"
+            enable_dns_hostnames             = true
+            enable_dns_support               = true
+            enable_classiclink               = false
+            enable_classiclink_dns_support   = false
+            assign_generated_ipv6_cidr_block = false
+          }]
+          intra_subnets = [{
+            name              = "spoke3-intra-1"
+            cidr_block        = "10.203.128.0/24",
+            availability_zone = "us-east-1a"
+            route_table_idx   = 0
+          }]
+          intra_route_table = [{
+            name = "spoke3-intra-1"
+          }]
+        }
+      }
     }
+    #   output = {
+    #     vpc_ids                = [for k, v in module.east_vpcs.vpc_id : v]
+    #     public_route_table_ids = [for v in module.east_vpcs.public_route_table_id : v]
+    #     route_table_ids        = [for v in module.east_vpcs.route_table_ids : v]
+    #   }
   }
 }
 
-output "vpc_ids" {
-  value = local.east.output.vpc_ids
-}
-output "route_table_ids" {
-  value = local.east.output.route_table_ids
-}
-output "public_route_table_ids" {
-  value = local.east.output.public_route_table_ids
-}
+# output "vpc_ids" {
+#   value = local.east.output.vpc_ids
+# }
+# output "route_table_ids" {
+#   value = local.east.output.route_table_ids
+# }
+# output "public_route_table_ids" {
+#   value = local.east.output.public_route_table_ids
+# }
 module "east_vpcs" {
-  source    = "../../modules/vpc"
-  providers = { aws = aws.us_east_1 }
-  name      = "east"
-  vpc = [
-    {
-      name                             = "east-hub"
-      cidr_block                       = var.cidr_blocks.east["hub1"]
-      instance_tenancy                 = "default"
-      enable_dns_hostnames             = true
-      enable_dns_support               = true
-      enable_classiclink               = false
-      enable_classiclink_dns_support   = false
-      assign_generated_ipv6_cidr_block = false
-    },
-    {
-      name                             = "east-spoke1"
-      cidr_block                       = var.cidr_blocks.east["spoke1"]
-      instance_tenancy                 = "default"
-      enable_dns_hostnames             = true
-      enable_dns_support               = true
-      enable_classiclink               = false
-      enable_classiclink_dns_support   = false
-      assign_generated_ipv6_cidr_block = false
-    },
-    {
-      name                             = "east-spoke2"
-      cidr_block                       = var.cidr_blocks.east["spoke2"]
-      instance_tenancy                 = "default"
-      enable_dns_hostnames             = true
-      enable_dns_support               = true
-      enable_classiclink               = false
-      enable_classiclink_dns_support   = false
-      assign_generated_ipv6_cidr_block = false
-    },
-    {
-      name                             = "east-spoke3"
-      cidr_block                       = var.cidr_blocks.east["spoke3"]
-      instance_tenancy                 = "default"
-      enable_dns_hostnames             = true
-      enable_dns_support               = true
-      enable_classiclink               = false
-      enable_classiclink_dns_support   = false
-      assign_generated_ipv6_cidr_block = false
-    }
-  ]
-
-  internet_gateway = [{ vpc_idx = 0 }]
-  nat_gateway      = [{}]
-
-  public_subnets = [
-    {
-      name                    = "east-hub-public-1"
-      vpc_idx                 = 0
-      cidr_block              = "10.200.0.0/24"
-      availability_zone       = "us-east-1a"
-      map_public_ip_on_launch = true
-      route_table_idx         = 0
-    },
-    {
-      name                    = "east-hub-public-2"
-      vpc_idx                 = 0
-      cidr_block              = "10.200.1.0/24"
-      availability_zone       = "us-east-1b"
-      map_public_ip_on_launch = true
-      route_table_idx         = 0
-    }
-  ]
-  public_route_table = [{
-    name    = "east-hub-public-1"
-    vpc_idx = 0
-  }]
-
-  private_subnets = [
-    {
-      name              = "east-hub-private-1"
-      vpc_idx           = 0
-      cidr_block        = "10.200.64.0/24",
-      availability_zone = "us-east-1a"
-      route_table_idx   = 0
-    },
-    {
-      name              = "east-hub-private-2"
-      vpc_idx           = 0
-      cidr_block        = "10.200.65.0/24",
-      availability_zone = "us-east-1b"
-      route_table_idx   = 0
-    }
-  ]
-  private_route_table = [{
-    name    = "east-hub-private-1"
-    vpc_idx = 0
-  }]
-
-  intra_subnets = [
-    {
-      name              = "east-hub-intra-1"
-      vpc_idx           = 0
-      cidr_block        = "10.200.128.0/24",
-      availability_zone = "us-east-1a"
-      route_table_idx   = 0
-    },
-    {
-      name              = "east-hub-intra-2"
-      vpc_idx           = 0
-      cidr_block        = "10.200.129.0/24",
-      availability_zone = "us-east-1b"
-      route_table_idx   = 0
-    },
-    {
-      name              = "east-spoke1-intra-1"
-      vpc_idx           = 1
-      cidr_block        = "10.201.128.0/24",
-      availability_zone = "us-east-1a"
-      route_table_idx   = 1
-    },
-    {
-      name              = "east-spoke1-intra-2"
-      vpc_idx           = 1
-      cidr_block        = "10.201.129.0/24",
-      availability_zone = "us-east-1b"
-      route_table_idx   = 1
-    },
-    {
-      name              = "east-spoke2-intra-1"
-      vpc_idx           = 2
-      cidr_block        = "10.202.128.0/24",
-      availability_zone = "us-east-1a"
-      route_table_idx   = 2
-    },
-    {
-      name              = "east-spoke2-intra-2"
-      vpc_idx           = 2
-      cidr_block        = "10.202.129.0/24",
-      availability_zone = "us-east-1b"
-      route_table_idx   = 2
-    },
-    {
-      name              = "east-spoke3-intra-1"
-      vpc_idx           = 3
-      cidr_block        = "10.203.128.0/24",
-      availability_zone = "us-east-1a"
-      route_table_idx   = 3
-    },
-  ]
-  intra_route_table = [
-    {
-      name    = "east-hub-intra-1"
-      vpc_idx = 0
-    },
-    {
-      name    = "east-spoke1-intra-1"
-      vpc_idx = 1
-    },
-    {
-      name    = "east-spoke2-intra-1"
-      vpc_idx = 2
-    },
-    {
-      name    = "east-spoke3-intra-1"
-      vpc_idx = 3
-    },
-  ]
-
-  vpc_endpoints = [
-    {
-      vpc_idx         = 0
-      endpoint_type   = "Gateway"
-      service_type    = "s3"
-      policy          = local.east_s3_endpoint_policy
-      route_table_ids = slice(local.east.output.route_table_ids, 0, 3)
-      tags = {
-        Name = "east-hub-s3-endpoint"
-      }
-    }
-  ]
+  source              = "../../modules/vpc"
+  providers           = { aws = aws.us_east_1 }
+  for_each            = { for k, v in local.east.input.vpcs : k => v }
+  name                = "east"
+  vpc                 = lookup(each.value, "vpc", {})
+  public_subnets      = lookup(each.value, "public_subnets", {})
+  public_route_table  = lookup(each.value, "public_route_table", {})
+  private_subnets     = lookup(each.value, "private_subnets", {})
+  private_route_table = lookup(each.value, "private_route_table", {})
+  intra_subnets       = lookup(each.value, "intra_subnets", {})
+  intra_route_table   = lookup(each.value, "intra_route_table", {})
+  internet_gateway    = lookup(each.value, "internet_gateway", {})
+  nat_gateway         = lookup(each.value, "nat_gateway", {})
 }
 
 # locals {

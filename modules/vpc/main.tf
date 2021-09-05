@@ -106,7 +106,7 @@ resource "random_integer" "this" {
 }
 resource "aws_subnet" "public" {
   for_each                = { for k, v in var.public_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[each.value.vpc_idx].id)
+  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", true)
@@ -122,7 +122,7 @@ resource "aws_subnet" "public" {
 
 resource "aws_route_table" "public" {
   for_each = { for k, v in var.public_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[each.value.vpc_idx].id)
+  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
 
   tags = merge(
     {
@@ -136,19 +136,19 @@ resource "aws_route_table" "public" {
 resource "aws_route_table_association" "public" {
   for_each       = { for k, v in var.public_subnets : k => v }
   subnet_id      = aws_subnet.public[each.key].id
-  route_table_id = lookup(each.value, "route_table_id", aws_route_table.public[each.value.route_table_idx].id)
+  route_table_id = lookup(each.value, "route_table_id", aws_route_table.public[0].id)
 }
 
 resource "aws_subnet" "private" {
   for_each                = { for k, v in var.private_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[each.value.vpc_idx].id)
+  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", true)
 
   tags = merge(
     {
-      Name = lookup(each.value, "name", "${var.name}-private-${each.key}")
+      Name = "${var.name}-${lookup(each.value, "name", "private-${each.key}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -157,7 +157,7 @@ resource "aws_subnet" "private" {
 
 resource "aws_route_table" "private" {
   for_each = { for k, v in var.private_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[each.value.vpc_idx].id)
+  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
 
   tags = merge(
     {
@@ -171,12 +171,12 @@ resource "aws_route_table" "private" {
 resource "aws_route_table_association" "private" {
   for_each       = { for k, v in var.private_subnets : k => v }
   subnet_id      = aws_subnet.private[each.key].id
-  route_table_id = lookup(each.value, "route_table_id", aws_route_table.private[each.value.route_table_idx].id)
+  route_table_id = lookup(each.value, "route_table_id", aws_route_table.private[0].id)
 }
 
 resource "aws_subnet" "intra" {
   for_each                = { for k, v in var.intra_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[each.value.vpc_idx].id)
+  vpc_id                  = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", false)
@@ -192,7 +192,7 @@ resource "aws_subnet" "intra" {
 
 resource "aws_route_table" "intra" {
   for_each = { for k, v in var.intra_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[each.value.vpc_idx].id)
+  vpc_id   = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
 
   tags = merge(
     {
@@ -206,14 +206,14 @@ resource "aws_route_table" "intra" {
 resource "aws_route_table_association" "intra" {
   for_each       = { for k, v in var.intra_subnets : k => v }
   subnet_id      = aws_subnet.intra[each.key].id
-  route_table_id = lookup(each.value, "route_table_id", aws_route_table.intra[each.value.route_table_idx].id)
+  route_table_id = lookup(each.value, "route_table_id", aws_route_table.intra[0].id)
 }
 
 resource "aws_route" "internet_gateway_default" {
   for_each               = { for k, v in aws_internet_gateway.this : k => v }
   route_table_id         = lookup(each.value, "route_table_id", aws_route_table.public[each.key].id)
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = lookup(each.value, "internet_gateway_id", aws_internet_gateway.this[0].id)
+  gateway_id             = lookup(each.value, "internet_gateway_id", aws_internet_gateway.this[each.key].id)
 }
 
 resource "aws_route" "nat_gateway_default" {
@@ -242,7 +242,7 @@ resource "aws_route" "this" {
 data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "this" {
   for_each          = { for k, v in var.vpc_endpoints : k => v }
-  vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[each.value.vpc_idx].id)
+  vpc_id            = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
   policy            = lookup(each.value, "policy", null)
