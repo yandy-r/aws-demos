@@ -121,10 +121,6 @@ locals {
 #         }
 #       }
 #     }
-#     intra_subnets = {
-#       intra1 = { cidr_block = "10.201.128.0/24", availability_zone = "us-east-1a" }
-#       intra2 = { cidr_block = "10.201.129.0/24", availability_zone = "us-east-1b" }
-#     }
 
 #     security_groups = {
 #       intra1 = {
@@ -267,48 +263,117 @@ module "east_vpcs" {
 
   public_subnets = [
     {
+      name                    = "east-hub-public-1"
       vpc_id                  = local.east.output.vpc_ids[0]
       cidr_block              = "10.200.0.0/24"
       availability_zone       = "us-east-1a"
       map_public_ip_on_launch = true
-      name                    = "east-hub-public-0"
+      route_table_idx         = 0
     },
     {
+      name                    = "east-hub-public-2"
       vpc_id                  = local.east.output.vpc_ids[0]
       cidr_block              = "10.200.1.0/24"
       availability_zone       = "us-east-1b"
       map_public_ip_on_launch = true
+      route_table_idx         = 0
     }
   ]
-  public_route_table = [{ vpc_id = local.east.output.vpc_ids[0] }]
+  public_route_table = [{
+    name   = "east-hub-public-1"
+    vpc_id = local.east.output.vpc_ids[0]
+  }]
 
   private_subnets = [
     {
+      name              = "east-hub-private-1"
       vpc_id            = local.east.output.vpc_ids[0]
       cidr_block        = "10.200.64.0/24",
       availability_zone = "us-east-1a"
+      route_table_idx   = 0
     },
     {
+      name              = "east-hub-private-2"
       vpc_id            = local.east.output.vpc_ids[0]
       cidr_block        = "10.200.65.0/24",
       availability_zone = "us-east-1b"
+      route_table_idx   = 0
     }
   ]
-  private_route_table = [{ vpc_id = local.east.output.vpc_ids[0] }]
+  private_route_table = [{
+    name   = "east-hub-private-1"
+    vpc_id = local.east.output.vpc_ids[0]
+  }]
 
   intra_subnets = [
     {
+      name              = "east-hub-intra-1"
       vpc_id            = local.east.output.vpc_ids[0]
       cidr_block        = "10.200.128.0/24",
       availability_zone = "us-east-1a"
+      route_table_idx   = 0
     },
     {
+      name              = "east-hub-intra-2"
       vpc_id            = local.east.output.vpc_ids[0]
       cidr_block        = "10.200.129.0/24",
       availability_zone = "us-east-1b"
-    }
+      route_table_idx   = 0
+    },
+    {
+      name              = "east-spoke1-intra-1"
+      vpc_id            = local.east.output.vpc_ids[1]
+      cidr_block        = "10.201.128.0/24",
+      availability_zone = "us-east-1a"
+      route_table_idx   = 1
+    },
+    {
+      name              = "east-spoke1-intra-2"
+      vpc_id            = local.east.output.vpc_ids[1]
+      cidr_block        = "10.201.129.0/24",
+      availability_zone = "us-east-1b"
+      route_table_idx   = 1
+    },
+    {
+      name              = "east-spoke2-intra-1"
+      vpc_id            = local.east.output.vpc_ids[2]
+      cidr_block        = "10.202.128.0/24",
+      availability_zone = "us-east-1a"
+      route_table_idx   = 2
+    },
+    {
+      name              = "east-spoke2-intra-2"
+      vpc_id            = local.east.output.vpc_ids[2]
+      cidr_block        = "10.202.129.0/24",
+      availability_zone = "us-east-1b"
+      route_table_idx   = 2
+    },
+    {
+      name              = "east-spoke3-intra-1"
+      vpc_id            = local.east.output.vpc_ids[3]
+      cidr_block        = "10.203.128.0/24",
+      availability_zone = "us-east-1a"
+      route_table_idx   = 3
+    },
   ]
-  intra_route_table = [{ vpc_id = local.east.output.vpc_ids[0] }]
+  intra_route_table = [
+    {
+      name   = "east-hub-intra-1"
+      vpc_id = local.east.output.vpc_ids[0]
+    },
+    {
+      name   = "east-spoke1-intra-1"
+      vpc_id = local.east.output.vpc_ids[1]
+    },
+    {
+      name   = "east-spoke2-intra-1"
+      vpc_id = local.east.output.vpc_ids[2]
+    },
+    {
+      name   = "east-spoke3-intra-1"
+      vpc_id = local.east.output.vpc_ids[3]
+    },
+  ]
 }
 
 # locals {
