@@ -18,15 +18,17 @@ module "east_data" {
 }
 
 locals {
-  east_s3_endpoint_policy = module.east_data.s3_endpoint_policy
-  amzn_ami                = module.east_data.amzn_ami
-  amzn_cloud_config       = module.east_data.amzn_cloud_config
-  ubuntu_ami              = module.east_data.ubuntu_ami
-  ubuntu_cloud_config     = module.east_data.ubuntu_cloud_config
+  east_data = {
+    s3_endpoint_policy  = module.east_data.s3_endpoint_policy
+    amzn_ami            = module.east_data.amzn_ami
+    amzn_cloud_config   = module.east_data.amzn_cloud_config
+    ubuntu_ami          = module.east_data.ubuntu_ami
+    ubuntu_cloud_config = module.east_data.ubuntu_cloud_config
+  }
 }
 
 locals {
-  east_vpcs = {
+  east_vpc_input = {
     hub1 = {
       vpc = [{
         name                             = "hub"
@@ -94,7 +96,7 @@ locals {
       vpc_endpoints = [{
         endpoint_type = "Gateway"
         service_type  = "s3"
-        policy        = local.east_s3_endpoint_policy
+        policy        = local.east_data.s3_endpoint_policy
         tags = {
           Name = "hub-s3-endpoint"
         }
@@ -335,45 +337,47 @@ locals {
 }
 
 locals {
-  east_vpc_ids                 = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
-  east_public_route_table_ids  = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
-  east_public_subnet_ids       = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
-  east_private_route_table_ids = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
-  east_private_subnet_ids      = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
-  east_intra_route_table_ids   = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
-  east_intra_subnet_ids        = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
-  east_route_table_ids         = { for k, v in module.east_vpcs : k => v.route_table_ids }
-  east_security_group_ids      = { for k, v in module.east_vpcs : k => v.security_group_ids }
+  east_vpc_output = {
+    vpc_ids                 = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
+    public_route_table_ids  = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
+    public_subnet_ids       = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
+    private_route_table_ids = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
+    private_subnet_ids      = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
+    intra_route_table_ids   = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
+    intra_subnet_ids        = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
+    route_table_ids         = { for k, v in module.east_vpcs : k => v.route_table_ids }
+    security_group_ids      = { for k, v in module.east_vpcs : k => v.security_group_ids }
+  }
 }
 output "vpc_ids" {
-  value = local.east_vpc_ids
+  value = local.east_vpc_output.vpc_ids
 }
 output "public_subnet_ids" {
-  value = local.east_public_subnet_ids
+  value = local.east_vpc_output.public_subnet_ids
 }
 output "public_route_table_ids" {
-  value = local.east_public_route_table_ids
+  value = local.east_vpc_output.public_route_table_ids
 }
 output "private_subnet_ids" {
-  value = local.east_private_subnet_ids
+  value = local.east_vpc_output.private_subnet_ids
 }
 output "private_route_table_ids" {
-  value = local.east_private_route_table_ids
+  value = local.east_vpc_output.private_route_table_ids
 }
 output "intra_subnet_ids" {
-  value = local.east_intra_subnet_ids
+  value = local.east_vpc_output.intra_subnet_ids
 }
 output "intra_route_table_ids" {
-  value = local.east_intra_route_table_ids
+  value = local.east_vpc_output.intra_route_table_ids
 }
 output "route_table_ids" {
-  value = local.east_route_table_ids
+  value = local.east_vpc_output.route_table_ids
 }
 
 module "east_vpcs" {
   source              = "../../modules/vpc"
   providers           = { aws = aws.us_east_1 }
-  for_each            = { for k, v in local.east_vpcs : k => v }
+  for_each            = { for k, v in local.east_vpc_input : k => v }
   name                = "east"
   vpc                 = lookup(each.value, "vpc", {})
   public_subnets      = lookup(each.value, "public_subnets", {})
@@ -388,8 +392,9 @@ module "east_vpcs" {
   security_groups     = lookup(each.value, "security_groups", {})
 }
 
+
 locals {
-  east_sg_rules = {
+  east_security_group_input = {
     hub1 = {
       security_group_rules = [
         {
@@ -397,49 +402,49 @@ locals {
           from_port                = 0
           to_port                  = 0
           protocol                 = "-1"
-          source_security_group_id = local.east_security_group_ids["hub1"][1]
-          security_group_id        = local.east_security_group_ids["hub1"][0]
+          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
+          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][0]
         },
         {
           type                     = "ingress"
           from_port                = 0
           to_port                  = 0
           protocol                 = "-1"
-          source_security_group_id = local.east_security_group_ids["hub1"][2]
-          security_group_id        = local.east_security_group_ids["hub1"][0]
+          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
+          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][0]
         },
         {
           type                     = "ingress"
           from_port                = 0
           to_port                  = 0
           protocol                 = "-1"
-          source_security_group_id = local.east_security_group_ids["hub1"][0]
-          security_group_id        = local.east_security_group_ids["hub1"][1]
+          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
+          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][1]
         },
         {
           type                     = "ingress"
           from_port                = 0
           to_port                  = 0
           protocol                 = "-1"
-          source_security_group_id = local.east_security_group_ids["hub1"][0]
-          security_group_id        = local.east_security_group_ids["hub1"][2]
+          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
+          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][2]
         },
         {
           type                     = "ingress"
           from_port                = 0
           to_port                  = 0
           protocol                 = "-1"
-          source_security_group_id = local.east_security_group_ids["hub1"][1]
-          security_group_id        = local.east_security_group_ids["hub1"][2]
+          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
+          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][2]
         },
       ]
     }
   }
 }
 
-module "east_security_group_rules" {
+module "east_security_groups" {
   source               = "../../modules/vpc"
-  for_each             = { for k, v in local.east_sg_rules : k => v }
+  for_each             = { for k, v in local.east_security_group_input : k => v }
   name                 = "east"
   security_group_rules = lookup(each.value, "security_group_rules", {})
 }
@@ -595,8 +600,10 @@ module "east_security_group_rules" {
 # }
 
 locals {
-  network_interface_ids = {
-    east = { for k, v in module.east_ec2.network_interface_ids : k => v }
+  east_ec2 = {
+    network_interface_ids = {
+      east = { for k, v in module.east_ec2.network_interface_ids : k => v }
+    }
   }
 }
 module "east_ec2" {
@@ -609,9 +616,9 @@ module "east_ec2" {
   network_interfaces = {
     hub_bastion1 = {
       source_dest_check = true
-      subnet_id         = local.east_public_subnet_ids["hub1"][0]
+      subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
       private_ips       = ["10.200.0.10"]
-      security_groups   = [local.east_security_group_ids["hub1"][0]]
+      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
       description       = "Bastion 1 Public Interface"
       tags              = { Purpose = "Bastion 1 Public Interface" }
     }
@@ -619,11 +626,11 @@ module "east_ec2" {
 
   aws_instances = {
     hub_bastion1 = {
-      ami           = local.amzn_ami
+      ami           = local.east_data.amzn_ami
       instance_type = "t3.medium"
-      user_data     = local.amzn_cloud_config[0]
+      user_data     = local.east_data.amzn_cloud_config[0]
       network_interface = [{
-        network_interface_id = local.network_interface_ids.east["hub_bastion1"]
+        network_interface_id = local.east_ec2.network_interface_ids.east["hub_bastion1"]
         device_index         = 0
       }]
     }
