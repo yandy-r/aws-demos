@@ -262,10 +262,9 @@ locals {
           }]
 
           vpc_endpoints = [{
-            endpoint_type   = "Gateway"
-            service_type    = "s3"
-            policy          = local.east_s3_endpoint_policy
-            route_table_ids = ""
+            endpoint_type = "Gateway"
+            service_type  = "s3"
+            policy        = local.east_s3_endpoint_policy
             tags = {
               Name = "hub-s3-endpoint"
             }
@@ -340,7 +339,6 @@ locals {
             name              = "spoke3-intra-1"
             cidr_block        = "10.203.128.0/24",
             availability_zone = "us-east-1a"
-            route_table_idx   = 0
           }]
           intra_route_table = [{
             name = "spoke3-intra-1"
@@ -348,23 +346,46 @@ locals {
         }
       }
     }
-    #   output = {
-    #     vpc_ids                = [for k, v in module.east_vpcs.vpc_id : v]
-    #     public_route_table_ids = [for v in module.east_vpcs.public_route_table_id : v]
-    #     route_table_ids        = [for v in module.east_vpcs.route_table_ids : v]
-    #   }
   }
 }
 
-# output "vpc_ids" {
-#   value = local.east.output.vpc_ids
-# }
-# output "route_table_ids" {
-#   value = local.east.output.route_table_ids
-# }
-# output "public_route_table_ids" {
-#   value = local.east.output.public_route_table_ids
-# }
+locals {
+  output = {
+    vpc_ids                 = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
+    public_route_table_ids  = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
+    public_subnet_ids       = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
+    private_route_table_ids = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
+    private_subnet_ids      = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
+    intra_route_table_ids   = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
+    intra_subnet_ids        = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
+    route_table_ids         = { for k, v in module.east_vpcs : k => v.route_table_ids }
+  }
+}
+output "vpc_ids" {
+  value = local.output.vpc_ids
+}
+output "public_subnet_ids" {
+  value = local.output.public_subnet_ids
+}
+output "public_route_table_ids" {
+  value = local.output.public_route_table_ids
+}
+output "private_subnet_ids" {
+  value = local.output.private_subnet_ids
+}
+output "private_route_table_ids" {
+  value = local.output.private_route_table_ids
+}
+output "intra_subnet_ids" {
+  value = local.output.intra_subnet_ids
+}
+output "intra_route_table_ids" {
+  value = local.output.intra_route_table_ids
+}
+output "route_table_ids" {
+  value = local.output.route_table_ids
+}
+
 module "east_vpcs" {
   source              = "../../modules/vpc"
   providers           = { aws = aws.us_east_1 }
@@ -379,6 +400,7 @@ module "east_vpcs" {
   intra_route_table   = lookup(each.value, "intra_route_table", {})
   internet_gateway    = lookup(each.value, "internet_gateway", {})
   nat_gateway         = lookup(each.value, "nat_gateway", {})
+  vpc_endpoints       = lookup(each.value, "vpc_endpoints", {})
 }
 
 # locals {
