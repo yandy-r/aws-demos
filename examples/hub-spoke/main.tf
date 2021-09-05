@@ -25,103 +25,213 @@ locals {
   ubuntu_cloud_config     = module.east_data.ubuntu_cloud_config
 }
 
+# locals {
+#   east_vpcs = {
+#     hub1 = {
+
+
+#       security_groups = {
+#         public1 = {
+#           egress = [
+#             {
+#               description      = "Allow all out"
+#               from_port        = 0
+#               to_port          = 0
+#               protocol         = "-1"
+#               cidr_blocks      = ["0.0.0.0/0"]
+#               ipv6_cidr_blocks = ["::/0"]
+#             }
+#           ]
+#           ingress = [
+#             {
+#               description = "Allow ALL sourced from self"
+#               from_port   = 0
+#               to_port     = 0
+#               protocol    = "-1"
+#               self        = true
+#             },
+#             {
+#               description = "Allow ICMP from home"
+#               from_port   = -1
+#               to_port     = -1
+#               protocol    = "icmp"
+#               cidr_blocks = [var.self_public_ip]
+#             },
+#             {
+#               description = "Allow SSH from home"
+#               from_port   = 22
+#               to_port     = 22
+#               protocol    = "tcp"
+#               cidr_blocks = [var.self_public_ip]
+#             }
+#           ]
+#         }
+#         private1 = {
+#           ingress = [
+#             {
+#               description = "Allow ALL sourced from self"
+#               from_port   = 0
+#               to_port     = 0
+#               protocol    = "-1"
+#               self        = true
+#             }
+#           ]
+#           egress = [
+#             {
+#               description      = "Allow all out"
+#               from_port        = 0
+#               to_port          = 0
+#               protocol         = "-1"
+#               cidr_blocks      = ["0.0.0.0/0"]
+#               ipv6_cidr_blocks = ["::/0"]
+#             }
+#           ]
+#         }
+#         intra1 = {
+#           ingress = [
+#             {
+#               description = "Allow ALL sourced from self"
+#               from_port   = 0
+#               to_port     = 0
+#               protocol    = "-1"
+#               self        = true
+#             }
+#           ]
+#           egress = [
+#             {
+#               description      = "Allow all out"
+#               from_port        = 0
+#               to_port          = 0
+#               protocol         = "-1"
+#               cidr_blocks      = ["0.0.0.0/0"]
+#               ipv6_cidr_blocks = ["::/0"]
+#             }
+#           ]
+#         }
+#       }
+
+#       vpc_endpoints = {
+#         s3 = {
+#           endpoint_type = "Gateway"
+#           service_type  = "s3"
+#           policy        = local.east_s3_endpoint_policy
+#           tags = {
+#             Purpose = "Hub VPC S3 Endpoint"
+#           }
+#         }
+#       }
+#     }
+#     intra_subnets = {
+#       intra1 = { cidr_block = "10.201.128.0/24", availability_zone = "us-east-1a" }
+#       intra2 = { cidr_block = "10.201.129.0/24", availability_zone = "us-east-1b" }
+#     }
+
+#     security_groups = {
+#       intra1 = {
+#         ingress = [
+#           {
+#             description = "Allow ALL sourced from self"
+#             from_port   = 0
+#             to_port     = 0
+#             protocol    = "-1"
+#             self        = true
+#           }
+#         ]
+#         egress = [
+#           {
+#             description      = "Allow all out"
+#             from_port        = 0
+#             to_port          = 0
+#             protocol         = "-1"
+#             cidr_blocks      = ["0.0.0.0/0"]
+#             ipv6_cidr_blocks = ["::/0"]
+#           }
+#         ]
+#       }
+#     }
+#   }
+
+#   intra_subnets = {
+#     intra1 = { cidr_block = "10.202.128.0/24", availability_zone = "us-east-1a" }
+#     intra2 = { cidr_block = "10.202.129.0/24", availability_zone = "us-east-1b" }
+#   }
+
+#   security_groups = {
+#     intra1 = {
+#       ingress = [
+#         {
+#           description = "Allow ALL sourced from self"
+#           from_port   = 0
+#           to_port     = 0
+#           protocol    = "-1"
+#           self        = true
+#         }
+#       ]
+#       egress = [
+#         {
+#           description      = "Allow all out"
+#           from_port        = 0
+#           to_port          = 0
+#           protocol         = "-1"
+#           cidr_blocks      = ["0.0.0.0/0"]
+#           ipv6_cidr_blocks = ["::/0"]
+#         }
+#       ]
+#     }
+#   }
+# }
+# intra_subnets = {
+#   intra1 = { cidr_block = "10.203.128.0/24" }
+# }
+
+# security_groups = {
+#   intra1 = {
+#     ingress = [
+#       {
+#         description = "Allow ALL sourced from self"
+#         from_port   = 0
+#         to_port     = 0
+#         protocol    = "-1"
+#         self        = true
+#       }
+#     ]
+#     egress = [
+#       {
+#         description      = "Allow all out"
+#         from_port        = 0
+#         to_port          = 0
+#         protocol         = "-1"
+#         cidr_blocks      = ["0.0.0.0/0"]
+#         ipv6_cidr_blocks = ["::/0"]
+#       }
+#     ]
+#   }
+# }
+
 locals {
-  east_vpcs = {
-    hub1 = {
-
-
-      security_groups = {
-        public1 = {
-          egress = [
-            {
-              description      = "Allow all out"
-              from_port        = 0
-              to_port          = 0
-              protocol         = "-1"
-              cidr_blocks      = ["0.0.0.0/0"]
-              ipv6_cidr_blocks = ["::/0"]
-            }
-          ]
-          ingress = [
-            {
-              description = "Allow ALL sourced from self"
-              from_port   = 0
-              to_port     = 0
-              protocol    = "-1"
-              self        = true
-            },
-            {
-              description = "Allow ICMP from home"
-              from_port   = -1
-              to_port     = -1
-              protocol    = "icmp"
-              cidr_blocks = [var.self_public_ip]
-            },
-            {
-              description = "Allow SSH from home"
-              from_port   = 22
-              to_port     = 22
-              protocol    = "tcp"
-              cidr_blocks = [var.self_public_ip]
-            }
-          ]
-        }
-        private1 = {
-          ingress = [
-            {
-              description = "Allow ALL sourced from self"
-              from_port   = 0
-              to_port     = 0
-              protocol    = "-1"
-              self        = true
-            }
-          ]
-          egress = [
-            {
-              description      = "Allow all out"
-              from_port        = 0
-              to_port          = 0
-              protocol         = "-1"
-              cidr_blocks      = ["0.0.0.0/0"]
-              ipv6_cidr_blocks = ["::/0"]
-            }
-          ]
-        }
-        intra1 = {
-          ingress = [
-            {
-              description = "Allow ALL sourced from self"
-              from_port   = 0
-              to_port     = 0
-              protocol    = "-1"
-              self        = true
-            }
-          ]
-          egress = [
-            {
-              description      = "Allow all out"
-              from_port        = 0
-              to_port          = 0
-              protocol         = "-1"
-              cidr_blocks      = ["0.0.0.0/0"]
-              ipv6_cidr_blocks = ["::/0"]
-            }
-          ]
-        }
-      }
-
-      vpc_endpoints = {
-        s3 = {
-          endpoint_type = "Gateway"
-          service_type  = "s3"
-          policy        = local.east_s3_endpoint_policy
-          tags = {
-            Purpose = "Hub VPC S3 Endpoint"
-          }
-        }
-      }
+  east = {
+    output = {
+      vpc_ids = { for k, v in module.east_vpcs.vpc_id : k => v }
     }
-    spoke1 = {
+  }
+}
+module "east_vpcs" {
+  source    = "../../modules/vpc"
+  providers = { aws = aws.us_east_1 }
+  name      = "east"
+  vpc = [
+    {
+      name                             = "east-hub"
+      cidr_block                       = var.cidr_blocks.east["hub1"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
+    },
+    {
+      name                             = "east-spoke1"
       cidr_block                       = var.cidr_blocks.east["spoke1"]
       instance_tenancy                 = "default"
       enable_dns_hostnames             = true
@@ -129,37 +239,9 @@ locals {
       enable_classiclink               = false
       enable_classiclink_dns_support   = false
       assign_generated_ipv6_cidr_block = false
-
-      intra_subnets = {
-        intra1 = { cidr_block = "10.201.128.0/24", availability_zone = "us-east-1a" }
-        intra2 = { cidr_block = "10.201.129.0/24", availability_zone = "us-east-1b" }
-      }
-
-      security_groups = {
-        intra1 = {
-          ingress = [
-            {
-              description = "Allow ALL sourced from self"
-              from_port   = 0
-              to_port     = 0
-              protocol    = "-1"
-              self        = true
-            }
-          ]
-          egress = [
-            {
-              description      = "Allow all out"
-              from_port        = 0
-              to_port          = 0
-              protocol         = "-1"
-              cidr_blocks      = ["0.0.0.0/0"]
-              ipv6_cidr_blocks = ["::/0"]
-            }
-          ]
-        }
-      }
-    }
-    spoke2 = {
+    },
+    {
+      name                             = "east-spoke2"
       cidr_block                       = var.cidr_blocks.east["spoke2"]
       instance_tenancy                 = "default"
       enable_dns_hostnames             = true
@@ -167,37 +249,9 @@ locals {
       enable_classiclink               = false
       enable_classiclink_dns_support   = false
       assign_generated_ipv6_cidr_block = false
-
-      intra_subnets = {
-        intra1 = { cidr_block = "10.202.128.0/24", availability_zone = "us-east-1a" }
-        intra2 = { cidr_block = "10.202.129.0/24", availability_zone = "us-east-1b" }
-      }
-
-      security_groups = {
-        intra1 = {
-          ingress = [
-            {
-              description = "Allow ALL sourced from self"
-              from_port   = 0
-              to_port     = 0
-              protocol    = "-1"
-              self        = true
-            }
-          ]
-          egress = [
-            {
-              description      = "Allow all out"
-              from_port        = 0
-              to_port          = 0
-              protocol         = "-1"
-              cidr_blocks      = ["0.0.0.0/0"]
-              ipv6_cidr_blocks = ["::/0"]
-            }
-          ]
-        }
-      }
-    }
-    spoke3 = {
+    },
+    {
+      name                             = "east-spoke3"
       cidr_block                       = var.cidr_blocks.east["spoke3"]
       instance_tenancy                 = "default"
       enable_dns_hostnames             = true
@@ -205,76 +259,33 @@ locals {
       enable_classiclink               = false
       enable_classiclink_dns_support   = false
       assign_generated_ipv6_cidr_block = false
-
-      intra_subnets = {
-        intra1 = { cidr_block = "10.203.128.0/24" }
-      }
-
-      security_groups = {
-        intra1 = {
-          ingress = [
-            {
-              description = "Allow ALL sourced from self"
-              from_port   = 0
-              to_port     = 0
-              protocol    = "-1"
-              self        = true
-            }
-          ]
-          egress = [
-            {
-              description      = "Allow all out"
-              from_port        = 0
-              to_port          = 0
-              protocol         = "-1"
-              cidr_blocks      = ["0.0.0.0/0"]
-              ipv6_cidr_blocks = ["::/0"]
-            }
-          ]
-        }
-      }
-    }
-  }
-}
-
-module "east_hub_vpc" {
-  source    = "../../modules/vpc"
-  providers = { aws = aws.us_east_1 }
-  name      = "east-hub"
-  vpc = {
-    cidr_block                       = var.cidr_blocks.east["hub1"]
-    instance_tenancy                 = "default"
-    enable_dns_hostnames             = true
-    enable_dns_support               = true
-    enable_classiclink               = false
-    enable_classiclink_dns_support   = false
-    assign_generated_ipv6_cidr_block = false
-  }
-  internet_gateway = [{}]
-  nat_gateway      = [{}]
-
-  public_subnets = [
-    {
-      cidr_block              = "10.200.0.0/24"
-      availability_zone       = "us-east-1a"
-      map_public_ip_on_launch = true
-      name                    = "east-hub-public-0"
-    },
-    {
-      cidr_block              = "10.200.1.0/24"
-      availability_zone       = "us-east-1b"
-      map_public_ip_on_launch = true
     }
   ]
-  private_subnets = [
-    { cidr_block = "10.200.64.0/24", availability_zone = "us-east-1a" },
-    { cidr_block = "10.200.65.0/24", availability_zone = "us-east-1b" }
-  ]
+  internet_gateway = [{ vpc_id = local.east.output.vpc_ids[0] }]
+  # nat_gateway      = [{}]
 
-  intra_subnets = [
-    { cidr_block = "10.200.128.0/24", availability_zone = "us-east-1a" },
-    { cidr_block = "10.200.129.0/24", availability_zone = "us-east-1b" }
-  ]
+  # public_subnets = [
+  #   {
+  #     cidr_block              = "10.200.0.0/24"
+  #     availability_zone       = "us-east-1a"
+  #     map_public_ip_on_launch = true
+  #     name                    = "east-hub-public-0"
+  #   },
+  #   {
+  #     cidr_block              = "10.200.1.0/24"
+  #     availability_zone       = "us-east-1b"
+  #     map_public_ip_on_launch = true
+  #   }
+  # ]
+  # private_subnets = [
+  #   { cidr_block = "10.200.64.0/24", availability_zone = "us-east-1a" },
+  #   { cidr_block = "10.200.65.0/24", availability_zone = "us-east-1b" }
+  # ]
+
+  # intra_subnets = [
+  #   { cidr_block = "10.200.128.0/24", availability_zone = "us-east-1a" },
+  #   { cidr_block = "10.200.129.0/24", availability_zone = "us-east-1b" }
+  # ]
 }
 
 # locals {

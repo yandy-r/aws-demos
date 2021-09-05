@@ -20,29 +20,29 @@ data "aws_availability_zones" "azs" {
 }
 
 resource "aws_vpc" "this" {
-  count                            = length(var.vpc) > 0 ? 1 : 0
-  cidr_block                       = var.vpc["cidr_block"]
-  instance_tenancy                 = lookup(var.vpc, "instance_tenancy", "default")
-  enable_dns_hostnames             = lookup(var.vpc, "enable_dns_hostnames", true)
-  enable_dns_support               = lookup(var.vpc, "enable_dns_support", true)
-  enable_classiclink               = lookup(var.vpc, "enable_classiclink", false)
-  enable_classiclink_dns_support   = lookup(var.vpc, "enable_classiclink_dns_support", false)
-  assign_generated_ipv6_cidr_block = lookup(var.vpc, "assign_generated_ipv6_cidr_block", false)
+  for_each                         = { for k, v in var.vpc : k => v }
+  cidr_block                       = each.value["cidr_block"]
+  instance_tenancy                 = lookup(each.value, "instance_tenancy", "default")
+  enable_dns_hostnames             = lookup(each.value, "enable_dns_hostnames", true)
+  enable_dns_support               = lookup(each.value, "enable_dns_support", true)
+  enable_classiclink               = lookup(each.value, "enable_classiclink", false)
+  enable_classiclink_dns_support   = lookup(each.value, "enable_classiclink_dns_support", false)
+  assign_generated_ipv6_cidr_block = lookup(each.value, "assign_generated_ipv6_cidr_block", false)
 
   tags = merge(
     {
-      Name = lookup(var.vpc, "name", "${var.name}")
+      Name = lookup(each.value, "name", "${var.name}")
     },
     var.tags,
-    lookup(var.vpc, "tags", null)
+    lookup(each.value, "tags", null)
   )
 }
 
 locals {
   azs                    = data.aws_availability_zones.azs
-  vpc_id                 = one(aws_vpc.this[*].id)
-  cidr_block             = one(aws_vpc.this[*].cidr_block)
-  internet_gateway_id    = one([for v in aws_internet_gateway.this : v.id])
+  vpc_id                 = { for k, v in aws_vpc.this : k => v.id }
+  cidr_block             = { for k, v in aws_vpc.this : k => v.cidr_block }
+  internet_gateway_id    = [for v in aws_internet_gateway.this : v.id]
   nat_gateway_id         = one([for v in aws_nat_gateway.this : v.id])
   intra_subnet_ids       = [for v in aws_subnet.intra : v.id]
   public_subnet_ids      = [for v in aws_subnet.public : v.id]
@@ -56,7 +56,7 @@ locals {
 
 resource "aws_internet_gateway" "this" {
   for_each = { for k, v in var.internet_gateway : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", local.vpc_id)
+  vpc_id   = lookup(each.value, "vpc_id", local.vpc_id[each.key])
 
   tags = merge(
     {
@@ -209,12 +209,12 @@ resource "aws_route_table_association" "intra" {
   route_table_id = aws_route_table.intra[0].id
 }
 
-resource "aws_route" "internet_gateway_default" {
-  for_each               = { for k, v in var.internet_gateway : k => v }
-  route_table_id         = lookup(each.value, "route_table_id", aws_route_table.public[each.key].id)
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = lookup(each.value, "internet_gateway_id", aws_internet_gateway.this[0].id)
-}
+# resource "aws_route" "internet_gateway_default" {
+#   for_each               = { for k, v in aws_internet_gateway.this : k => v }
+#   route_table_id         = lookup(each.value, "route_table_id", aws_route_table.public[each.key].id)
+#   destination_cidr_block = "0.0.0.0/0"
+#   gateway_id             = lookup(each.value, "internet_gateway_id", aws_internet_gateway.this[0].id)
+# }
 
 resource "aws_route" "nat_gateway_default" {
   for_each               = { for k, v in var.nat_gateway : k => v }
