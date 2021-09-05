@@ -495,6 +495,45 @@ module "east_security_groups" {
   security_group_rules = lookup(each.value, "security_group_rules", {})
 }
 
+locals {
+  east_ec2_output = {
+    network_interface_ids = {
+      east = { for k, v in module.east_ec2.network_interface_ids : k => v }
+    }
+  }
+}
+module "east_ec2" {
+  source    = "../../modules/ec2"
+  providers = { aws = aws.us_east_1 }
+  name      = "east-ec2"
+  key_name  = var.key_name
+  priv_key  = module.ssh_key.priv_key
+
+  network_interfaces = {
+    hub_bastion1 = {
+      source_dest_check = true
+      subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
+      private_ips       = ["10.200.0.10"]
+      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
+      description       = "Bastion 1 Public Interface"
+      tags              = { Purpose = "Bastion 1 Public Interface" }
+    }
+  }
+
+  aws_instances = {
+    hub_bastion1 = {
+      ami           = local.east_data.amzn_ami
+      instance_type = "t3.medium"
+      user_data     = local.east_data.amzn_cloud_config[0]
+      network_interface = [{
+        network_interface_id = local.east_ec2_output.network_interface_ids.east["hub_bastion1"]
+        device_index         = 0
+      }]
+    }
+  }
+}
+
+
 # locals {
 #   east_transit_gateways = {
 #     central_east = {
@@ -644,44 +683,6 @@ module "east_security_groups" {
 #   destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
 #   gateway_id             = lookup(each.value, "gateway_id", null)
 # }
-
-locals {
-  east_ec2 = {
-    network_interface_ids = {
-      east = { for k, v in module.east_ec2.network_interface_ids : k => v }
-    }
-  }
-}
-module "east_ec2" {
-  source    = "../../modules/ec2"
-  providers = { aws = aws.us_east_1 }
-  name      = "east-ec2"
-  key_name  = var.key_name
-  priv_key  = module.ssh_key.priv_key
-
-  network_interfaces = {
-    hub_bastion1 = {
-      source_dest_check = true
-      subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
-      private_ips       = ["10.200.0.10"]
-      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
-      description       = "Bastion 1 Public Interface"
-      tags              = { Purpose = "Bastion 1 Public Interface" }
-    }
-  }
-
-  aws_instances = {
-    hub_bastion1 = {
-      ami           = local.east_data.amzn_ami
-      instance_type = "t3.medium"
-      user_data     = local.east_data.amzn_cloud_config[0]
-      network_interface = [{
-        network_interface_id = local.east_ec2.network_interface_ids.east["hub_bastion1"]
-        device_index         = 0
-      }]
-    }
-  }
-}
 
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1
