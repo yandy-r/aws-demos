@@ -76,7 +76,7 @@ variable "routes" {
 
 variable "vpc_endpoints" {
   type    = any
-  default = {}
+  default = []
 }
 
 variable "security_groups" {
