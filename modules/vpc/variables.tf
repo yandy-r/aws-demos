@@ -46,7 +46,7 @@ variable "public_subnets" {
 
 variable "public_route_table" {
   type    = any
-  default = {}
+  default = []
 }
 
 variable "private_subnets" {
@@ -56,7 +56,7 @@ variable "private_subnets" {
 
 variable "private_route_table" {
   type    = any
-  default = {}
+  default = []
 }
 
 variable "intra_subnets" {
@@ -66,7 +66,7 @@ variable "intra_subnets" {
 
 variable "intra_route_table" {
   type    = any
-  default = {}
+  default = []
 }
 
 variable "routes" {

@@ -261,31 +261,54 @@ module "east_vpcs" {
       assign_generated_ipv6_cidr_block = false
     }
   ]
+
   internet_gateway = [{ vpc_id = local.east.output.vpc_ids[0] }]
-  # nat_gateway      = [{}]
+  nat_gateway      = [{}]
 
-  # public_subnets = [
-  #   {
-  #     cidr_block              = "10.200.0.0/24"
-  #     availability_zone       = "us-east-1a"
-  #     map_public_ip_on_launch = true
-  #     name                    = "east-hub-public-0"
-  #   },
-  #   {
-  #     cidr_block              = "10.200.1.0/24"
-  #     availability_zone       = "us-east-1b"
-  #     map_public_ip_on_launch = true
-  #   }
-  # ]
-  # private_subnets = [
-  #   { cidr_block = "10.200.64.0/24", availability_zone = "us-east-1a" },
-  #   { cidr_block = "10.200.65.0/24", availability_zone = "us-east-1b" }
-  # ]
+  public_subnets = [
+    {
+      vpc_id                  = local.east.output.vpc_ids[0]
+      cidr_block              = "10.200.0.0/24"
+      availability_zone       = "us-east-1a"
+      map_public_ip_on_launch = true
+      name                    = "east-hub-public-0"
+    },
+    {
+      vpc_id                  = local.east.output.vpc_ids[0]
+      cidr_block              = "10.200.1.0/24"
+      availability_zone       = "us-east-1b"
+      map_public_ip_on_launch = true
+    }
+  ]
+  public_route_table = [{ vpc_id = local.east.output.vpc_ids[0] }]
 
-  # intra_subnets = [
-  #   { cidr_block = "10.200.128.0/24", availability_zone = "us-east-1a" },
-  #   { cidr_block = "10.200.129.0/24", availability_zone = "us-east-1b" }
-  # ]
+  private_subnets = [
+    {
+      vpc_id            = local.east.output.vpc_ids[0]
+      cidr_block        = "10.200.64.0/24",
+      availability_zone = "us-east-1a"
+    },
+    {
+      vpc_id            = local.east.output.vpc_ids[0]
+      cidr_block        = "10.200.65.0/24",
+      availability_zone = "us-east-1b"
+    }
+  ]
+  private_route_table = [{ vpc_id = local.east.output.vpc_ids[0] }]
+
+  intra_subnets = [
+    {
+      vpc_id            = local.east.output.vpc_ids[0]
+      cidr_block        = "10.200.128.0/24",
+      availability_zone = "us-east-1a"
+    },
+    {
+      vpc_id            = local.east.output.vpc_ids[0]
+      cidr_block        = "10.200.129.0/24",
+      availability_zone = "us-east-1b"
+    }
+  ]
+  intra_route_table = [{ vpc_id = local.east.output.vpc_ids[0] }]
 }
 
 # locals {
