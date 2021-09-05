@@ -194,6 +194,7 @@ locals {
 locals {
   east_vpc_output = {
     vpc_ids                 = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
+    vpc_cidr_blocks         = { for k, v in module.east_vpcs : k => one(v.cidr_block) }
     public_route_table_ids  = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
     public_subnet_ids       = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
     private_route_table_ids = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
@@ -290,7 +291,7 @@ locals {
           security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
         },
         {
-          description              = "Allow sourced from privateto public security group"
+          description              = "Allow sourced from private public security group"
           type                     = "ingress"
           from_port                = 0
           to_port                  = 0
@@ -314,6 +315,15 @@ locals {
           to_port                  = 0
           protocol                 = "-1"
           source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
+          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][1]
+        },
+        {
+          description              = "Allow all sourced from intra to private"
+          type                     = "ingress"
+          from_port                = 0
+          to_port                  = 0
+          protocol                 = "-1"
+          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
           security_group_id        = local.east_vpc_output.security_group_ids["hub1"][1]
         },
         {
@@ -343,6 +353,32 @@ locals {
           source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
           security_group_id        = local.east_vpc_output.security_group_ids["hub1"][2]
         },
+        {
+          description = "Allow all sourced from spokes to private"
+          type        = "ingress"
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = [
+            local.east_vpc_output.vpc_cidr_blocks["spoke1"],
+            local.east_vpc_output.vpc_cidr_blocks["spoke2"],
+            local.east_vpc_output.vpc_cidr_blocks["spoke3"],
+          ]
+          security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
+        },
+        {
+          description = "Allow all sourced from spokes to intra"
+          type        = "ingress"
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = [
+            local.east_vpc_output.vpc_cidr_blocks["spoke1"],
+            local.east_vpc_output.vpc_cidr_blocks["spoke2"],
+            local.east_vpc_output.vpc_cidr_blocks["spoke3"],
+          ]
+          security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
+        },
       ]
     }
     spoke1 = {
@@ -365,7 +401,19 @@ locals {
           protocol                 = "-1"
           source_security_group_id = local.east_vpc_output.security_group_ids["spoke1"][0]
           security_group_id        = local.east_vpc_output.security_group_ids["spoke1"][0]
-        }
+        },
+        {
+          description = "Allow all sourced from hub1, spoke2 to intra"
+          type        = "ingress"
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = [
+            local.east_vpc_output.vpc_cidr_blocks["hub1"],
+            local.east_vpc_output.vpc_cidr_blocks["spoke2"],
+          ]
+          security_group_id = local.east_vpc_output.security_group_ids["spoke1"][0]
+        },
       ]
     }
     spoke2 = {
@@ -388,7 +436,19 @@ locals {
           protocol                 = "-1"
           source_security_group_id = local.east_vpc_output.security_group_ids["spoke2"][0]
           security_group_id        = local.east_vpc_output.security_group_ids["spoke2"][0]
-        }
+        },
+        {
+          description = "Allow all sourced from hub1, spoke1 to intra"
+          type        = "ingress"
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = [
+            local.east_vpc_output.vpc_cidr_blocks["hub1"],
+            local.east_vpc_output.vpc_cidr_blocks["spoke1"],
+          ]
+          security_group_id = local.east_vpc_output.security_group_ids["spoke2"][0]
+        },
       ]
     }
     spoke3 = {
@@ -411,7 +471,18 @@ locals {
           protocol                 = "-1"
           source_security_group_id = local.east_vpc_output.security_group_ids["spoke3"][0]
           security_group_id        = local.east_vpc_output.security_group_ids["spoke3"][0]
-        }
+        },
+        {
+          description = "Allow all sourced from hub to intra"
+          type        = "ingress"
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = [
+            local.east_vpc_output.vpc_cidr_blocks["hub1"],
+          ]
+          security_group_id = local.east_vpc_output.security_group_ids["spoke3"][0]
+        },
       ]
     }
   }
