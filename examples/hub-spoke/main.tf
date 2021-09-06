@@ -212,6 +212,7 @@ locals {
     intra_subnet_cidr_blocks   = { for k, v in module.east_vpcs : k => v.intra_subnet_cidr_blocks }
     route_table_ids            = { for k, v in module.east_vpcs : k => v.route_table_ids }
     security_group_ids         = { for k, v in module.east_vpcs : k => v.security_group_ids }
+    internet_gateway_ids       = { for k, v in module.east_vpcs : k => one(v.internet_gateway_id) }
   }
 }
 # output "vpc_ids" {
@@ -721,6 +722,11 @@ locals {
   }
 }
 
+locals {
+  east_transit_gateway_output = {
+    transit_gateway_id = { for k, v in module.east_transit_gateway : k => one(v.transit_gateway_id) }
+  }
+}
 module "east_transit_gateway" {
   source                   = "../../modules/transit-gateway"
   providers                = { aws = aws.us_east_1 }
@@ -734,25 +740,72 @@ module "east_transit_gateway" {
   transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
 }
 
-# locals {
-#   routes = {
-#     east = {
-#       east_public_test = {
-#         destination_cidr_block = "10.0.0.0/8"
-#         gateway_id             = local.internet_gateway_ids.east["hub1"]
-#         route_table_id         = local.public_route_table_ids.east["hub1"]
-#       }
-#     }
-#   }
-# }
+locals {
+  east_route_input = [
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke1"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke2"]
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+      route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke3"]
+    }
+  ]
+}
 
-# resource "aws_route" "east_routes" {
-#   provider               = aws.us_east_1
-#   for_each               = local.routes.east
-#   route_table_id         = each.value["route_table_id"]
-#   destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
-#   gateway_id             = lookup(each.value, "gateway_id", null)
-# }
+resource "aws_route" "east_routes" {
+  provider                  = aws.us_east_1
+  for_each                  = { for k, v in local.east_route_input : k => v }
+  route_table_id            = each.value["route_table_id"]
+  destination_cidr_block    = lookup(each.value, "destination_cidr_block", null)
+  gateway_id                = lookup(each.value, "gateway_id", null)
+  nat_gateway_id            = lookup(each.value, "nat_gateway_id", null)
+  instance_id               = lookup(each.value, "instance_id", null)
+  local_gateway_id          = lookup(each.value, "local_gateway_id", null)
+  vpc_endpoint_id           = lookup(each.value, "vpc_endpoint_id", null)
+  transit_gateway_id        = lookup(each.value, "transit_gateway_id", null)
+  carrier_gateway_id        = lookup(each.value, "carrier_gateway_id", null)
+  network_interface_id      = lookup(each.value, "network_interface_id", null)
+  egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
+  vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
+}
 
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1
