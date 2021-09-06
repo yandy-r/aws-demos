@@ -228,7 +228,7 @@ resource "aws_route" "nat_gateway_default" {
 }
 
 resource "aws_route" "this" {
-  for_each                  = var.routes
+  for_each                  = { for k, v in var.routes : k => v }
   route_table_id            = lookup(each.value, "route_table_id", null)
   destination_cidr_block    = lookup(each.value, "destination_cidr_block", null)
   gateway_id                = lookup(each.value, "gateway_id", null)

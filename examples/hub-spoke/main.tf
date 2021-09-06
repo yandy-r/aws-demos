@@ -319,8 +319,14 @@ module "east_spoke1" {
   }]
 
   intra_subnets = [
-    { cidr_block = cidrsubnet(module.east_spoke1.cidr_block, 8, 128) },
-    { cidr_block = cidrsubnet(module.east_spoke1.cidr_block, 8, 129) },
+    {
+      cidr_block        = cidrsubnet(module.east_spoke1.cidr_block, 8, 128)
+      availability_zone = "us-east-1a"
+    },
+    {
+      cidr_block        = cidrsubnet(module.east_spoke1.cidr_block, 8, 129)
+      availability_zone = "us-east-1b"
+    },
   ]
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
@@ -376,8 +382,14 @@ module "east_spoke2" {
   }]
 
   intra_subnets = [
-    { cidr_block = cidrsubnet(module.east_spoke2.cidr_block, 8, 128) },
-    { cidr_block = cidrsubnet(module.east_spoke2.cidr_block, 8, 129) },
+    {
+      cidr_block        = cidrsubnet(module.east_spoke2.cidr_block, 8, 128)
+      availability_zone = "us-east-1c"
+    },
+    {
+      cidr_block        = cidrsubnet(module.east_spoke2.cidr_block, 8, 129)
+      availability_zone = "us-east-1d"
+    },
   ]
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
@@ -433,7 +445,10 @@ module "east_spoke3" {
   }]
 
   intra_subnets = [
-    { cidr_block = cidrsubnet(module.east_spoke3.cidr_block, 8, 128) }
+    {
+      cidr_block        = cidrsubnet(module.east_spoke3.cidr_block, 8, 128)
+      availability_zone = "us-east-1f"
+    }
   ]
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
@@ -563,194 +578,139 @@ module "east_ec2" {
   }
 }
 
-# locals {
-#   east_transit_gateway_input = {
-#     core = {
-#       transit_gateway = [{
-#         dns_support                     = "enable"
-#         description                     = "US East Transit Gateway"
-#         amazon_side_asn                 = 65000
-#         vpn_ecmp_support                = "enable"
-#         auto_accept_shared_attachments  = "disable"
-#         default_route_table_association = "disable"
-#         default_route_table_propagation = "disable"
-#         tags                            = { Purpose = "Central routing hub for the east" }
-#       }]
-#       vpc_attachments = {
-#         hub1 = {
-#           vpc_id                                          = local.east_vpc_output.vpc_ids["hub1"]
-#           subnet_ids                                      = local.east_vpc_output.private_subnet_ids["hub1"]
-#           dns_support                                     = "enable"
-#           ipv6_support                                    = "disable"
-#           appliance_mode_support                          = "disable"
-#           transit_gateway_default_route_table_association = false
-#           transit_gateway_default_route_table_propagation = false
-#           tags                                            = { Purpose = "Attachment to Hub1 VPC" }
-#         }
-#         spoke1 = {
-#           vpc_id     = local.east_vpc_output.vpc_ids["spoke1"]
-#           subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke1"]
-#         }
-#         spoke2 = {
-#           vpc_id     = local.east_vpc_output.vpc_ids["spoke2"]
-#           subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke2"]
-#         }
-#         spoke3 = {
-#           vpc_id     = local.east_vpc_output.vpc_ids["spoke3"]
-#           subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke3"]
-#         }
-#       }
+module "east_transit_gateway" {
+  source    = "../../modules/transit-gateway"
+  providers = { aws = aws.us_east_1 }
+  name      = "east-tgw"
 
-#       route_tables = {
-#         hubs   = {}
-#         spokes = {}
-#       }
+  transit_gateway = [{
+    dns_support                     = "enable"
+    description                     = "US East Transit Gateway"
+    amazon_side_asn                 = 65000
+    vpn_ecmp_support                = "enable"
+    auto_accept_shared_attachments  = "disable"
+    default_route_table_association = "disable"
+    default_route_table_propagation = "disable"
+    tags                            = { Purpose = "Central routing hub for the east" }
+  }]
 
-#       route_table_associations = {
-#         hub1   = { route_table_name = "hubs" }
-#         spoke1 = { route_table_name = "spokes" }
-#         spoke2 = { route_table_name = "spokes" }
-#         spoke3 = { route_table_name = "spokes" }
-#       }
+  vpc_attachments = {
+    hub1 = {
+      vpc_id                                          = module.east_hub.vpc_id
+      subnet_ids                                      = module.east_hub.private_subnet_ids
+      dns_support                                     = "enable"
+      ipv6_support                                    = "disable"
+      appliance_mode_support                          = "disable"
+      transit_gateway_default_route_table_association = false
+      transit_gateway_default_route_table_propagation = false
+      tags                                            = { Purpose = "Attachment to Hub1 VPC" }
+    }
+    spoke1 = {
+      vpc_id     = module.east_spoke1.vpc_id
+      subnet_ids = module.east_spoke1.intra_subnet_ids
+    }
+    spoke2 = {
+      vpc_id     = module.east_spoke2.vpc_id
+      subnet_ids = module.east_spoke2.intra_subnet_ids
+    }
+    spoke3 = {
+      vpc_id     = module.east_spoke3.vpc_id
+      subnet_ids = module.east_spoke3.intra_subnet_ids
+    }
+  }
 
-#       route_table_propagations = {
-#         hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
-#         spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
-#         spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
-#         spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
-#         spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
-#         spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
-#       }
+  route_tables = {
+    hubs   = {}
+    spokes = {}
+  }
 
-#       transit_gateway_routes = {
-#         spoke_default = {
-#           destination      = "0.0.0.0/0"
-#           attach_name      = "hub1"
-#           route_table_name = "spokes"
-#         }
-#         blackhole_1 = {
-#           destination      = "10.0.0.0/8"
-#           blackhole        = true
-#           route_table_name = "hubs"
-#         }
-#         blackhole_2 = {
-#           destination      = "10.0.0.0/8"
-#           blackhole        = true
-#           route_table_name = "spokes"
-#         }
-#         blackhole_3 = {
-#           destination      = "172.16.0.0/12"
-#           blackhole        = true
-#           route_table_name = "hubs"
-#         }
-#         blackhole_4 = {
-#           destination      = "172.16.0.0/12"
-#           blackhole        = true
-#           route_table_name = "spokes"
-#         }
-#         blackhole_5 = {
-#           destination      = "192.168.0.0/16"
-#           blackhole        = true
-#           route_table_name = "hubs"
-#         }
-#         blackhole_6 = {
-#           destination      = "192.168.0.0/16"
-#           blackhole        = true
-#           route_table_name = "spokes"
-#         }
-#       }
-#     }
-#   }
-# }
+  route_table_associations = {
+    hub1   = { route_table_name = "hubs" }
+    spoke1 = { route_table_name = "spokes" }
+    spoke2 = { route_table_name = "spokes" }
+    spoke3 = { route_table_name = "spokes" }
+  }
 
-# locals {
-#   east_transit_gateway_output = {
-#     transit_gateway_id = { for k, v in module.east_transit_gateway : k => one(v.transit_gateway_id) }
-#   }
-# }
-# module "east_transit_gateway" {
-#   source                   = "../../modules/transit-gateway"
-#   providers                = { aws = aws.us_east_1 }
-#   for_each                 = local.east_transit_gateway_input
-#   name                     = "east"
-#   transit_gateway          = lookup(each.value, "transit_gateway", {})
-#   vpc_attachments          = lookup(each.value, "vpc_attachments", {})
-#   route_tables             = lookup(each.value, "route_tables", {})
-#   route_table_associations = lookup(each.value, "route_table_associations", {})
-#   route_table_propagations = lookup(each.value, "route_table_propagations", {})
-#   transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
-# }
+  route_table_propagations = {
+    hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
+    spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
+    spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
+    spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
+    spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
+    spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
+  }
 
-# locals {
-#   east_route_input = [
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke1"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke2"]
-#     },
-#     {
-#       destination_cidr_block = "10.192.0.0/11"
-#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-#       route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke3"]
-#     }
-#   ]
-# }
+  transit_gateway_routes = [
+    {
+      destination      = "0.0.0.0/0"
+      attach_name      = "hub1"
+      route_table_name = "spokes"
+    },
+    {
+      destination      = "10.0.0.0/8"
+      blackhole        = true
+      route_table_name = "hubs"
+    },
+    {
+      destination      = "10.0.0.0/8"
+      blackhole        = true
+      route_table_name = "spokes"
+    },
+    {
+      destination      = "172.16.0.0/12"
+      blackhole        = true
+      route_table_name = "hubs"
+    },
+    {
+      destination      = "172.16.0.0/12"
+      blackhole        = true
+      route_table_name = "spokes"
+    },
+    {
+      destination      = "192.168.0.0/16"
+      blackhole        = true
+      route_table_name = "hubs"
+    },
+    {
+      destination      = "192.168.0.0/16"
+      blackhole        = true
+      route_table_name = "spokes"
+    }
+  ]
 
-# resource "aws_route" "east_routes" {
-#   provider                  = aws.us_east_1
-#   for_each                  = { for k, v in local.east_route_input : k => v }
-#   route_table_id            = each.value["route_table_id"]
-#   destination_cidr_block    = lookup(each.value, "destination_cidr_block", null)
-#   gateway_id                = lookup(each.value, "gateway_id", null)
-#   nat_gateway_id            = lookup(each.value, "nat_gateway_id", null)
-#   instance_id               = lookup(each.value, "instance_id", null)
-#   local_gateway_id          = lookup(each.value, "local_gateway_id", null)
-#   vpc_endpoint_id           = lookup(each.value, "vpc_endpoint_id", null)
-#   transit_gateway_id        = lookup(each.value, "transit_gateway_id", null)
-#   carrier_gateway_id        = lookup(each.value, "carrier_gateway_id", null)
-#   network_interface_id      = lookup(each.value, "network_interface_id", null)
-#   egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
-#   vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
-# }
-
-
-
-
+  vpc_routes = [
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_hub.public_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_hub.private_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_hub.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_spoke1.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_spoke2.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_spoke3.intra_route_table_id
+    },
+  ]
+}
 
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1

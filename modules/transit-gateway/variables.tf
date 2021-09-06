@@ -36,5 +36,10 @@ variable "route_table_propagations" {
 
 variable "transit_gateway_routes" {
   type    = any
-  default = {}
+  default = []
+}
+
+variable "vpc_routes" {
+  type    = any
+  default = []
 }

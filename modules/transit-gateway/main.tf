@@ -27,7 +27,7 @@ resource "aws_ec2_transit_gateway" "this" {
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "tgw-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -35,7 +35,7 @@ resource "aws_ec2_transit_gateway" "this" {
 }
 
 locals {
-  transit_gateway_id = [for v in aws_ec2_transit_gateway.this : v.id]
+  transit_gateway_id = one([for v in aws_ec2_transit_gateway.this : v.id])
   vpc_attachment_ids = { for k, v in aws_ec2_transit_gateway_vpc_attachment.this : k => v.id }
   route_table_ids    = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
 }
@@ -44,7 +44,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
   for_each                                        = { for k, v in var.vpc_attachments : k => v }
   vpc_id                                          = each.value["vpc_id"]
   subnet_ids                                      = each.value["subnet_ids"]
-  transit_gateway_id                              = lookup(each.value, "transit_gateway_id", element(concat(local.transit_gateway_id, [""]), 0))
+  transit_gateway_id                              = lookup(each.value, "transit_gateway_id", local.transit_gateway_id)
   ipv6_support                                    = lookup(each.value, "ipv6_support", "disable")
   dns_support                                     = lookup(each.value, "dns_support", "enable")
   appliance_mode_support                          = lookup(each.value, "appliance_mode_support", "disable")
@@ -62,11 +62,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 
 resource "aws_ec2_transit_gateway_route_table" "this" {
   for_each           = { for k, v in var.route_tables : k => v }
-  transit_gateway_id = lookup(each.value, "transit_gateway_id", element(concat(local.transit_gateway_id, [""]), 0))
+  transit_gateway_id = lookup(each.value, "transit_gateway_id", local.transit_gateway_id)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "rt-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -91,4 +91,20 @@ resource "aws_ec2_transit_gateway_route" "this" {
   destination_cidr_block         = each.value.destination
   transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? local.vpc_attachment_ids[each.value.attach_name] : null
   transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), lookup(local.route_table_ids, each.value.route_table_name, ""))
+}
+
+resource "aws_route" "this" {
+  for_each                  = { for k, v in var.vpc_routes : k => v }
+  route_table_id            = lookup(each.value, "route_table_id", null)
+  destination_cidr_block    = lookup(each.value, "destination_cidr_block", null)
+  gateway_id                = lookup(each.value, "gateway_id", null)
+  nat_gateway_id            = lookup(each.value, "nat_gateway_id", null)
+  instance_id               = lookup(each.value, "instance_id", null)
+  local_gateway_id          = lookup(each.value, "local_gateway_id", null)
+  vpc_endpoint_id           = lookup(each.value, "vpc_endpoint_id", null)
+  transit_gateway_id        = lookup(each.value, "transit_gateway_id", null)
+  carrier_gateway_id        = lookup(each.value, "carrier_gateway_id", null)
+  network_interface_id      = lookup(each.value, "network_interface_id", null)
+  egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
+  vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
 }
