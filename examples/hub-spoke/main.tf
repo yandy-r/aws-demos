@@ -1,8 +1,16 @@
+### -------------------------------------------------------------------------------------------- ###
+### UNIVERSAL SSH KEY
+### -------------------------------------------------------------------------------------------- ###
+
 module "ssh_key" {
   source        = "../../modules/ssh-key"
   key_name      = var.key_name
   priv_key_path = var.priv_key_path
 }
+
+### -------------------------------------------------------------------------------------------- ###
+### EAST DATA
+### -------------------------------------------------------------------------------------------- ###
 
 module "east_data" {
   source        = "./data"
@@ -33,48 +41,9 @@ locals {
   }
 }
 
-locals {
-  east_vpc_output = {
-    # vpc_ids         = { for k, v in module.east_vpcs.vpc_id : k => v }
-    # vpc_cidr_blocks = { for k, v in module.east_vpcs.cidr_block : k => v }
-    # public_route_table_ids     = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
-    # public_subnet_ids          = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
-    # public_subnet_cidr_blocks  = { for k, v in module.east_vpcs : k => v.public_subnet_cidr_blocks }
-    # private_route_table_ids    = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
-    # private_subnet_ids         = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
-    # private_subnet_cidr_blocks = { for k, v in module.east_vpcs : k => v.private_subnet_cidr_blocks }
-    # intra_route_table_ids      = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
-    # intra_subnet_ids           = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
-    # intra_subnet_cidr_blocks   = { for k, v in module.east_vpcs : k => v.intra_subnet_cidr_blocks }
-    # route_table_ids            = { for k, v in module.east_vpcs : k => v.route_table_ids }
-    # security_group_ids         = { for k, v in module.east_vpcs : k => v.security_group_ids }
-    # internet_gateway_ids       = { for k, v in module.east_vpcs : k => one(v.internet_gateway_id) }
-  }
-}
-# output "vpc_ids" {
-#   value = local.east_vpc_output.vpc_ids
-# }
-# output "public_subnet_ids" {
-#   value = local.east_vpc_output.public_subnet_ids
-# }
-# output "public_route_table_ids" {
-#   value = local.east_vpc_output.public_route_table_ids
-# }
-# output "private_subnet_ids" {
-#   value = local.east_vpc_output.private_subnet_ids
-# }
-# output "private_route_table_ids" {
-#   value = local.east_vpc_output.private_route_table_ids
-# }
-# output "intra_subnet_ids" {
-#   value = local.east_vpc_output.intra_subnet_ids
-# }
-# output "intra_route_table_ids" {
-#   value = local.east_vpc_output.intra_route_table_ids
-# }
-# output "route_table_ids" {
-#   value = local.east_vpc_output.route_table_ids
-# }
+### -------------------------------------------------------------------------------------------- ###
+### US-EAST-1 INFRASTRUCTURE
+### -------------------------------------------------------------------------------------------- ###
 
 module "east_hub" {
   source    = "../../modules/vpc"
@@ -144,7 +113,7 @@ module "east_hub" {
     service_type  = "s3"
     policy        = local.east_data.s3_endpoint_policy
     tags = {
-      Name = "hub-s3-endpoint"
+      Name = "east-hub-s3-endpoint"
     }
   }]
   security_groups = {
@@ -620,8 +589,9 @@ module "east_transit_gateway" {
   }
 
   route_tables = {
-    hubs   = {}
-    spokes = {}
+    hubs         = {}
+    spokes       = {}
+    east_to_west = {}
   }
 
   route_table_associations = {
@@ -712,34 +682,683 @@ module "east_transit_gateway" {
   ]
 }
 
-# resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
-#   provider                = aws.us_east_1
-#   peer_region             = local.west_region
-#   transit_gateway_id      = local.east_tgw.id
-#   peer_transit_gateway_id = local.west_tgw.id
+### -------------------------------------------------------------------------------------------- ###
+### EAST DATA
+### -------------------------------------------------------------------------------------------- ###
 
-#   tags = {
-#     Name = "EAST->WEST"
-#   }
-# }
+module "west_data" {
+  source        = "./data"
+  providers     = { aws = aws.us_west_2 }
+  get_amzn_ami  = true
+  key_name      = var.key_name
+  priv_key_path = var.priv_key_path
+  instance_hostnames = [
+    "hub_bastion1",
+    "hub_private1",
+    "spoke1_intra1",
+    "spoke2_intra1",
+    "spoke3_intra1",
+  ]
 
-# resource "aws_ec2_transit_gateway_peering_attachment_accepter" "east_west" {
-#   provider                      = aws.us_west_2
-#   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.east_west.id
+  depends_on = [
+    module.ssh_key
+  ]
+}
 
-#   tags = {
-#     Name = "WEST->EAST"
-#   }
-# }
+locals {
+  west_data = {
+    s3_endpoint_policy  = module.west_data.s3_endpoint_policy
+    amzn_ami            = module.west_data.amzn_ami
+    amzn_cloud_config   = module.west_data.amzn_cloud_config
+    ubuntu_ami          = module.west_data.ubuntu_ami
+    ubuntu_cloud_config = module.west_data.ubuntu_cloud_config
+  }
+}
 
-# resource "aws_ec2_transit_gateway_route_table" "east_to_west" {
-#   provider           = aws.us_east_1
-#   transit_gateway_id = local.east_tgw.id
+### -------------------------------------------------------------------------------------------- ###
+### US-WEST-2 INFRASTRUCTURE
+### -------------------------------------------------------------------------------------------- ###
 
-#   tags = {
-#     Name = "EAST->WEST"
-#   }
-# }
+module "west_hub" {
+  source    = "../../modules/vpc"
+  providers = { aws = aws.us_west_2 }
+  name      = "west-hub"
+
+  vpc = [{
+    cidr_block                       = var.cidr_blocks.west["hub1"]
+    instance_tenancy                 = "default"
+    enable_dns_hostnames             = true
+    enable_dns_support               = true
+    enable_classiclink               = false
+    enable_classiclink_dns_support   = false
+    assign_generated_ipv6_cidr_block = false
+    }
+  ]
+
+  public_subnets = [
+    {
+      name                    = "public-1"
+      cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 0)
+      availability_zone       = "us-west-2a"
+      map_public_ip_on_launch = true
+    },
+    {
+      name                    = "public-2"
+      cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 1)
+      availability_zone       = "us-west-2b"
+      map_public_ip_on_launch = true
+    }
+  ]
+
+  private_subnets = [
+    {
+      cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 64)
+      availability_zone       = "us-west-2a"
+      map_public_ip_on_launch = true
+    },
+    {
+      cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 65)
+      availability_zone       = "us-west-2b"
+      map_public_ip_on_launch = true
+    }
+  ]
+
+  intra_subnets = [
+    {
+      cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 128)
+      availability_zone       = "us-west-2a"
+      map_public_ip_on_launch = true
+    },
+    {
+      cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 129)
+      availability_zone       = "us-west-2b"
+      map_public_ip_on_launch = true
+    }
+  ]
+
+  public_route_table  = [{}]
+  private_route_table = [{}]
+  intra_route_table   = [{}]
+  internet_gateway    = [{}]
+  nat_gateway         = [{}]
+
+  vpc_endpoints = [{
+    endpoint_type = "Gateway"
+    service_type  = "s3"
+    policy        = local.west_data.s3_endpoint_policy
+    tags = {
+      Name = "west-hub-s3-endpoint"
+    }
+  }]
+  security_groups = {
+    public1  = {},
+    private1 = {},
+    intra1   = {},
+  }
+
+  security_group_rules = [
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.west_hub.security_group_ids["public1"]
+    },
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.west_hub.security_group_ids["private1"]
+    },
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.west_hub.security_group_ids["intra1"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["public1"]
+      security_group_id        = module.west_hub.security_group_ids["public1"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["private1"]
+      security_group_id        = module.west_hub.security_group_ids["private1"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["intra1"]
+      security_group_id        = module.west_hub.security_group_ids["intra1"]
+    },
+    {
+      description       = "Allow ICMP from home"
+      type              = "ingress"
+      from_port         = -1
+      to_port           = -1
+      protocol          = "icmp"
+      cidr_blocks       = [var.self_public_ip]
+      security_group_id = module.west_hub.security_group_ids["public1"]
+    },
+    {
+      description       = "Allow SSH from home"
+      type              = "ingress"
+      from_port         = 22
+      to_port           = 22
+      protocol          = "tcp"
+      cidr_blocks       = [var.self_public_ip]
+      security_group_id = module.west_hub.security_group_ids["public1"]
+    },
+    {
+      description              = "Allow ALL sourced from private"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["private1"]
+      security_group_id        = module.west_hub.security_group_ids["public1"]
+    },
+    {
+      description              = "Allow ALL sourced from public"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["public1"]
+      security_group_id        = module.west_hub.security_group_ids["private1"]
+    },
+    {
+      description              = "Allow ALL sourced from intra"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["intra1"]
+      security_group_id        = module.west_hub.security_group_ids["private1"]
+    },
+    {
+      description              = "Allow ALL sourced from public"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["public1"]
+      security_group_id        = module.west_hub.security_group_ids["intra1"]
+    },
+    {
+      description              = "Allow ALL sourced from private"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_hub.security_group_ids["private1"]
+      security_group_id        = module.west_hub.security_group_ids["intra1"]
+    },
+    {
+      description = "Allow all sourced from spokes to private"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        module.west_spoke1.cidr_block,
+        module.west_spoke2.cidr_block,
+        module.west_spoke3.cidr_block,
+      ]
+      security_group_id = module.west_hub.security_group_ids["private1"]
+    },
+    {
+      description = "Allow all sourced from spokes to intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        module.west_spoke1.cidr_block,
+        module.west_spoke2.cidr_block,
+        module.west_spoke3.cidr_block,
+      ]
+      security_group_id = module.west_hub.security_group_ids["intra1"]
+    },
+  ]
+}
+
+module "west_spoke1" {
+  source    = "../../modules/vpc"
+  providers = { aws = aws.us_west_2 }
+  name      = "west-spoke1"
+
+  vpc = [{
+    cidr_block                       = var.cidr_blocks.west["spoke1"]
+    instance_tenancy                 = "default"
+    enable_dns_hostnames             = true
+    enable_dns_support               = true
+    enable_classiclink               = false
+    enable_classiclink_dns_support   = false
+    assign_generated_ipv6_cidr_block = false
+  }]
+
+  intra_subnets = [
+    {
+      cidr_block        = cidrsubnet(module.west_spoke1.cidr_block, 8, 128)
+      availability_zone = "us-west-2a"
+    },
+    {
+      cidr_block        = cidrsubnet(module.west_spoke1.cidr_block, 8, 129)
+      availability_zone = "us-west-2b"
+    },
+  ]
+  intra_route_table = [{}]
+  security_groups   = { intra1 = {} }
+
+  security_group_rules = [
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.west_spoke1.security_group_ids["intra1"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_spoke1.security_group_ids["intra1"]
+      security_group_id        = module.west_spoke1.security_group_ids["intra1"]
+    },
+    {
+      description = "Allow all sourced from hub and spoke2 to intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        module.west_hub.cidr_block,
+        module.west_spoke2.cidr_block,
+      ]
+      security_group_id = module.west_spoke1.security_group_ids["intra1"]
+    },
+  ]
+}
+
+module "west_spoke2" {
+  source    = "../../modules/vpc"
+  providers = { aws = aws.us_west_2 }
+  name      = "west-spoke2"
+
+  vpc = [{
+    cidr_block                       = var.cidr_blocks.west["spoke2"]
+    instance_tenancy                 = "default"
+    enable_dns_hostnames             = true
+    enable_dns_support               = true
+    enable_classiclink               = false
+    enable_classiclink_dns_support   = false
+    assign_generated_ipv6_cidr_block = false
+  }]
+
+  intra_subnets = [
+    {
+      cidr_block        = cidrsubnet(module.west_spoke2.cidr_block, 8, 128)
+      availability_zone = "us-west-2c"
+    },
+    {
+      cidr_block        = cidrsubnet(module.west_spoke2.cidr_block, 8, 129)
+      availability_zone = "us-west-2d"
+    },
+  ]
+  intra_route_table = [{}]
+  security_groups   = { intra1 = {} }
+
+  security_group_rules = [
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.west_spoke2.security_group_ids["intra1"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_spoke2.security_group_ids["intra1"]
+      security_group_id        = module.west_spoke2.security_group_ids["intra1"]
+    },
+    {
+      description = "Allow all sourced from hub and spoke1 to intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        module.west_hub.cidr_block,
+        module.west_spoke1.cidr_block,
+      ]
+      security_group_id = module.west_spoke2.security_group_ids["intra1"]
+    },
+  ]
+}
+
+module "west_spoke3" {
+  source    = "../../modules/vpc"
+  providers = { aws = aws.us_west_2 }
+  name      = "west-spoke3"
+
+  vpc = [{
+    cidr_block                       = var.cidr_blocks.west["spoke3"]
+    instance_tenancy                 = "default"
+    enable_dns_hostnames             = true
+    enable_dns_support               = true
+    enable_classiclink               = false
+    enable_classiclink_dns_support   = false
+    assign_generated_ipv6_cidr_block = false
+  }]
+
+  intra_subnets = [
+    {
+      cidr_block        = cidrsubnet(module.west_spoke3.cidr_block, 8, 128)
+      availability_zone = "us-west-2d"
+    }
+  ]
+  intra_route_table = [{}]
+  security_groups   = { intra1 = {} }
+
+  security_group_rules = [
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.west_spoke3.security_group_ids["intra1"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.west_spoke3.security_group_ids["intra1"]
+      security_group_id        = module.west_spoke3.security_group_ids["intra1"]
+    },
+    {
+      description = "Allow all sourced from hub intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        module.west_hub.cidr_block,
+      ]
+      security_group_id = module.west_spoke3.security_group_ids["intra1"]
+    },
+  ]
+}
+
+module "west_ec2" {
+  source    = "../../modules/ec2"
+  providers = { aws = aws.us_west_2 }
+  name      = "west-ec2"
+  key_name  = var.key_name
+  priv_key  = module.ssh_key.priv_key
+
+  network_interfaces = {
+    hub_bastion1 = {
+      source_dest_check = true
+      subnet_id         = module.west_hub.public_subnet_ids[0]
+      private_ips       = [cidrhost(module.west_hub.public_subnet_cidr_blocks[0], 10)]
+      security_groups   = [module.west_hub.security_group_ids["public1"]]
+      description       = "Bastion 1 Public Interface 1"
+      tags              = { Purpose = "Bastion 1 Public Interface" }
+    }
+    hub_private1 = {
+      source_dest_check = true
+      subnet_id         = module.west_hub.private_subnet_ids[0]
+      private_ips       = [cidrhost(module.west_hub.private_subnet_cidr_blocks[0], 10)]
+      security_groups   = [module.west_hub.security_group_ids["private1"]]
+      description       = "Hub 1 Private Interface 1"
+    }
+    spoke1_intra1 = {
+      source_dest_check = true
+      subnet_id         = module.west_spoke1.intra_subnet_ids[0]
+      private_ips       = [cidrhost(module.west_spoke1.intra_subnet_cidr_blocks[0], 10)]
+      security_groups   = [module.west_spoke1.security_group_ids["intra1"]]
+      description       = "Spoke 1 Intra Interface 1"
+    }
+    spoke2_intra1 = {
+      source_dest_check = true
+      subnet_id         = module.west_spoke2.intra_subnet_ids[0]
+      private_ips       = [cidrhost(module.west_spoke2.intra_subnet_cidr_blocks[0], 10)]
+      security_groups   = [module.west_spoke2.security_group_ids["intra1"]]
+      description       = "Spoke 2 Intra Interface 1"
+    }
+    spoke3_intra1 = {
+      source_dest_check = true
+      subnet_id         = module.west_spoke3.intra_subnet_ids[0]
+      private_ips       = [cidrhost(module.west_spoke3.intra_subnet_cidr_blocks[0], 10)]
+      security_groups   = [module.west_spoke3.security_group_ids["intra1"]]
+      description       = "Spoke 3 Intra Interface 1"
+    }
+  }
+
+  aws_instances = {
+    hub_bastion1 = {
+      ami              = local.west_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.west_data.amzn_cloud_config[0]
+      network_interface = [{
+        network_interface_id = module.west_ec2.network_interface_ids["hub_bastion1"]
+        device_index         = 0
+      }]
+    }
+    hub_private1 = {
+      ami              = local.west_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.west_data.amzn_cloud_config[1]
+      network_interface = [{
+        device_index = 0
+      }]
+    }
+    spoke1_intra1 = {
+      ami              = local.west_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.west_data.amzn_cloud_config[2]
+      network_interface = [{
+        device_index = 0
+      }]
+    }
+    spoke2_intra1 = {
+      ami              = local.west_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.west_data.amzn_cloud_config[3]
+      network_interface = [{
+        device_index = 0
+      }]
+    }
+    spoke3_intra1 = {
+      ami              = local.west_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.west_data.amzn_cloud_config[4]
+      network_interface = [{
+        device_index = 0
+      }]
+    }
+  }
+}
+
+module "west_transit_gateway" {
+  source    = "../../modules/transit-gateway"
+  providers = { aws = aws.us_west_2 }
+  name      = "west-tgw"
+
+  transit_gateway = [{
+    dns_support                     = "enable"
+    description                     = "US East Transit Gateway"
+    amazon_side_asn                 = 65000
+    vpn_ecmp_support                = "enable"
+    auto_accept_shared_attachments  = "disable"
+    default_route_table_association = "disable"
+    default_route_table_propagation = "disable"
+    tags                            = { Purpose = "Central routing hub for the west" }
+  }]
+
+  vpc_attachments = {
+    hub1 = {
+      vpc_id                                          = module.west_hub.vpc_id
+      subnet_ids                                      = module.west_hub.private_subnet_ids
+      dns_support                                     = "enable"
+      ipv6_support                                    = "disable"
+      appliance_mode_support                          = "disable"
+      transit_gateway_default_route_table_association = false
+      transit_gateway_default_route_table_propagation = false
+      tags                                            = { Purpose = "Attachment to Hub1 VPC" }
+    }
+    spoke1 = {
+      vpc_id     = module.west_spoke1.vpc_id
+      subnet_ids = module.west_spoke1.intra_subnet_ids
+    }
+    spoke2 = {
+      vpc_id     = module.west_spoke2.vpc_id
+      subnet_ids = module.west_spoke2.intra_subnet_ids
+    }
+    spoke3 = {
+      vpc_id     = module.west_spoke3.vpc_id
+      subnet_ids = module.west_spoke3.intra_subnet_ids
+    }
+  }
+
+  route_tables = {
+    hubs         = {}
+    spokes       = {}
+    west_to_west = {}
+  }
+
+  route_table_associations = {
+    hub1   = { route_table_name = "hubs" }
+    spoke1 = { route_table_name = "spokes" }
+    spoke2 = { route_table_name = "spokes" }
+    spoke3 = { route_table_name = "spokes" }
+  }
+
+  route_table_propagations = {
+    hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
+    spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
+    spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
+    spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
+    spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
+    spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
+  }
+
+  transit_gateway_routes = [
+    {
+      destination      = "0.0.0.0/0"
+      attach_name      = "hub1"
+      route_table_name = "spokes"
+    },
+    {
+      destination      = "10.0.0.0/8"
+      blackhole        = true
+      route_table_name = "hubs"
+    },
+    {
+      destination      = "10.0.0.0/8"
+      blackhole        = true
+      route_table_name = "spokes"
+    },
+    {
+      destination      = "172.16.0.0/12"
+      blackhole        = true
+      route_table_name = "hubs"
+    },
+    {
+      destination      = "172.16.0.0/12"
+      blackhole        = true
+      route_table_name = "spokes"
+    },
+    {
+      destination      = "192.168.0.0/16"
+      blackhole        = true
+      route_table_name = "hubs"
+    },
+    {
+      destination      = "192.168.0.0/16"
+      blackhole        = true
+      route_table_name = "spokes"
+    }
+  ]
+
+  vpc_routes = [
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_hub.public_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_hub.private_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_hub.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_spoke1.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_spoke2.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_spoke3.intra_route_table_id
+    },
+  ]
+}
+
+### -------------------------------------------------------------------------------------------- ###
+### US-EAST-1 TO USE-WEST-2 COMMUNICATION
+### -------------------------------------------------------------------------------------------- ###
 
 # resource "aws_ec2_transit_gateway_route_table_association" "east_to_west" {
 #   provider                       = aws.us_east_1

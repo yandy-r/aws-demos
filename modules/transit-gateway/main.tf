@@ -108,3 +108,21 @@ resource "aws_route" "this" {
   egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
   vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
 }
+
+# resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
+#   peer_region             = local.west_region
+#   transit_gateway_id      = local.east_tgw.id
+#   peer_transit_gateway_id = local.west_tgw.id
+
+#   tags = {
+#     Name = "EAST->WEST"
+#   }
+# }
+
+# resource "aws_ec2_transit_gateway_peering_attachment_accepter" "east_west" {
+#   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.east_west.id
+
+#   tags = {
+#     Name = "WEST->EAST"
+#   }
+# }

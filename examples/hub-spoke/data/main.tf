@@ -35,27 +35,6 @@ locals {
 }
 
 ### -------------------------------------------------------------------------------------------- ###
-### THERE'S A BUG HERE, NEED TO INVESTIGATE AND REPORT
-### POLLICY MENTIONES THAT CAN'T ADD PRINCIPALS BUT AWS POLICY REQUIRES IT
-### -------------------------------------------------------------------------------------------- ###
-data "aws_iam_policy_document" "s3_endpoint_policy" {
-  statement {
-    sid     = "AllowYumRepoAccess"
-    actions = ["s3:*"]
-    effect  = "Allow"
-    resources = [
-      "arn:aws:s3:::packages.${data.aws_region.this.name}.amazonaws.com/*",
-      "arn:aws:s3:::repo.${data.aws_region.this.name}.amazonaws.com/*",
-      "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.this.name}/*"
-    ]
-  }
-}
-
-resource "aws_iam_policy" "s3_endpoint_policy" {
-  name   = "s3_endpoint_policy"
-  policy = data.aws_iam_policy_document.s3_endpoint_policy.json
-}
-### -------------------------------------------------------------------------------------------- ###
 
 data "aws_ami" "amzn_linux" {
   count       = var.get_amzn_ami ? 1 : 0
