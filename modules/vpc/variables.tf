@@ -16,7 +16,7 @@ variable "tags" {
 
 variable "vpc" {
   type    = any
-  default = []
+  default = {}
 }
 
 variable "create_internet_gateway" {
@@ -81,7 +81,7 @@ variable "vpc_endpoints" {
 
 variable "security_groups" {
   type    = any
-  default = []
+  default = {}
 }
 
 variable "security_group_rules" {

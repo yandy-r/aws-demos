@@ -34,18 +34,9 @@ locals {
 }
 
 locals {
-  east_vpc_input = {
+  east_vpc_old_input = {
     hub1 = {
-      vpc = [{
-        name                             = "hub"
-        cidr_block                       = var.cidr_blocks.east["hub1"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
-      }],
+      vpc              = [],
       internet_gateway = [{}]
       nat_gateway      = [{}]
 
@@ -108,23 +99,9 @@ locals {
         }
       }]
 
-      security_groups = [
-        { name = "hub1-public" },
-        { name = "hub1-private" },
-        { name = "hub1-intra" }
-      ]
     }
     spoke1 = {
-      vpc = [{
-        name                             = "spoke1"
-        cidr_block                       = var.cidr_blocks.east["spoke1"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
-      }]
+      vpc = []
       intra_subnets = [
         {
           name              = "spoke1-intra-1"
@@ -140,20 +117,9 @@ locals {
       intra_route_table = [{
         name = "spoke1-intra-1"
       }]
-
-      security_groups = [{ name = "spoke1-intra1" }]
     }
     spoke2 = {
-      vpc = [{
-        name                             = "spoke2"
-        cidr_block                       = var.cidr_blocks.east["spoke2"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
-      }]
+      vpc = []
       intra_subnets = [
         {
           name              = "spoke2-intra-1"
@@ -169,20 +135,9 @@ locals {
       intra_route_table = [{
         name = "spoke2-intra-1"
       }]
-
-      security_groups = [{ name = "spoke2-intra1" }]
     }
     spoke3 = {
-      vpc = [{
-        name                             = "spoke3"
-        cidr_block                       = var.cidr_blocks.east["spoke3"]
-        instance_tenancy                 = "default"
-        enable_dns_hostnames             = true
-        enable_dns_support               = true
-        enable_classiclink               = false
-        enable_classiclink_dns_support   = false
-        assign_generated_ipv6_cidr_block = false
-      }]
+      vpc = []
       intra_subnets = [{
         name              = "spoke3-intra-1"
         cidr_block        = "10.203.128.0/24",
@@ -191,28 +146,26 @@ locals {
       intra_route_table = [{
         name = "spoke3-intra-1"
       }]
-
-      security_groups = [{ name = "spoke3-intra1" }]
     }
   }
 }
 
 locals {
   east_vpc_output = {
-    vpc_ids                    = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
-    vpc_cidr_blocks            = { for k, v in module.east_vpcs : k => one(v.cidr_block) }
-    public_route_table_ids     = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
-    public_subnet_ids          = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
-    public_subnet_cidr_blocks  = { for k, v in module.east_vpcs : k => v.public_subnet_cidr_blocks }
-    private_route_table_ids    = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
-    private_subnet_ids         = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
-    private_subnet_cidr_blocks = { for k, v in module.east_vpcs : k => v.private_subnet_cidr_blocks }
-    intra_route_table_ids      = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
-    intra_subnet_ids           = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
-    intra_subnet_cidr_blocks   = { for k, v in module.east_vpcs : k => v.intra_subnet_cidr_blocks }
-    route_table_ids            = { for k, v in module.east_vpcs : k => v.route_table_ids }
-    security_group_ids         = { for k, v in module.east_vpcs : k => v.security_group_ids }
-    internet_gateway_ids       = { for k, v in module.east_vpcs : k => one(v.internet_gateway_id) }
+    vpc_ids         = { for k, v in module.east_vpcs.vpc_id : k => v }
+    vpc_cidr_blocks = { for k, v in module.east_vpcs.cidr_block : k => v }
+    # public_route_table_ids     = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
+    # public_subnet_ids          = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
+    # public_subnet_cidr_blocks  = { for k, v in module.east_vpcs : k => v.public_subnet_cidr_blocks }
+    # private_route_table_ids    = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
+    # private_subnet_ids         = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
+    # private_subnet_cidr_blocks = { for k, v in module.east_vpcs : k => v.private_subnet_cidr_blocks }
+    # intra_route_table_ids      = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
+    # intra_subnet_ids           = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
+    # intra_subnet_cidr_blocks   = { for k, v in module.east_vpcs : k => v.intra_subnet_cidr_blocks }
+    # route_table_ids            = { for k, v in module.east_vpcs : k => v.route_table_ids }
+    # security_group_ids         = { for k, v in module.east_vpcs : k => v.security_group_ids }
+    # internet_gateway_ids       = { for k, v in module.east_vpcs : k => one(v.internet_gateway_id) }
   }
 }
 # output "vpc_ids" {
@@ -240,573 +193,605 @@ locals {
 #   value = local.east_vpc_output.route_table_ids
 # }
 
-module "east_vpcs" {
-  source              = "../../modules/vpc"
-  providers           = { aws = aws.us_east_1 }
-  for_each            = { for k, v in local.east_vpc_input : k => v }
-  name                = "east"
-  vpc                 = lookup(each.value, "vpc", {})
-  public_subnets      = lookup(each.value, "public_subnets", {})
-  public_route_table  = lookup(each.value, "public_route_table", {})
-  private_subnets     = lookup(each.value, "private_subnets", {})
-  private_route_table = lookup(each.value, "private_route_table", {})
-  intra_subnets       = lookup(each.value, "intra_subnets", {})
-  intra_route_table   = lookup(each.value, "intra_route_table", {})
-  internet_gateway    = lookup(each.value, "internet_gateway", {})
-  nat_gateway         = lookup(each.value, "nat_gateway", {})
-  vpc_endpoints       = lookup(each.value, "vpc_endpoints", {})
-  security_groups     = lookup(each.value, "security_groups", {})
-}
-
-
 locals {
-  east_security_group_input = {
+  east_vpcs = {
     hub1 = {
-      security_group_rules = [
-        {
-          description       = "Allow all out"
-          type              = "egress"
-          from_port         = 0
-          to_port           = 0
-          protocol          = "-1"
-          cidr_blocks       = ["0.0.0.0/0"]
-          ipv6_cidr_blocks  = ["::/0"]
-          security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
-        },
-        {
-          description              = "Allow ALL sourced from self"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][0]
-        },
-        {
-          description       = "Allow ICMP from home"
-          type              = "ingress"
-          from_port         = -1
-          to_port           = -1
-          protocol          = "icmp"
-          cidr_blocks       = [var.self_public_ip]
-          security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
-        },
-        {
-          description       = "Allow SSH from home"
-          type              = "ingress"
-          from_port         = 22
-          to_port           = 22
-          protocol          = "tcp"
-          cidr_blocks       = [var.self_public_ip]
-          security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
-        },
-        {
-          description              = "Allow sourced from private public security group"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][0]
-        },
-        {
-          description       = "Allow all out from private"
-          type              = "egress"
-          from_port         = 0
-          to_port           = 0
-          protocol          = "-1"
-          cidr_blocks       = ["0.0.0.0/0"]
-          ipv6_cidr_blocks  = ["::/0"]
-          security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
-        },
-        {
-          description              = "Allow all sourced from public to private security group"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][1]
-        },
-        {
-          description              = "Allow all sourced from private self"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][1]
-        },
-        {
-          description              = "Allow all sourced from intra to private"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][1]
-        },
-        {
-          description       = "Allow all out from intra"
-          type              = "egress"
-          from_port         = 0
-          to_port           = 0
-          protocol          = "-1"
-          cidr_blocks       = ["0.0.0.0/0"]
-          ipv6_cidr_blocks  = ["::/0"]
-          security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
-        },
-        {
-          description              = "Allow all sourced from public to intra security group"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][0]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][2]
-        },
-        {
-          description              = "Allow all sourced from private to intra security group"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][2]
-        },
-        {
-          description              = "Allow all sourced from self"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
-          security_group_id        = local.east_vpc_output.security_group_ids["hub1"][2]
-        },
-        {
-          description = "Allow all sourced from spokes to private"
-          type        = "ingress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = [
-            local.east_vpc_output.vpc_cidr_blocks["spoke1"],
-            local.east_vpc_output.vpc_cidr_blocks["spoke2"],
-            local.east_vpc_output.vpc_cidr_blocks["spoke3"],
-          ]
-          security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
-        },
-        {
-          description = "Allow all sourced from spokes to intra"
-          type        = "ingress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = [
-            local.east_vpc_output.vpc_cidr_blocks["spoke1"],
-            local.east_vpc_output.vpc_cidr_blocks["spoke2"],
-            local.east_vpc_output.vpc_cidr_blocks["spoke3"],
-          ]
-          security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
-        },
-      ]
+      name                             = "hub"
+      cidr_block                       = var.cidr_blocks.east["hub1"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
     }
     spoke1 = {
-      security_group_rules = [
-        {
-          description       = "Allow all out"
-          type              = "egress"
-          from_port         = 0
-          to_port           = 0
-          protocol          = "-1"
-          cidr_blocks       = ["0.0.0.0/0"]
-          ipv6_cidr_blocks  = ["::/0"]
-          security_group_id = local.east_vpc_output.security_group_ids["spoke1"][0]
-        },
-        {
-          description              = "Allow ALL sourced from self"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["spoke1"][0]
-          security_group_id        = local.east_vpc_output.security_group_ids["spoke1"][0]
-        },
-        {
-          description = "Allow all sourced from hub1, spoke2 to intra"
-          type        = "ingress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = [
-            local.east_vpc_output.vpc_cidr_blocks["hub1"],
-            local.east_vpc_output.vpc_cidr_blocks["spoke2"],
-          ]
-          security_group_id = local.east_vpc_output.security_group_ids["spoke1"][0]
-        },
-      ]
+      name                             = "spoke1"
+      cidr_block                       = var.cidr_blocks.east["spoke1"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
     }
     spoke2 = {
-      security_group_rules = [
-        {
-          description       = "Allow all out"
-          type              = "egress"
-          from_port         = 0
-          to_port           = 0
-          protocol          = "-1"
-          cidr_blocks       = ["0.0.0.0/0"]
-          ipv6_cidr_blocks  = ["::/0"]
-          security_group_id = local.east_vpc_output.security_group_ids["spoke2"][0]
-        },
-        {
-          description              = "Allow ALL sourced from self"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["spoke2"][0]
-          security_group_id        = local.east_vpc_output.security_group_ids["spoke2"][0]
-        },
-        {
-          description = "Allow all sourced from hub1, spoke1 to intra"
-          type        = "ingress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = [
-            local.east_vpc_output.vpc_cidr_blocks["hub1"],
-            local.east_vpc_output.vpc_cidr_blocks["spoke1"],
-          ]
-          security_group_id = local.east_vpc_output.security_group_ids["spoke2"][0]
-        },
-      ]
+      name                             = "spoke2"
+      cidr_block                       = var.cidr_blocks.east["spoke2"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
     }
     spoke3 = {
-      security_group_rules = [
-        {
-          description       = "Allow all out"
-          type              = "egress"
-          from_port         = 0
-          to_port           = 0
-          protocol          = "-1"
-          cidr_blocks       = ["0.0.0.0/0"]
-          ipv6_cidr_blocks  = ["::/0"]
-          security_group_id = local.east_vpc_output.security_group_ids["spoke3"][0]
-        },
-        {
-          description              = "Allow ALL sourced from self"
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 0
-          protocol                 = "-1"
-          source_security_group_id = local.east_vpc_output.security_group_ids["spoke3"][0]
-          security_group_id        = local.east_vpc_output.security_group_ids["spoke3"][0]
-        },
-        {
-          description = "Allow all sourced from hub to intra"
-          type        = "ingress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = [
-            local.east_vpc_output.vpc_cidr_blocks["hub1"],
-          ]
-          security_group_id = local.east_vpc_output.security_group_ids["spoke3"][0]
-        },
-      ]
+      name                             = "spoke3"
+      cidr_block                       = var.cidr_blocks.east["spoke3"]
+      instance_tenancy                 = "default"
+      enable_dns_hostnames             = true
+      enable_dns_support               = true
+      enable_classiclink               = false
+      enable_classiclink_dns_support   = false
+      assign_generated_ipv6_cidr_block = false
     }
   }
 }
-
-module "east_security_groups" {
-  source               = "../../modules/vpc"
-  for_each             = { for k, v in local.east_security_group_input : k => v }
-  name                 = "east"
-  security_group_rules = lookup(each.value, "security_group_rules", {})
-}
-
-locals {
-  east_ec2_network_interfaces = {
-    hub_bastion1 = {
-      source_dest_check = true
-      subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
-      private_ips       = [cidrhost(local.east_vpc_output.public_subnet_cidr_blocks["hub1"][0], 10)]
-      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
-      description       = "Bastion 1 Public Interface 1"
-      tags              = { Purpose = "Bastion 1 Public Interface" }
-    }
-    hub_private1 = {
-      source_dest_check = true
-      subnet_id         = local.east_vpc_output.private_subnet_ids["hub1"][0]
-      private_ips       = [cidrhost(local.east_vpc_output.private_subnet_cidr_blocks["hub1"][0], 10)]
-      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][1]]
-      description       = "Hub 1 Private Interface 1"
-    }
-    spoke1_intra1 = {
-      source_dest_check = true
-      subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke1"][0]
-      private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke1"][0], 10)]
-      security_groups   = [local.east_vpc_output.security_group_ids["spoke1"][0]]
-      description       = "Spoke 1 Intra Interface 1"
-    }
-    spoke2_intra1 = {
-      source_dest_check = true
-      subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke2"][0]
-      private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke2"][0], 10)]
-      security_groups   = [local.east_vpc_output.security_group_ids["spoke2"][0]]
-      description       = "Spoke 2 Intra Interface 1"
-    }
-    spoke3_intra1 = {
-      source_dest_check = true
-      subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke3"][0]
-      private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke3"][0], 10)]
-      security_groups   = [local.east_vpc_output.security_group_ids["spoke3"][0]]
-      description       = "Spoke 3 Intra Interface 1"
-    }
-  }
-  east_aws_instances = {
-    hub_bastion1 = {
-      ami              = local.east_data.amzn_ami
-      instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[0]
-      network_interface = [{
-        network_interface_id = local.east_ec2_output.network_interface_ids["hub_bastion1"]
-        device_index         = 0
-      }]
-    }
-    hub_private1 = {
-      ami              = local.east_data.amzn_ami
-      instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[1]
-      network_interface = [{
-        network_interface_id = local.east_ec2_output.network_interface_ids["hub_private1"]
-        device_index         = 0
-      }]
-    }
-    spoke1_intra1 = {
-      ami              = local.east_data.amzn_ami
-      instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[2]
-      network_interface = [{
-        device_index = 0
-      }]
-    }
-    spoke2_intra1 = {
-      ami              = local.east_data.amzn_ami
-      instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[3]
-      network_interface = [{
-        device_index = 0
-      }]
-    }
-    spoke3_intra1 = {
-      ami              = local.east_data.amzn_ami
-      instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[4]
-      network_interface = [{
-        device_index = 0
-      }]
-    }
-  }
-  east_ec2_output = {
-    network_interface_ids = { for k, v in module.east_ec2.network_interface_ids : k => v }
-  }
-}
-module "east_ec2" {
-  source    = "../../modules/ec2"
+module "east_vpcs" {
+  source    = "../../modules/vpc"
   providers = { aws = aws.us_east_1 }
-  name      = "east-ec2"
-  key_name  = var.key_name
-  priv_key  = module.ssh_key.priv_key
-
-  network_interfaces = local.east_ec2_network_interfaces
-  aws_instances      = local.east_aws_instances
+  name      = "east"
+  vpc       = local.east_vpcs
+  # public_subnets       = lookup(each.value, "public_subnets", {})
+  # public_route_table   = lookup(each.value, "public_route_table", {})
+  # private_subnets      = lookup(each.value, "private_subnets", {})
+  # private_route_table  = lookup(each.value, "private_route_table", {})
+  # intra_subnets        = lookup(each.value, "intra_subnets", {})
+  # intra_route_table    = lookup(each.value, "intra_route_table", {})
+  # internet_gateway     = lookup(each.value, "internet_gateway", {})
+  # nat_gateway          = lookup(each.value, "nat_gateway", {})
+  # vpc_endpoints        = lookup(each.value, "vpc_endpoints", {})
+  security_groups      = local.east_security_groups
+  security_group_rules = local.east_security_group_rules
 }
 
 locals {
-  east_transit_gateway_input = {
-    core = {
-      transit_gateway = [{
-        dns_support                     = "enable"
-        description                     = "US East Transit Gateway"
-        amazon_side_asn                 = 65000
-        vpn_ecmp_support                = "enable"
-        auto_accept_shared_attachments  = "disable"
-        default_route_table_association = "disable"
-        default_route_table_propagation = "disable"
-        tags                            = { Purpose = "Central routing hub for the east" }
-      }]
-      vpc_attachments = {
-        hub1 = {
-          vpc_id                                          = local.east_vpc_output.vpc_ids["hub1"]
-          subnet_ids                                      = local.east_vpc_output.private_subnet_ids["hub1"]
-          dns_support                                     = "enable"
-          ipv6_support                                    = "disable"
-          appliance_mode_support                          = "disable"
-          transit_gateway_default_route_table_association = false
-          transit_gateway_default_route_table_propagation = false
-          tags                                            = { Purpose = "Attachment to Hub1 VPC" }
-        }
-        spoke1 = {
-          vpc_id     = local.east_vpc_output.vpc_ids["spoke1"]
-          subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke1"]
-        }
-        spoke2 = {
-          vpc_id     = local.east_vpc_output.vpc_ids["spoke2"]
-          subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke2"]
-        }
-        spoke3 = {
-          vpc_id     = local.east_vpc_output.vpc_ids["spoke3"]
-          subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke3"]
-        }
-      }
-
-      route_tables = {
-        hubs   = {}
-        spokes = {}
-      }
-
-      route_table_associations = {
-        hub1   = { route_table_name = "hubs" }
-        spoke1 = { route_table_name = "spokes" }
-        spoke2 = { route_table_name = "spokes" }
-        spoke3 = { route_table_name = "spokes" }
-      }
-
-      route_table_propagations = {
-        hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
-        spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
-        spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
-        spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
-        spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
-        spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
-      }
-
-      transit_gateway_routes = {
-        spoke_default = {
-          destination      = "0.0.0.0/0"
-          attach_name      = "hub1"
-          route_table_name = "spokes"
-        }
-        blackhole_1 = {
-          destination      = "10.0.0.0/8"
-          blackhole        = true
-          route_table_name = "hubs"
-        }
-        blackhole_2 = {
-          destination      = "10.0.0.0/8"
-          blackhole        = true
-          route_table_name = "spokes"
-        }
-        blackhole_3 = {
-          destination      = "172.16.0.0/12"
-          blackhole        = true
-          route_table_name = "hubs"
-        }
-        blackhole_4 = {
-          destination      = "172.16.0.0/12"
-          blackhole        = true
-          route_table_name = "spokes"
-        }
-        blackhole_5 = {
-          destination      = "192.168.0.0/16"
-          blackhole        = true
-          route_table_name = "hubs"
-        }
-        blackhole_6 = {
-          destination      = "192.168.0.0/16"
-          blackhole        = true
-          route_table_name = "spokes"
-        }
-      }
-    }
+  east_security_groups = {
+    hub1_public  = { name = "hub1-public", vpc_id = module.east_vpcs.vpc_id["hub1"] },
+    hub1_private = { name = "hub1-private", vpc_id = module.east_vpcs.vpc_id["hub1"] },
+    hub1_intra   = { name = "hub1-intra", vpc_id = module.east_vpcs.vpc_id["hub1"] },
+    spoke1_intra = { name = "spoke1-intra1", vpc_id = module.east_vpcs.vpc_id["spoke1"] },
+    spoke2_intra = { name = "spoke2-intra1", vpc_id = module.east_vpcs.vpc_id["spoke2"] },
+    spoke3_intra = { name = "spoke3-intra1", vpc_id = module.east_vpcs.vpc_id["spoke3"] }
   }
-}
-
-locals {
-  east_transit_gateway_output = {
-    transit_gateway_id = { for k, v in module.east_transit_gateway : k => one(v.transit_gateway_id) }
-  }
-}
-module "east_transit_gateway" {
-  source                   = "../../modules/transit-gateway"
-  providers                = { aws = aws.us_east_1 }
-  for_each                 = local.east_transit_gateway_input
-  name                     = "east"
-  transit_gateway          = lookup(each.value, "transit_gateway", {})
-  vpc_attachments          = lookup(each.value, "vpc_attachments", {})
-  route_tables             = lookup(each.value, "route_tables", {})
-  route_table_associations = lookup(each.value, "route_table_associations", {})
-  route_table_propagations = lookup(each.value, "route_table_propagations", {})
-  transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
-}
-
-locals {
-  east_route_input = [
+  east_security_group_rules = [
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.east_vpcs.security_group_ids["hub1_public"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_public"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_public"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
+      description       = "Allow ICMP from home"
+      type              = "ingress"
+      from_port         = -1
+      to_port           = -1
+      protocol          = "icmp"
+      cidr_blocks       = [var.self_public_ip]
+      security_group_id = module.east_vpcs.security_group_ids["hub1_public"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
+      description       = "Allow SSH from home"
+      type              = "ingress"
+      from_port         = 22
+      to_port           = 22
+      protocol          = "tcp"
+      cidr_blocks       = [var.self_public_ip]
+      security_group_id = module.east_vpcs.security_group_ids["hub1_public"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
+      description              = "Allow sourced from private public security group"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_private"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_public"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
+      description       = "Allow all out from private"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.east_vpcs.security_group_ids["hub1_private"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke1"]
+      description              = "Allow all sourced from public to private security group"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_public"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_private"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke2"]
+      description              = "Allow all sourced from private self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_private"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_private"]
     },
     {
-      destination_cidr_block = "10.192.0.0/11"
-      transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
-      route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke3"]
-    }
+      description              = "Allow all sourced from intra to private"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_intra"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_private"]
+    },
+    {
+      description       = "Allow all out from intra"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.east_vpcs.security_group_ids["hub1_intra"]
+    },
+    {
+      description              = "Allow all sourced from public to intra security group"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_public"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_intra"]
+    },
+    {
+      description              = "Allow all sourced from private to intra security group"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_private"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_intra"]
+    },
+    {
+      description              = "Allow all sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["hub1_intra"]
+      security_group_id        = module.east_vpcs.security_group_ids["hub1_intra"]
+    },
+    {
+      description = "Allow all sourced from spokes to private"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        local.east_vpc_output.vpc_cidr_blocks["spoke1"],
+        local.east_vpc_output.vpc_cidr_blocks["spoke2"],
+        local.east_vpc_output.vpc_cidr_blocks["spoke3"],
+      ]
+      security_group_id = module.east_vpcs.security_group_ids["hub1_private"]
+    },
+    {
+      description = "Allow all sourced from spokes to intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        local.east_vpc_output.vpc_cidr_blocks["spoke1"],
+        local.east_vpc_output.vpc_cidr_blocks["spoke2"],
+        local.east_vpc_output.vpc_cidr_blocks["spoke3"],
+      ]
+      security_group_id = module.east_vpcs.security_group_ids["hub1_intra"]
+    },
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.east_vpcs.security_group_ids["spoke1_intra"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["spoke1_intra"]
+      security_group_id        = module.east_vpcs.security_group_ids["spoke1_intra"]
+    },
+    {
+      description = "Allow all sourced from hub1, spoke2 to intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        local.east_vpc_output.vpc_cidr_blocks["hub1"],
+        local.east_vpc_output.vpc_cidr_blocks["spoke2"],
+      ]
+      security_group_id = module.east_vpcs.security_group_ids["spoke1_intra"]
+    },
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.east_vpcs.security_group_ids["spoke2_intra"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["spoke2_intra"]
+      security_group_id        = module.east_vpcs.security_group_ids["spoke2_intra"]
+    },
+    {
+      description = "Allow all sourced from hub1, spoke1 to intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        local.east_vpc_output.vpc_cidr_blocks["hub1"],
+        local.east_vpc_output.vpc_cidr_blocks["spoke1"],
+      ]
+      security_group_id = module.east_vpcs.security_group_ids["spoke2_intra"]
+    },
+    {
+      description       = "Allow all out"
+      type              = "egress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = ["0.0.0.0/0"]
+      ipv6_cidr_blocks  = ["::/0"]
+      security_group_id = module.east_vpcs.security_group_ids["spoke3_intra"]
+    },
+    {
+      description              = "Allow ALL sourced from self"
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 0
+      protocol                 = "-1"
+      source_security_group_id = module.east_vpcs.security_group_ids["spoke3_intra"]
+      security_group_id        = module.east_vpcs.security_group_ids["spoke3_intra"]
+    },
+    {
+      description = "Allow all sourced from hub to intra"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        local.east_vpc_output.vpc_cidr_blocks["hub1"],
+      ]
+      security_group_id = module.east_vpcs.security_group_ids["spoke3_intra"]
+    },
   ]
 }
 
-resource "aws_route" "east_routes" {
-  provider                  = aws.us_east_1
-  for_each                  = { for k, v in local.east_route_input : k => v }
-  route_table_id            = each.value["route_table_id"]
-  destination_cidr_block    = lookup(each.value, "destination_cidr_block", null)
-  gateway_id                = lookup(each.value, "gateway_id", null)
-  nat_gateway_id            = lookup(each.value, "nat_gateway_id", null)
-  instance_id               = lookup(each.value, "instance_id", null)
-  local_gateway_id          = lookup(each.value, "local_gateway_id", null)
-  vpc_endpoint_id           = lookup(each.value, "vpc_endpoint_id", null)
-  transit_gateway_id        = lookup(each.value, "transit_gateway_id", null)
-  carrier_gateway_id        = lookup(each.value, "carrier_gateway_id", null)
-  network_interface_id      = lookup(each.value, "network_interface_id", null)
-  egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
-  vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
-}
+# locals {
+#   east_ec2_network_interfaces = {
+#     hub_bastion1 = {
+#       source_dest_check = true
+#       subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
+#       private_ips       = [cidrhost(local.east_vpc_output.public_subnet_cidr_blocks["hub1"][0], 10)]
+#       security_groups   = [module.east_vpcs.security_group_ids["hub1_public"]]
+#       description       = "Bastion 1 Public Interface 1"
+#       tags              = { Purpose = "Bastion 1 Public Interface" }
+#     }
+#     hub_private1 = {
+#       source_dest_check = true
+#       subnet_id         = local.east_vpc_output.private_subnet_ids["hub1"][0]
+#       private_ips       = [cidrhost(local.east_vpc_output.private_subnet_cidr_blocks["hub1"][0], 10)]
+#       security_groups   = [module.east_vpcs.security_group_ids["hub1_private"]]
+#       description       = "Hub 1 Private Interface 1"
+#     }
+#     spoke1_intra1 = {
+#       source_dest_check = true
+#       subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke1"][0]
+#       private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke1"][0], 10)]
+#       security_groups   = [module.east_vpcs.security_group_ids["spoke1_intra"]]
+#       description       = "Spoke 1 Intra Interface 1"
+#     }
+#     spoke2_intra1 = {
+#       source_dest_check = true
+#       subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke2"][0]
+#       private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke2"][0], 10)]
+#       security_groups   = [module.east_vpcs.security_group_ids["spoke2_intra"]]
+#       description       = "Spoke 2 Intra Interface 1"
+#     }
+#     spoke3_intra1 = {
+#       source_dest_check = true
+#       subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke3"][0]
+#       private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke3"][0], 10)]
+#       security_groups   = [module.east_vpcs.security_group_ids["spoke3_intra"]]
+#       description       = "Spoke 3 Intra Interface 1"
+#     }
+#   }
+#   east_aws_instances = {
+#     hub_bastion1 = {
+#       ami              = local.east_data.amzn_ami
+#       instance_type    = "t3.medium"
+#       user_data_base64 = local.east_data.amzn_cloud_config[0]
+#       network_interface = [{
+#         network_interface_id = local.east_ec2_output.network_interface_ids["hub_bastion1"]
+#         device_index         = 0
+#       }]
+#     }
+#     hub_private1 = {
+#       ami              = local.east_data.amzn_ami
+#       instance_type    = "t3.medium"
+#       user_data_base64 = local.east_data.amzn_cloud_config[1]
+#       network_interface = [{
+#         network_interface_id = local.east_ec2_output.network_interface_ids["hub_private1"]
+#         device_index         = 0
+#       }]
+#     }
+#     spoke1_intra1 = {
+#       ami              = local.east_data.amzn_ami
+#       instance_type    = "t3.medium"
+#       user_data_base64 = local.east_data.amzn_cloud_config[2]
+#       network_interface = [{
+#         device_index = 0
+#       }]
+#     }
+#     spoke2_intra1 = {
+#       ami              = local.east_data.amzn_ami
+#       instance_type    = "t3.medium"
+#       user_data_base64 = local.east_data.amzn_cloud_config[3]
+#       network_interface = [{
+#         device_index = 0
+#       }]
+#     }
+#     spoke3_intra1 = {
+#       ami              = local.east_data.amzn_ami
+#       instance_type    = "t3.medium"
+#       user_data_base64 = local.east_data.amzn_cloud_config[4]
+#       network_interface = [{
+#         device_index = 0
+#       }]
+#     }
+#   }
+#   east_ec2_output = {
+#     network_interface_ids = { for k, v in module.east_ec2.network_interface_ids : k => v }
+#   }
+# }
+# module "east_ec2" {
+#   source    = "../../modules/ec2"
+#   providers = { aws = aws.us_east_1 }
+#   name      = "east-ec2"
+#   key_name  = var.key_name
+#   priv_key  = module.ssh_key.priv_key
+
+#   network_interfaces = local.east_ec2_network_interfaces
+#   aws_instances      = local.east_aws_instances
+# }
+
+# locals {
+#   east_transit_gateway_input = {
+#     core = {
+#       transit_gateway = [{
+#         dns_support                     = "enable"
+#         description                     = "US East Transit Gateway"
+#         amazon_side_asn                 = 65000
+#         vpn_ecmp_support                = "enable"
+#         auto_accept_shared_attachments  = "disable"
+#         default_route_table_association = "disable"
+#         default_route_table_propagation = "disable"
+#         tags                            = { Purpose = "Central routing hub for the east" }
+#       }]
+#       vpc_attachments = {
+#         hub1 = {
+#           vpc_id                                          = local.east_vpc_output.vpc_ids["hub1"]
+#           subnet_ids                                      = local.east_vpc_output.private_subnet_ids["hub1"]
+#           dns_support                                     = "enable"
+#           ipv6_support                                    = "disable"
+#           appliance_mode_support                          = "disable"
+#           transit_gateway_default_route_table_association = false
+#           transit_gateway_default_route_table_propagation = false
+#           tags                                            = { Purpose = "Attachment to Hub1 VPC" }
+#         }
+#         spoke1 = {
+#           vpc_id     = local.east_vpc_output.vpc_ids["spoke1"]
+#           subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke1"]
+#         }
+#         spoke2 = {
+#           vpc_id     = local.east_vpc_output.vpc_ids["spoke2"]
+#           subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke2"]
+#         }
+#         spoke3 = {
+#           vpc_id     = local.east_vpc_output.vpc_ids["spoke3"]
+#           subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke3"]
+#         }
+#       }
+
+#       route_tables = {
+#         hubs   = {}
+#         spokes = {}
+#       }
+
+#       route_table_associations = {
+#         hub1   = { route_table_name = "hubs" }
+#         spoke1 = { route_table_name = "spokes" }
+#         spoke2 = { route_table_name = "spokes" }
+#         spoke3 = { route_table_name = "spokes" }
+#       }
+
+#       route_table_propagations = {
+#         hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
+#         spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
+#         spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
+#         spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
+#         spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
+#         spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
+#       }
+
+#       transit_gateway_routes = {
+#         spoke_default = {
+#           destination      = "0.0.0.0/0"
+#           attach_name      = "hub1"
+#           route_table_name = "spokes"
+#         }
+#         blackhole_1 = {
+#           destination      = "10.0.0.0/8"
+#           blackhole        = true
+#           route_table_name = "hubs"
+#         }
+#         blackhole_2 = {
+#           destination      = "10.0.0.0/8"
+#           blackhole        = true
+#           route_table_name = "spokes"
+#         }
+#         blackhole_3 = {
+#           destination      = "172.16.0.0/12"
+#           blackhole        = true
+#           route_table_name = "hubs"
+#         }
+#         blackhole_4 = {
+#           destination      = "172.16.0.0/12"
+#           blackhole        = true
+#           route_table_name = "spokes"
+#         }
+#         blackhole_5 = {
+#           destination      = "192.168.0.0/16"
+#           blackhole        = true
+#           route_table_name = "hubs"
+#         }
+#         blackhole_6 = {
+#           destination      = "192.168.0.0/16"
+#           blackhole        = true
+#           route_table_name = "spokes"
+#         }
+#       }
+#     }
+#   }
+# }
+
+# locals {
+#   east_transit_gateway_output = {
+#     transit_gateway_id = { for k, v in module.east_transit_gateway : k => one(v.transit_gateway_id) }
+#   }
+# }
+# module "east_transit_gateway" {
+#   source                   = "../../modules/transit-gateway"
+#   providers                = { aws = aws.us_east_1 }
+#   for_each                 = local.east_transit_gateway_input
+#   name                     = "east"
+#   transit_gateway          = lookup(each.value, "transit_gateway", {})
+#   vpc_attachments          = lookup(each.value, "vpc_attachments", {})
+#   route_tables             = lookup(each.value, "route_tables", {})
+#   route_table_associations = lookup(each.value, "route_table_associations", {})
+#   route_table_propagations = lookup(each.value, "route_table_propagations", {})
+#   transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
+# }
+
+# locals {
+#   east_route_input = [
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.public_route_table_ids["hub1"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.private_route_table_ids["hub1"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.intra_route_table_ids["hub1"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke1"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke2"]
+#     },
+#     {
+#       destination_cidr_block = "10.192.0.0/11"
+#       transit_gateway_id     = local.east_transit_gateway_output.transit_gateway_id["core"]
+#       route_table_id         = local.east_vpc_output.intra_route_table_ids["spoke3"]
+#     }
+#   ]
+# }
+
+# resource "aws_route" "east_routes" {
+#   provider                  = aws.us_east_1
+#   for_each                  = { for k, v in local.east_route_input : k => v }
+#   route_table_id            = each.value["route_table_id"]
+#   destination_cidr_block    = lookup(each.value, "destination_cidr_block", null)
+#   gateway_id                = lookup(each.value, "gateway_id", null)
+#   nat_gateway_id            = lookup(each.value, "nat_gateway_id", null)
+#   instance_id               = lookup(each.value, "instance_id", null)
+#   local_gateway_id          = lookup(each.value, "local_gateway_id", null)
+#   vpc_endpoint_id           = lookup(each.value, "vpc_endpoint_id", null)
+#   transit_gateway_id        = lookup(each.value, "transit_gateway_id", null)
+#   carrier_gateway_id        = lookup(each.value, "carrier_gateway_id", null)
+#   network_interface_id      = lookup(each.value, "network_interface_id", null)
+#   egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
+#   vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
+# }
+
+
+
+
 
 # resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
 #   provider                = aws.us_east_1
