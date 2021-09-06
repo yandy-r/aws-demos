@@ -321,6 +321,44 @@ resource "aws_security_group_rule" "security_group_rules" {
 }
 
 # ### -------------------------------------------------------------------------------------------- ###
+# ### FLOW LOGS
+# ### -------------------------------------------------------------------------------------------- ###
+
+# resource "aws_iam_role" "flow_logs" {
+#   count              = var.create_flow_logs ? 1 : 0
+#   name               = "${data.aws_region.current.name}-flow_logs"
+#   assume_role_policy = file("${path.module}/templates/flow_logs_role.json")
+
+#   tags = {
+#     Name = "Flow Logs"
+#   }
+# }
+
+# resource "aws_iam_role_policy" "flow_logs" {
+#   count  = var.create_flow_logs ? 1 : 0
+#   name   = "${data.aws_region.current.name}-flow_logs"
+#   role   = aws_iam_role.flow_logs[0].id
+#   policy = file("${path.module}/templates/flow_logs_role_policy.json")
+# }
+
+# resource "aws_cloudwatch_log_group" "flow_logs" {
+#   count = var.create_flow_logs ? 1 : 0
+#   name  = "${data.aws_region.current.name}-flow_logs"
+
+#   tags = {
+#     Name = "Flow logs"
+#   }
+# }
+
+# resource "aws_flow_log" "flow_logs" {
+#   count           = var.create_flow_logs ? length(aws_vpc.vpcs) : 0
+#   iam_role_arn    = aws_iam_role.flow_logs[0].arn
+#   log_destination = aws_cloudwatch_log_group.flow_logs[0].arn
+#   traffic_type    = "ALL"
+#   vpc_id          = aws_vpc.vpcs[count.index].id
+# }
+
+# ### -------------------------------------------------------------------------------------------- ###
 # ### S3
 # ### -------------------------------------------------------------------------------------------- ###
 
