@@ -16,35 +16,35 @@ terraform {
 ### -------------------------------------------------------------------------------------------- ###
 
 resource "aws_ec2_transit_gateway" "this" {
-  count                           = length(var.transit_gateway) > 0 ? 1 : 0
-  dns_support                     = lookup(var.transit_gateway, "dns_support", "enable")
-  description                     = lookup(var.transit_gateway, "description", null)
-  amazon_side_asn                 = lookup(var.transit_gateway, "amazon_side_asn", 64512)
-  vpn_ecmp_support                = lookup(var.transit_gateway, "vpn_ecmp_support", "enable")
-  auto_accept_shared_attachments  = lookup(var.transit_gateway, "auto_accept_shared_attachments", "disable")
-  default_route_table_association = lookup(var.transit_gateway, "default_route_table_association", "disable")
-  default_route_table_propagation = lookup(var.transit_gateway, "default_route_table_propagation", "disable")
+  for_each                        = { for k, v in var.transit_gateway : k => v }
+  dns_support                     = lookup(each.value, "dns_support", "enable")
+  description                     = lookup(each.value, "description", null)
+  amazon_side_asn                 = lookup(each.value, "amazon_side_asn", 64512)
+  vpn_ecmp_support                = lookup(each.value, "vpn_ecmp_support", "enable")
+  auto_accept_shared_attachments  = lookup(each.value, "auto_accept_shared_attachments", "disable")
+  default_route_table_association = lookup(each.value, "default_route_table_association", "disable")
+  default_route_table_propagation = lookup(each.value, "default_route_table_propagation", "disable")
 
   tags = merge(
     {
-      Name = "${var.name}"
+      Name = "${var.name}-${lookup(each.value, "name", "tgw-${each.key}")}"
     },
     var.tags,
-    lookup(var.transit_gateway, "tags", null)
+    lookup(each.value, "tags", null)
   )
 }
 
 locals {
-  transit_gateway_id = one(aws_ec2_transit_gateway.this[*].id)
+  transit_gateway_id = [for v in aws_ec2_transit_gateway.this : v.id]
   vpc_attachment_ids = { for k, v in aws_ec2_transit_gateway_vpc_attachment.this : k => v.id }
   route_table_ids    = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
-  for_each                                        = var.vpc_attachments
+  for_each                                        = { for k, v in var.vpc_attachments : k => v }
   vpc_id                                          = each.value["vpc_id"]
   subnet_ids                                      = each.value["subnet_ids"]
-  transit_gateway_id                              = lookup(each.value, "transit_gateway_id", local.transit_gateway_id)
+  transit_gateway_id                              = lookup(each.value, "transit_gateway_id", element(concat(local.transit_gateway_id, [""]), 0))
   ipv6_support                                    = lookup(each.value, "ipv6_support", "disable")
   dns_support                                     = lookup(each.value, "dns_support", "enable")
   appliance_mode_support                          = lookup(each.value, "appliance_mode_support", "disable")
@@ -53,7 +53,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 
   tags = merge(
     {
-      Name = "${var.name}-${each.key}"
+      Name = "${var.name}-${lookup(each.value, "name", "attach-${each.key}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -61,12 +61,12 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 }
 
 resource "aws_ec2_transit_gateway_route_table" "this" {
-  for_each           = var.route_tables
-  transit_gateway_id = lookup(each.value, "transit_gateway_id", local.transit_gateway_id)
+  for_each           = { for k, v in var.route_tables : k => v }
+  transit_gateway_id = lookup(each.value, "transit_gateway_id", element(concat(local.transit_gateway_id, [""]), 0))
 
   tags = merge(
     {
-      Name = "${var.name}-${each.key}"
+      Name = "${var.name}-${lookup(each.value, "name", "rt-${each.key}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -74,9 +74,9 @@ resource "aws_ec2_transit_gateway_route_table" "this" {
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "this" {
-  for_each                       = var.route_table_associations
+  for_each                       = { for k, v in var.route_table_associations : k => v }
   transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", local.vpc_attachment_ids[each.key])
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), local.route_table_ids[each.value.route_table_name])
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), lookup(local.route_table_ids, each.value.route_table_name, ""))
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "this" {

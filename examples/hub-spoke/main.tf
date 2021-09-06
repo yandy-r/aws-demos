@@ -576,135 +576,136 @@ module "east_ec2" {
   }
 }
 
-# locals {
-#   east_transit_gateways = {
-#     central_east = {
-#       dns_support                     = "enable"
-#       description                     = "US East Transit Gateway"
-#       amazon_side_asn                 = 65000
-#       vpn_ecmp_support                = "enable"
-#       auto_accept_shared_attachments  = "disable"
-#       default_route_table_association = "disable"
-#       default_route_table_propagation = "disable"
-#       tags                            = { Purpose = "Central routing hub for the east" }
+locals {
+  east_transit_gateway_input = {
+    core = {
+      transit_gateway = [{
+        dns_support                     = "enable"
+        description                     = "US East Transit Gateway"
+        amazon_side_asn                 = 65000
+        vpn_ecmp_support                = "enable"
+        auto_accept_shared_attachments  = "disable"
+        default_route_table_association = "disable"
+        default_route_table_propagation = "disable"
+        tags                            = { Purpose = "Central routing hub for the east" }
+      }]
+      vpc_attachments = {
+        hub1 = {
+          vpc_id                                          = local.east_vpc_output.vpc_ids["hub1"]
+          subnet_ids                                      = local.east_vpc_output.private_subnet_ids["hub1"]
+          dns_support                                     = "enable"
+          ipv6_support                                    = "disable"
+          appliance_mode_support                          = "disable"
+          transit_gateway_default_route_table_association = false
+          transit_gateway_default_route_table_propagation = false
+          tags                                            = { Purpose = "Attachment to Hub1 VPC" }
+        }
+        spoke1 = {
+          vpc_id     = local.east_vpc_output.vpc_ids["spoke1"]
+          subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke1"]
+        }
+        spoke2 = {
+          vpc_id     = local.east_vpc_output.vpc_ids["spoke2"]
+          subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke2"]
+        }
+        spoke3 = {
+          vpc_id     = local.east_vpc_output.vpc_ids["spoke3"]
+          subnet_ids = local.east_vpc_output.intra_subnet_ids["spoke3"]
+        }
+      }
 
-#       vpc_attachments = {
-#         hub1 = {
-#           vpc_id                                          = local.vpc_ids.east["hub1"]
-#           subnet_ids                                      = local.private_subnet_ids.east["hub1"]
-#           dns_support                                     = "enable"
-#           ipv6_support                                    = "disable"
-#           appliance_mode_support                          = "disable"
-#           transit_gateway_default_route_table_association = false
-#           transit_gateway_default_route_table_propagation = false
-#           tags                                            = { Purpose = "Attachment to Hub1 VPC" }
-#         }
-#         spoke1 = {
-#           vpc_id     = local.vpc_ids.east["spoke1"]
-#           subnet_ids = local.intra_subnet_ids.east["spoke1"]
-#         }
-#         spoke2 = {
-#           vpc_id     = local.vpc_ids.east["spoke2"]
-#           subnet_ids = local.intra_subnet_ids.east["spoke2"]
-#         }
-#         spoke3 = {
-#           vpc_id     = local.vpc_ids.east["spoke3"]
-#           subnet_ids = local.intra_subnet_ids.east["spoke3"]
-#         }
-#       }
+      route_tables = {
+        hubs   = {}
+        spokes = {}
+      }
 
-#       route_tables = {
-#         hubs   = {}
-#         spokes = {}
-#       }
+      route_table_associations = {
+        hub1   = { route_table_name = "hubs" }
+        spoke1 = { route_table_name = "spokes" }
+        spoke2 = { route_table_name = "spokes" }
+        spoke3 = { route_table_name = "spokes" }
+      }
 
-#       route_table_associations = {
-#         hub1   = { route_table_name = "hubs" }
-#         spoke1 = { route_table_name = "spokes" }
-#         spoke2 = { route_table_name = "spokes" }
-#         spoke3 = { route_table_name = "spokes" }
-#       }
+      route_table_propagations = {
+        hub_to_spokes = {
+          attach_name      = "hub1"
+          route_table_name = "spokes"
+        }
+        spoke_1_to_hub = {
+          attach_name      = "spoke1"
+          route_table_name = "hubs"
+        }
+        spoke_2_to_hub = {
+          attach_name      = "spoke2"
+          route_table_name = "hubs"
+        }
+        spoke_3_to_hub = {
+          attach_name      = "spoke3"
+          route_table_name = "hubs"
+        }
+        spoke_1_to_2 = {
+          attach_name      = "spoke1"
+          route_table_name = "spokes"
+        }
+        spoke_2_to_1 = {
+          attach_name      = "spoke2"
+          route_table_name = "spokes"
+        }
+      }
 
-#       route_table_propagations = {
-#         hub_to_spokes = {
-#           attach_name      = "hub1"
-#           route_table_name = "spokes"
-#         }
-#         spoke_1_to_hub = {
-#           attach_name      = "spoke1"
-#           route_table_name = "hubs"
-#         }
-#         spoke_2_to_hub = {
-#           attach_name      = "spoke2"
-#           route_table_name = "hubs"
-#         }
-#         spoke_3_to_hub = {
-#           attach_name      = "spoke3"
-#           route_table_name = "hubs"
-#         }
-#         spoke_1_to_2 = {
-#           attach_name      = "spoke1"
-#           route_table_name = "spokes"
-#         }
-#         spoke_2_to_1 = {
-#           attach_name      = "spoke2"
-#           route_table_name = "spokes"
-#         }
-#       }
+      transit_gateway_routes = {
+        spoke_default = {
+          destination      = "0.0.0.0/0"
+          attach_name      = "hub1"
+          route_table_name = "spokes"
+        }
+        blackhole_1 = {
+          destination      = "10.0.0.0/8"
+          blackhole        = true
+          route_table_name = "hubs"
+        }
+        blackhole_2 = {
+          destination      = "10.0.0.0/8"
+          blackhole        = true
+          route_table_name = "spokes"
+        }
+        blackhole_3 = {
+          destination      = "172.16.0.0/12"
+          blackhole        = true
+          route_table_name = "hubs"
+        }
+        blackhole_4 = {
+          destination      = "172.16.0.0/12"
+          blackhole        = true
+          route_table_name = "spokes"
+        }
+        blackhole_5 = {
+          destination      = "192.168.0.0/16"
+          blackhole        = true
+          route_table_name = "hubs"
+        }
+        blackhole_6 = {
+          destination      = "192.168.0.0/16"
+          blackhole        = true
+          route_table_name = "spokes"
+        }
+      }
+    }
+  }
+}
 
-#       transit_gateway_routes = {
-#         spoke_default = {
-#           destination      = "0.0.0.0/0"
-#           attach_name      = "hub1"
-#           route_table_name = "spokes"
-#         }
-#         blackhole_1 = {
-#           destination      = "10.0.0.0/8"
-#           blackhole        = true
-#           route_table_name = "hubs"
-#         }
-#         blackhole_2 = {
-#           destination      = "10.0.0.0/8"
-#           blackhole        = true
-#           route_table_name = "spokes"
-#         }
-#         blackhole_3 = {
-#           destination      = "172.16.0.0/12"
-#           blackhole        = true
-#           route_table_name = "hubs"
-#         }
-#         blackhole_4 = {
-#           destination      = "172.16.0.0/12"
-#           blackhole        = true
-#           route_table_name = "spokes"
-#         }
-#         blackhole_5 = {
-#           destination      = "192.168.0.0/16"
-#           blackhole        = true
-#           route_table_name = "hubs"
-#         }
-#         blackhole_6 = {
-#           destination      = "192.168.0.0/16"
-#           blackhole        = true
-#           route_table_name = "spokes"
-#         }
-#       }
-#     }
-#   }
-# }
-
-# module "east_transit_gateway" {
-#   source                   = "../../modules/transit-gateway"
-#   providers                = { aws = aws.us_east_1 }
-#   for_each                 = local.east_transit_gateways
-#   transit_gateway          = each.value
-#   name                     = each.key
-#   vpc_attachments          = lookup(each.value, "vpc_attachments", {})
-#   route_tables             = lookup(each.value, "route_tables", {})
-#   route_table_associations = lookup(each.value, "route_table_associations", {})
-#   route_table_propagations = lookup(each.value, "route_table_propagations", {})
-#   transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
-# }
+module "east_transit_gateway" {
+  source                   = "../../modules/transit-gateway"
+  providers                = { aws = aws.us_east_1 }
+  for_each                 = local.east_transit_gateway_input
+  name                     = "east"
+  transit_gateway          = lookup(each.value, "transit_gateway", {})
+  vpc_attachments          = lookup(each.value, "vpc_attachments", {})
+  route_tables             = lookup(each.value, "route_tables", {})
+  route_table_associations = lookup(each.value, "route_table_associations", {})
+  # route_table_propagations = lookup(each.value, "route_table_propagations", {})
+  # transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
+}
 
 # locals {
 #   routes = {
