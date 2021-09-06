@@ -574,6 +574,51 @@ module "east_ec2" {
       description       = "Spoke 3 Intra Interface 1"
     }
   }
+
+  aws_instances = {
+    hub_bastion1 = {
+      ami              = local.east_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.east_data.amzn_cloud_config[0]
+      network_interface = [{
+        network_interface_id = local.east_ec2_output.network_interface_ids["hub_bastion1"]
+        device_index         = 0
+      }]
+    }
+    hub_private1 = {
+      ami              = local.east_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.east_data.amzn_cloud_config[1]
+      network_interface = [{
+        network_interface_id = local.east_ec2_output.network_interface_ids["hub_private1"]
+        device_index         = 0
+      }]
+    }
+    spoke1_intra1 = {
+      ami              = local.east_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.east_data.amzn_cloud_config[2]
+      network_interface = [{
+        device_index = 0
+      }]
+    }
+    spoke2_intra1 = {
+      ami              = local.east_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.east_data.amzn_cloud_config[3]
+      network_interface = [{
+        device_index = 0
+      }]
+    }
+    spoke3_intra1 = {
+      ami              = local.east_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.east_data.amzn_cloud_config[4]
+      network_interface = [{
+        device_index = 0
+      }]
+    }
+  }
 }
 
 locals {
