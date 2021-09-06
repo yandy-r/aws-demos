@@ -11,9 +11,9 @@ output "ubuntu_ami" {
 }
 
 output "amzn_cloud_config" {
-  value = local.amzn_cloud_config
+  value = local.amzn_cloud_config[*]
 }
 
 output "ubuntu_cloud_config" {
-  value = local.ubuntu_cloud_config
+  value = local.ubuntu_cloud_config[*]
 }

@@ -5,12 +5,15 @@ module "ssh_key" {
 }
 
 module "east_data" {
-  source             = "./data"
-  providers          = { aws = aws.us_east_1 }
-  get_amzn_ami       = true
-  key_name           = var.key_name
-  priv_key_path      = var.priv_key_path
-  instance_hostnames = ["hub_bastion1"]
+  source        = "./data"
+  providers     = { aws = aws.us_east_1 }
+  get_amzn_ami  = true
+  key_name      = var.key_name
+  priv_key_path = var.priv_key_path
+  instance_hostnames = [
+    "hub_bastion1",
+    "hub1_spoke1"
+  ]
 
   depends_on = [
     module.ssh_key
@@ -193,16 +196,19 @@ locals {
 
 locals {
   east_vpc_output = {
-    vpc_ids                 = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
-    vpc_cidr_blocks         = { for k, v in module.east_vpcs : k => one(v.cidr_block) }
-    public_route_table_ids  = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
-    public_subnet_ids       = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
-    private_route_table_ids = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
-    private_subnet_ids      = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
-    intra_route_table_ids   = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
-    intra_subnet_ids        = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
-    route_table_ids         = { for k, v in module.east_vpcs : k => v.route_table_ids }
-    security_group_ids      = { for k, v in module.east_vpcs : k => v.security_group_ids }
+    vpc_ids                    = { for k, v in module.east_vpcs : k => one(v.vpc_id) }
+    vpc_cidr_blocks            = { for k, v in module.east_vpcs : k => one(v.cidr_block) }
+    public_route_table_ids     = { for k, v in module.east_vpcs : k => one(v.public_route_table_id) }
+    public_subnet_ids          = { for k, v in module.east_vpcs : k => v.public_subnet_ids }
+    public_subnet_cidr_blocks  = { for k, v in module.east_vpcs : k => v.public_subnet_cidr_blocks }
+    private_route_table_ids    = { for k, v in module.east_vpcs : k => one(v.private_route_table_id) }
+    private_subnet_ids         = { for k, v in module.east_vpcs : k => v.private_subnet_ids }
+    private_subnet_cidr_blocks = { for k, v in module.east_vpcs : k => v.private_subnet_cidr_blocks }
+    intra_route_table_ids      = { for k, v in module.east_vpcs : k => one(v.intra_route_table_id) }
+    intra_subnet_ids           = { for k, v in module.east_vpcs : k => v.intra_subnet_ids }
+    intra_subnet_cidr_blocks   = { for k, v in module.east_vpcs : k => v.intra_subnet_cidr_blocks }
+    route_table_ids            = { for k, v in module.east_vpcs : k => v.route_table_ids }
+    security_group_ids         = { for k, v in module.east_vpcs : k => v.security_group_ids }
   }
 }
 # output "vpc_ids" {
@@ -255,7 +261,7 @@ locals {
       security_group_rules = [
         {
           description       = "Allow all out"
-          type              = "ingress"
+          type              = "egress"
           from_port         = 0
           to_port           = 0
           protocol          = "-1"
@@ -300,6 +306,16 @@ locals {
           security_group_id        = local.east_vpc_output.security_group_ids["hub1"][0]
         },
         {
+          description       = "Allow all out from private"
+          type              = "egress"
+          from_port         = 0
+          to_port           = 0
+          protocol          = "-1"
+          cidr_blocks       = ["0.0.0.0/0"]
+          ipv6_cidr_blocks  = ["::/0"]
+          security_group_id = local.east_vpc_output.security_group_ids["hub1"][1]
+        },
+        {
           description              = "Allow all sourced from public to private security group"
           type                     = "ingress"
           from_port                = 0
@@ -325,6 +341,16 @@ locals {
           protocol                 = "-1"
           source_security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
           security_group_id        = local.east_vpc_output.security_group_ids["hub1"][1]
+        },
+        {
+          description       = "Allow all out from intra"
+          type              = "egress"
+          from_port         = 0
+          to_port           = 0
+          protocol          = "-1"
+          cidr_blocks       = ["0.0.0.0/0"]
+          ipv6_cidr_blocks  = ["::/0"]
+          security_group_id = local.east_vpc_output.security_group_ids["hub1"][2]
         },
         {
           description              = "Allow all sourced from public to intra security group"
@@ -496,41 +522,60 @@ module "east_security_groups" {
 }
 
 locals {
-  east_ec2_interfaces_input = {
-    hub_bastion1 = {
-      source_dest_check = true
-      subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
-      private_ips       = [cidrhost(local.east_vpc_output.public_subnet_ids["hub1"][0], 10)]
-      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
-      description       = "Bastion 1 Public Interface"
-      tags              = { Purpose = "Bastion 1 Public Interface" }
-    }
-  }
   east_ec2_output = {
     network_interface_ids = { for k, v in module.east_ec2.network_interface_ids : k => v }
   }
 }
 locals {
   east_ec2_instances_input = {
+
+  }
+}
+module "east_ec2" {
+  source    = "../../modules/ec2"
+  providers = { aws = aws.us_east_1 }
+  name      = "east-ec2"
+  key_name  = var.key_name
+  priv_key  = module.ssh_key.priv_key
+
+  network_interfaces = {
     hub_bastion1 = {
-      ami           = local.east_data.amzn_ami
-      instance_type = "t3.medium"
-      user_data     = local.east_data.amzn_cloud_config[0]
+      source_dest_check = true
+      subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
+      private_ips       = [cidrhost(local.east_vpc_output.public_subnet_cidr_blocks["hub1"][0], 10)]
+      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
+      description       = "Bastion 1 Public Interface"
+      tags              = { Purpose = "Bastion 1 Public Interface" }
+    }
+    hub_spoke1 = {
+      source_dest_check = true
+      subnet_id         = local.east_vpc_output.private_subnet_ids["hub1"][0]
+      private_ips       = [cidrhost(local.east_vpc_output.private_subnet_cidr_blocks["hub1"][0], 10)]
+      security_groups   = [local.east_vpc_output.security_group_ids["hub1"][1]]
+      description       = "Spoke 1 Private Interface"
+    }
+  }
+
+  aws_instances = {
+    hub_bastion1 = {
+      ami              = local.east_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.east_data.amzn_cloud_config[0]
       network_interface = [{
         network_interface_id = local.east_ec2_output.network_interface_ids["hub_bastion1"]
         device_index         = 0
       }]
     }
+    hub_spoke1 = {
+      ami              = local.east_data.amzn_ami
+      instance_type    = "t3.medium"
+      user_data_base64 = local.east_data.amzn_cloud_config[0]
+      network_interface = [{
+        network_interface_id = local.east_ec2_output.network_interface_ids["hub_spoke1"]
+        device_index         = 0
+      }]
+    }
   }
-}
-module "east_ec2" {
-  source             = "../../modules/ec2"
-  providers          = { aws = aws.us_east_1 }
-  name               = "east-ec2"
-  key_name           = var.key_name
-  priv_key           = module.ssh_key.priv_key
-  network_interfaces = { for k, v in local.east_ec2_interfaces_input : k => v }
-  aws_instances      = { for k, v in local.east_ec2_instances_input : k => v }
 }
 
 

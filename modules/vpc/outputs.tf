@@ -22,6 +22,10 @@ output "public_subnet_ids" {
   value = local.public_subnet_ids
 }
 
+output "public_subnet_cidr_blocks" {
+  value = local.public_subnet_cidr_blocks
+}
+
 output "public_route_table_id" {
   value = local.public_route_table_id
 }
@@ -30,12 +34,20 @@ output "private_subnet_ids" {
   value = local.private_subnet_ids
 }
 
+output "private_subnet_cidr_blocks" {
+  value = local.private_subnet_cidr_blocks
+}
+
 output "private_route_table_id" {
   value = local.private_route_table_id
 }
 
 output "intra_subnet_ids" {
   value = local.intra_subnet_ids
+}
+
+output "intra_subnet_cidr_blocks" {
+  value = local.intra_subnet_cidr_blocks
 }
 
 output "intra_route_table_id" {

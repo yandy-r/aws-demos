@@ -39,19 +39,22 @@ resource "aws_vpc" "this" {
 }
 
 locals {
-  azs                    = data.aws_availability_zones.azs
-  vpc_id                 = [for v in aws_vpc.this : v.id]
-  cidr_block             = [for v in aws_vpc.this : v.cidr_block]
-  internet_gateway_id    = [for v in aws_internet_gateway.this : v.id]
-  nat_gateway_id         = [for v in aws_nat_gateway.this : v.id]
-  intra_subnet_ids       = [for v in aws_subnet.intra : v.id]
-  public_subnet_ids      = [for v in aws_subnet.public : v.id]
-  private_subnet_ids     = [for v in aws_subnet.private : v.id]
-  public_route_table_id  = [for v in aws_route_table.public : v.id]
-  private_route_table_id = [for v in aws_route_table.private : v.id]
-  intra_route_table_id   = [for v in aws_route_table.intra : v.id]
-  route_table_ids        = flatten([local.public_route_table_id[*], local.private_route_table_id[*], local.intra_route_table_id[*]])
-  security_group_ids     = { for k, v in aws_security_group.this : k => v.id }
+  azs                        = data.aws_availability_zones.azs
+  vpc_id                     = [for v in aws_vpc.this : v.id]
+  cidr_block                 = [for v in aws_vpc.this : v.cidr_block]
+  internet_gateway_id        = [for v in aws_internet_gateway.this : v.id]
+  nat_gateway_id             = [for v in aws_nat_gateway.this : v.id]
+  public_subnet_ids          = [for v in aws_subnet.public : v.id]
+  public_subnet_cidr_blocks  = [for v in aws_subnet.public : v.cidr_block]
+  private_subnet_ids         = [for v in aws_subnet.private : v.id]
+  private_subnet_cidr_blocks = [for v in aws_subnet.private : v.cidr_block]
+  intra_subnet_ids           = [for v in aws_subnet.intra : v.id]
+  intra_subnet_cidr_blocks   = [for v in aws_subnet.intra : v.cidr_block]
+  public_route_table_id      = [for v in aws_route_table.public : v.id]
+  private_route_table_id     = [for v in aws_route_table.private : v.id]
+  intra_route_table_id       = [for v in aws_route_table.intra : v.id]
+  route_table_ids            = flatten([local.public_route_table_id[*], local.private_route_table_id[*], local.intra_route_table_id[*]])
+  security_group_ids         = { for k, v in aws_security_group.this : k => v.id }
 }
 
 resource "aws_internet_gateway" "this" {
