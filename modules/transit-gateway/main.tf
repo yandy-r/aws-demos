@@ -116,8 +116,8 @@ resource "aws_ec2_transit_gateway_peering_attachment" "this" {
   for_each                = { for k, v in var.transit_gateway_peering_attachment : k => v }
   peer_account_id         = lookup(each.value, "peer_account_id", null)
   peer_region             = lookup(each.value, "peer_region", data.aws_region.this.name)
-  peer_transit_gateway_id = each.value["peer_transit_gateway_id"]
   transit_gateway_id      = each.value["transit_gateway_id"]
+  peer_transit_gateway_id = each.value["peer_transit_gateway_id"]
 
   tags = merge(
     {
@@ -130,7 +130,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "this" {
 
 resource "aws_ec2_transit_gateway_peering_attachment_accepter" "this" {
   for_each                      = { for k, v in var.transit_gateway_peering_attachment_accepter : k => v }
-  transit_gateway_attachment_id = each.value["aws_ec2_transit_gateway_peering_attachment"]
+  transit_gateway_attachment_id = each.value["transit_gateway_peering_attachment"]
 
   tags = merge(
     {

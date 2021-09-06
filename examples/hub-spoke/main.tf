@@ -550,7 +550,7 @@ module "east_ec2" {
 module "east_transit_gateway" {
   source    = "../../modules/transit-gateway"
   providers = { aws = aws.us_east_1 }
-  name      = "east-tgw"
+  name      = "east"
 
   transit_gateway = [{
     dns_support                     = "enable"
@@ -588,6 +588,14 @@ module "east_transit_gateway" {
     }
   }
 
+  transit_gateway_peering_attachment = {
+    east_to_west = {
+      peer_region             = "us-west-2"
+      transit_gateway_id      = module.east_transit_gateway.transit_gateway_id
+      peer_transit_gateway_id = module.west_transit_gateway.transit_gateway_id
+    }
+  }
+
   route_tables = {
     hubs         = {}
     spokes       = {}
@@ -610,6 +618,10 @@ module "east_transit_gateway" {
     spoke3 = {
       transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke3"]
       route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+    east_to_west = {
+      transit_gateway_attachment_id = module.east_transit_gateway.transit_gateway_peering_attachment_ids["east_to_west"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["east_to_west"]
     }
   }
 
@@ -637,6 +649,22 @@ module "east_transit_gateway" {
     spoke_2_to_1 = {
       transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke2"]
       route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+    hub_to_east_west = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["east_to_west"]
+    }
+    spoke1_to_east_west = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["east_to_west"]
+    }
+    spoke2_to_east_west = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["east_to_west"]
+    }
+    spoke3_to_east_west = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke3"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["east_to_west"]
     }
   }
 
@@ -1254,7 +1282,7 @@ module "west_ec2" {
 module "west_transit_gateway" {
   source    = "../../modules/transit-gateway"
   providers = { aws = aws.us_west_2 }
-  name      = "west-tgw"
+  name      = "west"
 
   transit_gateway = [{
     dns_support                     = "enable"
@@ -1292,6 +1320,12 @@ module "west_transit_gateway" {
     }
   }
 
+  transit_gateway_peering_attachment_accepter = {
+    east_to_west = {
+      transit_gateway_peering_attachment = module.east_transit_gateway.transit_gateway_peering_attachment_ids["east_to_west"]
+    }
+  }
+
   route_tables = {
     hubs         = {}
     spokes       = {}
@@ -1314,6 +1348,10 @@ module "west_transit_gateway" {
     spoke3 = {
       transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke3"]
       route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
+    east_to_west = {
+      transit_gateway_attachment_id = module.west_transit_gateway.transit_gateway_peering_attachment_accepter_ids["east_to_west"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["east_to_west"]
     }
   }
 
@@ -1341,6 +1379,22 @@ module "west_transit_gateway" {
     spoke_2_to_1 = {
       transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke2"]
       route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
+    hub_to_east_west = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["east_to_west"]
+    }
+    spoke1_to_east_west = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["east_to_west"]
+    }
+    spoke2_to_east_west = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["east_to_west"]
+    }
+    spoke3_to_east_west = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke3"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["east_to_west"]
     }
   }
 

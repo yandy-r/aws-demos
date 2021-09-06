@@ -11,10 +11,10 @@ output "route_table_ids" {
   value = local.route_table_ids
 }
 
-output "transit_gateway_peering_attachment_id" {
-  value = local.transit_gateway_peering_attachment_id
+output "transit_gateway_peering_attachment_ids" {
+  value = local.transit_gateway_peering_attachment_ids
 }
 
-output "transit_gateway_peering_attachment_accepter_id" {
-  value = local.transit_gateway_peering_attachment_accepter_id
+output "transit_gateway_peering_attachment_accepter_ids" {
+  value = local.transit_gateway_peering_attachment_accepter_ids
 }
