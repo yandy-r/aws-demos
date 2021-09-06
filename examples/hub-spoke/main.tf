@@ -526,18 +526,7 @@ module "east_security_groups" {
 }
 
 locals {
-  east_ec2_output = {
-    network_interface_ids = { for k, v in module.east_ec2.network_interface_ids : k => v }
-  }
-}
-module "east_ec2" {
-  source    = "../../modules/ec2"
-  providers = { aws = aws.us_east_1 }
-  name      = "east-ec2"
-  key_name  = var.key_name
-  priv_key  = module.ssh_key.priv_key
-
-  network_interfaces = {
+  east_ec2_network_interfaces = {
     hub_bastion1 = {
       source_dest_check = true
       subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
@@ -575,8 +564,7 @@ module "east_ec2" {
       description       = "Spoke 3 Intra Interface 1"
     }
   }
-
-  aws_instances = {
+  east_aws_instances = {
     hub_bastion1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
@@ -620,6 +608,19 @@ module "east_ec2" {
       }]
     }
   }
+  east_ec2_output = {
+    network_interface_ids = { for k, v in module.east_ec2.network_interface_ids : k => v }
+  }
+}
+module "east_ec2" {
+  source    = "../../modules/ec2"
+  providers = { aws = aws.us_east_1 }
+  name      = "east-ec2"
+  key_name  = var.key_name
+  priv_key  = module.ssh_key.priv_key
+
+  network_interfaces = local.east_ec2_network_interfaces
+  aws_instances      = local.east_aws_instances
 }
 
 locals {

@@ -9,7 +9,7 @@ terraform {
 }
 
 locals {
-  aws_profile = var.aws_profile.sandbox
+  aws_profile = var.aws_profile.dev
 }
 
 provider "aws" {
