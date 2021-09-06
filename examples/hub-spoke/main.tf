@@ -595,56 +595,86 @@ module "east_transit_gateway" {
   }
 
   route_table_associations = {
-    hub1   = { route_table_name = "hubs" }
-    spoke1 = { route_table_name = "spokes" }
-    spoke2 = { route_table_name = "spokes" }
-    spoke3 = { route_table_name = "spokes" }
+    hub1 = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke1 = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke2 = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke3 = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke3"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
   }
 
   route_table_propagations = {
-    hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
-    spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
-    spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
-    spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
-    spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
-    spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
+    hub_to_spokes = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke_1_to_hub = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke_2_to_hub = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke_3_to_hub = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke3"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke_1_to_2 = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke_2_to_1 = {
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+    }
   }
 
   transit_gateway_routes = [
     {
-      destination      = "0.0.0.0/0"
-      attach_name      = "hub1"
-      route_table_name = "spokes"
+      destination                   = "0.0.0.0/0"
+      transit_gateway_attachment_id = module.east_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
     },
     {
-      destination      = "10.0.0.0/8"
-      blackhole        = true
-      route_table_name = "hubs"
+      destination    = "10.0.0.0/8"
+      blackhole      = true
+      route_table_id = module.east_transit_gateway.route_table_ids["hubs"]
     },
     {
-      destination      = "10.0.0.0/8"
-      blackhole        = true
-      route_table_name = "spokes"
+      destination    = "10.0.0.0/8"
+      blackhole      = true
+      route_table_id = module.east_transit_gateway.route_table_ids["spokes"]
     },
     {
-      destination      = "172.16.0.0/12"
-      blackhole        = true
-      route_table_name = "hubs"
+      destination    = "172.16.0.0/12"
+      blackhole      = true
+      route_table_id = module.east_transit_gateway.route_table_ids["hubs"]
     },
     {
-      destination      = "172.16.0.0/12"
-      blackhole        = true
-      route_table_name = "spokes"
+      destination    = "172.16.0.0/12"
+      blackhole      = true
+      route_table_id = module.east_transit_gateway.route_table_ids["spokes"]
     },
     {
-      destination      = "192.168.0.0/16"
-      blackhole        = true
-      route_table_name = "hubs"
+      destination    = "192.168.0.0/16"
+      blackhole      = true
+      route_table_id = module.east_transit_gateway.route_table_ids["hubs"]
     },
     {
-      destination      = "192.168.0.0/16"
-      blackhole        = true
-      route_table_name = "spokes"
+      destination    = "192.168.0.0/16"
+      blackhole      = true
+      route_table_id = module.east_transit_gateway.route_table_ids["spokes"]
     }
   ]
 
@@ -1265,60 +1295,90 @@ module "west_transit_gateway" {
   route_tables = {
     hubs         = {}
     spokes       = {}
-    west_to_west = {}
+    east_to_west = {}
   }
 
   route_table_associations = {
-    hub1   = { route_table_name = "hubs" }
-    spoke1 = { route_table_name = "spokes" }
-    spoke2 = { route_table_name = "spokes" }
-    spoke3 = { route_table_name = "spokes" }
+    hub1 = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke1 = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke2 = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke3 = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke3"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
   }
 
   route_table_propagations = {
-    hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
-    spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
-    spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
-    spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
-    spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
-    spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
+    hub_to_spokes = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke_1_to_hub = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke_2_to_hub = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke_3_to_hub = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke3"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["hubs"]
+    }
+    spoke_1_to_2 = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
+    spoke_2_to_1 = {
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["spoke2"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+    }
   }
 
   transit_gateway_routes = [
     {
-      destination      = "0.0.0.0/0"
-      attach_name      = "hub1"
-      route_table_name = "spokes"
+      destination                   = "0.0.0.0/0"
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["hub1"]
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
     },
     {
-      destination      = "10.0.0.0/8"
-      blackhole        = true
-      route_table_name = "hubs"
+      destination    = "10.0.0.0/8"
+      blackhole      = true
+      route_table_id = module.west_transit_gateway.route_table_ids["hubs"]
     },
     {
-      destination      = "10.0.0.0/8"
-      blackhole        = true
-      route_table_name = "spokes"
+      destination    = "10.0.0.0/8"
+      blackhole      = true
+      route_table_id = module.west_transit_gateway.route_table_ids["spokes"]
     },
     {
-      destination      = "172.16.0.0/12"
-      blackhole        = true
-      route_table_name = "hubs"
+      destination    = "172.16.0.0/12"
+      blackhole      = true
+      route_table_id = module.west_transit_gateway.route_table_ids["hubs"]
     },
     {
-      destination      = "172.16.0.0/12"
-      blackhole        = true
-      route_table_name = "spokes"
+      destination    = "172.16.0.0/12"
+      blackhole      = true
+      route_table_id = module.west_transit_gateway.route_table_ids["spokes"]
     },
     {
-      destination      = "192.168.0.0/16"
-      blackhole        = true
-      route_table_name = "hubs"
+      destination    = "192.168.0.0/16"
+      blackhole      = true
+      route_table_id = module.west_transit_gateway.route_table_ids["hubs"]
     },
     {
-      destination      = "192.168.0.0/16"
-      blackhole        = true
-      route_table_name = "spokes"
+      destination    = "192.168.0.0/16"
+      blackhole      = true
+      route_table_id = module.west_transit_gateway.route_table_ids["spokes"]
     }
   ]
 

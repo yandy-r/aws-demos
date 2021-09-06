@@ -43,3 +43,13 @@ variable "vpc_routes" {
   type    = any
   default = []
 }
+
+variable "transit_gateway_peering_attachment" {
+  type    = any
+  default = {}
+}
+
+variable "transit_gateway_peering_attachment_accepter" {
+  type    = any
+  default = {}
+}

@@ -35,9 +35,11 @@ resource "aws_ec2_transit_gateway" "this" {
 }
 
 locals {
-  transit_gateway_id = one([for v in aws_ec2_transit_gateway.this : v.id])
-  vpc_attachment_ids = { for k, v in aws_ec2_transit_gateway_vpc_attachment.this : k => v.id }
-  route_table_ids    = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
+  transit_gateway_id                              = one([for v in aws_ec2_transit_gateway.this : v.id])
+  vpc_attachment_ids                              = { for k, v in aws_ec2_transit_gateway_vpc_attachment.this : k => v.id }
+  route_table_ids                                 = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
+  transit_gateway_peering_attachment_ids          = { for k, v in aws_ec2_transit_gateway_peering_attachment.this : k => v.id }
+  transit_gateway_peering_attachment_accepter_ids = { for k, v in aws_ec2_transit_gateway_peering_attachment_accepter.this : k => v.id }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
@@ -75,22 +77,22 @@ resource "aws_ec2_transit_gateway_route_table" "this" {
 
 resource "aws_ec2_transit_gateway_route_table_association" "this" {
   for_each                       = { for k, v in var.route_table_associations : k => v }
-  transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", local.vpc_attachment_ids[each.key])
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), lookup(local.route_table_ids, each.value.route_table_name, ""))
+  transit_gateway_attachment_id  = each.value["transit_gateway_attachment_id"]
+  transit_gateway_route_table_id = each.value["route_table_id"]
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
   for_each                       = { for k, v in var.route_table_propagations : k => v }
-  transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", local.vpc_attachment_ids[each.value.attach_name])
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), lookup(local.route_table_ids, each.value.route_table_name, ""))
+  transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", null)
+  transit_gateway_route_table_id = each.value["route_table_id"]
 }
 
 resource "aws_ec2_transit_gateway_route" "this" {
   for_each                       = { for k, v in var.transit_gateway_routes : k => v }
   blackhole                      = lookup(each.value, "blackhole", null)
   destination_cidr_block         = each.value.destination
-  transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? local.vpc_attachment_ids[each.value.attach_name] : null
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), lookup(local.route_table_ids, each.value.route_table_name, ""))
+  transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? each.value["transit_gateway_attachment_id"] : null
+  transit_gateway_route_table_id = each.value["route_table_id"]
 }
 
 resource "aws_route" "this" {
@@ -109,20 +111,32 @@ resource "aws_route" "this" {
   vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
 }
 
-# resource "aws_ec2_transit_gateway_peering_attachment" "east_west" {
-#   peer_region             = local.west_region
-#   transit_gateway_id      = local.east_tgw.id
-#   peer_transit_gateway_id = local.west_tgw.id
+data "aws_region" "this" {}
+resource "aws_ec2_transit_gateway_peering_attachment" "this" {
+  for_each                = { for k, v in var.transit_gateway_peering_attachment : k => v }
+  peer_account_id         = lookup(each.value, "peer_account_id", null)
+  peer_region             = lookup(each.value, "peer_region", data.aws_region.this.name)
+  peer_transit_gateway_id = each.value["peer_transit_gateway_id"]
+  transit_gateway_id      = each.value["transit_gateway_id"]
 
-#   tags = {
-#     Name = "EAST->WEST"
-#   }
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
 
-# resource "aws_ec2_transit_gateway_peering_attachment_accepter" "east_west" {
-#   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.east_west.id
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "this" {
+  for_each                      = { for k, v in var.transit_gateway_peering_attachment_accepter : k => v }
+  transit_gateway_attachment_id = each.value["aws_ec2_transit_gateway_peering_attachment"]
 
-#   tags = {
-#     Name = "WEST->EAST"
-#   }
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
