@@ -80,17 +80,17 @@ resource "aws_ec2_transit_gateway_route_table_association" "this" {
 }
 
 resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
-  for_each                       = var.route_table_propagations
+  for_each                       = { for k, v in var.route_table_propagations : k => v }
   transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", local.vpc_attachment_ids[each.value.attach_name])
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), local.route_table_ids[each.value.route_table_name])
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), lookup(local.route_table_ids, each.value.route_table_name, ""))
 }
 
 resource "aws_ec2_transit_gateway_route" "this" {
-  for_each                       = var.transit_gateway_routes
+  for_each                       = { for k, v in var.transit_gateway_routes : k => v }
   blackhole                      = lookup(each.value, "blackhole", null)
   destination_cidr_block         = each.value.destination
   transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? local.vpc_attachment_ids[each.value.attach_name] : null
-  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), local.route_table_ids[each.value.route_table_name])
+  transit_gateway_route_table_id = coalesce(lookup(each.value, "route_table_id", null), lookup(local.route_table_ids, each.value.route_table_name, ""))
 }
 
 # ### FLOW LOGS

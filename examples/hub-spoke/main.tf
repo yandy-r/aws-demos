@@ -672,30 +672,12 @@ locals {
       }
 
       route_table_propagations = {
-        hub_to_spokes = {
-          attach_name      = "hub1"
-          route_table_name = "spokes"
-        }
-        spoke_1_to_hub = {
-          attach_name      = "spoke1"
-          route_table_name = "hubs"
-        }
-        spoke_2_to_hub = {
-          attach_name      = "spoke2"
-          route_table_name = "hubs"
-        }
-        spoke_3_to_hub = {
-          attach_name      = "spoke3"
-          route_table_name = "hubs"
-        }
-        spoke_1_to_2 = {
-          attach_name      = "spoke1"
-          route_table_name = "spokes"
-        }
-        spoke_2_to_1 = {
-          attach_name      = "spoke2"
-          route_table_name = "spokes"
-        }
+        hub_to_spokes  = { attach_name = "hub1", route_table_name = "spokes" }
+        spoke_1_to_hub = { attach_name = "spoke1", route_table_name = "hubs" }
+        spoke_2_to_hub = { attach_name = "spoke2", route_table_name = "hubs" }
+        spoke_3_to_hub = { attach_name = "spoke3", route_table_name = "hubs" }
+        spoke_1_to_2   = { attach_name = "spoke1", route_table_name = "spokes" }
+        spoke_2_to_1   = { attach_name = "spoke2", route_table_name = "spokes" }
       }
 
       transit_gateway_routes = {
@@ -748,8 +730,8 @@ module "east_transit_gateway" {
   vpc_attachments          = lookup(each.value, "vpc_attachments", {})
   route_tables             = lookup(each.value, "route_tables", {})
   route_table_associations = lookup(each.value, "route_table_associations", {})
-  # route_table_propagations = lookup(each.value, "route_table_propagations", {})
-  # transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
+  route_table_propagations = lookup(each.value, "route_table_propagations", {})
+  transit_gateway_routes   = lookup(each.value, "transit_gateway_routes", {})
 }
 
 # locals {
