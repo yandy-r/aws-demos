@@ -675,6 +675,16 @@ module "east_transit_gateway" {
       route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
     },
     {
+      destination                   = "10.220.0.0/14"
+      route_table_id                = module.east_transit_gateway.route_table_ids["hubs"]
+      transit_gateway_attachment_id = module.east_transit_gateway.transit_gateway_peering_attachment_ids["east_to_west"]
+    },
+    {
+      destination                   = "10.220.0.0/14"
+      route_table_id                = module.east_transit_gateway.route_table_ids["spokes"]
+      transit_gateway_attachment_id = module.east_transit_gateway.transit_gateway_peering_attachment_ids["east_to_west"]
+    },
+    {
       destination    = "10.0.0.0/8"
       blackhole      = true
       route_table_id = module.east_transit_gateway.route_table_ids["hubs"]
@@ -734,6 +744,21 @@ module "east_transit_gateway" {
     },
     {
       destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_spoke3.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "0.0.0.0/0"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_spoke1.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "0.0.0.0/0"
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+      route_table_id         = module.east_spoke2.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "0.0.0.0/0"
       transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
       route_table_id         = module.east_spoke3.intra_route_table_id
     },
@@ -1401,8 +1426,18 @@ module "west_transit_gateway" {
   transit_gateway_routes = [
     {
       destination                   = "0.0.0.0/0"
-      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["hub1"]
       route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+      transit_gateway_attachment_id = module.west_transit_gateway.vpc_attachment_ids["hub1"]
+    },
+    {
+      destination                   = "10.200.0.0/14"
+      route_table_id                = module.west_transit_gateway.route_table_ids["hubs"]
+      transit_gateway_attachment_id = module.west_transit_gateway.transit_gateway_peering_attachment_accepter_ids["east_to_west"]
+    },
+    {
+      destination                   = "10.200.0.0/14"
+      route_table_id                = module.west_transit_gateway.route_table_ids["spokes"]
+      transit_gateway_attachment_id = module.west_transit_gateway.transit_gateway_peering_attachment_accepter_ids["east_to_west"]
     },
     {
       destination    = "10.0.0.0/8"
@@ -1464,6 +1499,21 @@ module "west_transit_gateway" {
     },
     {
       destination_cidr_block = "10.192.0.0/11"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_spoke3.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "0.0.0.0/0"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_spoke1.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "0.0.0.0/0"
+      transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
+      route_table_id         = module.west_spoke2.intra_route_table_id
+    },
+    {
+      destination_cidr_block = "0.0.0.0/0"
       transit_gateway_id     = module.west_transit_gateway.transit_gateway_id
       route_table_id         = module.west_spoke3.intra_route_table_id
     },
