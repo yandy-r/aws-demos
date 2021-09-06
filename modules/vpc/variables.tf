@@ -16,12 +16,7 @@ variable "tags" {
 
 variable "vpc" {
   type    = any
-  default = {}
-}
-
-variable "create_internet_gateway" {
-  type    = bool
-  default = false
+  default = []
 }
 
 variable "internet_gateway" {

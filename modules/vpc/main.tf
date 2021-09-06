@@ -31,7 +31,7 @@ resource "aws_vpc" "this" {
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -40,9 +40,9 @@ resource "aws_vpc" "this" {
 
 locals {
   azs                        = data.aws_availability_zones.azs
-  vpc_id                     = { for k, v in aws_vpc.this : k => v.id }
-  cidr_block                 = { for k, v in aws_vpc.this : k => v.cidr_block }
-  internet_gateway_id        = [for v in aws_internet_gateway.this : v.id]
+  vpc_id                     = one([for v in aws_vpc.this : v.id])
+  cidr_block                 = one([for v in aws_vpc.this : v.cidr_block])
+  internet_gateway_id        = one([for v in aws_internet_gateway.this : v.id])
   nat_gateway_id             = [for v in aws_nat_gateway.this : v.id]
   public_subnet_ids          = [for v in aws_subnet.public : v.id]
   public_subnet_cidr_blocks  = [for v in aws_subnet.public : v.cidr_block]
@@ -50,20 +50,20 @@ locals {
   private_subnet_cidr_blocks = [for v in aws_subnet.private : v.cidr_block]
   intra_subnet_ids           = [for v in aws_subnet.intra : v.id]
   intra_subnet_cidr_blocks   = [for v in aws_subnet.intra : v.cidr_block]
-  public_route_table_id      = [for v in aws_route_table.public : v.id]
-  private_route_table_id     = [for v in aws_route_table.private : v.id]
-  intra_route_table_id       = [for v in aws_route_table.intra : v.id]
+  public_route_table_id      = one([for v in aws_route_table.public : v.id])
+  private_route_table_id     = one([for v in aws_route_table.private : v.id])
+  intra_route_table_id       = one([for v in aws_route_table.intra : v.id])
   route_table_ids            = flatten([local.public_route_table_id[*], local.private_route_table_id[*], local.intra_route_table_id[*]])
   security_group_ids         = { for k, v in aws_security_group.this : k => v.id }
 }
 
 resource "aws_internet_gateway" "this" {
   for_each = { for k, v in var.internet_gateway : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id   = lookup(each.value, "vpc_id", local.vpc_id)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "inetgw-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "inetgw-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -76,7 +76,7 @@ resource "aws_eip" "nat" {
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "nat_eip-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "nat_eip-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -90,7 +90,7 @@ resource "aws_nat_gateway" "this" {
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "natgw-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "natgw-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -107,16 +107,17 @@ resource "random_integer" "this" {
   min = 1
   max = length(local.azs.names) - 1
 }
+
 resource "aws_subnet" "public" {
   for_each                = { for k, v in var.public_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id                  = lookup(each.value, "vpc_id", local.vpc_id)
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", true)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "public-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "public-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -125,11 +126,11 @@ resource "aws_subnet" "public" {
 
 resource "aws_route_table" "public" {
   for_each = { for k, v in var.public_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id   = lookup(each.value, "vpc_id", local.vpc_id)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "public-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "public-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -144,14 +145,14 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_subnet" "private" {
   for_each                = { for k, v in var.private_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id                  = lookup(each.value, "vpc_id", local.vpc_id)
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", true)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "private-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "private-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -160,11 +161,11 @@ resource "aws_subnet" "private" {
 
 resource "aws_route_table" "private" {
   for_each = { for k, v in var.private_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id   = lookup(each.value, "vpc_id", local.vpc_id)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "private-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "private-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -179,14 +180,14 @@ resource "aws_route_table_association" "private" {
 
 resource "aws_subnet" "intra" {
   for_each                = { for k, v in var.intra_subnets : k => v }
-  vpc_id                  = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id                  = lookup(each.value, "vpc_id", local.vpc_id)
   cidr_block              = each.value["cidr_block"]
   availability_zone       = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
   map_public_ip_on_launch = lookup(each.value, "map_public_ip_on_launch", false)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "intra-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "intra-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -195,11 +196,11 @@ resource "aws_subnet" "intra" {
 
 resource "aws_route_table" "intra" {
   for_each = { for k, v in var.intra_route_table : k => v }
-  vpc_id   = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id   = lookup(each.value, "vpc_id", local.vpc_id)
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "intra-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "intra-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -245,7 +246,7 @@ resource "aws_route" "this" {
 data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "this" {
   for_each          = { for k, v in var.vpc_endpoints : k => v }
-  vpc_id            = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id            = lookup(each.value, "vpc_id", local.vpc_id)
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
   policy            = lookup(each.value, "policy", null)
@@ -253,7 +254,7 @@ resource "aws_vpc_endpoint" "this" {
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "endpoint-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "endpoint-${each.key + 1}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
@@ -267,7 +268,7 @@ resource "aws_vpc_endpoint" "this" {
 resource "aws_security_group" "this" {
   for_each    = { for k, v in var.security_groups : k => v }
   description = lookup(each.value, "description", null)
-  vpc_id      = lookup(each.value, "vpc_id", lookup(each.value, "vpc_name", ""))
+  vpc_id      = lookup(each.value, "vpc_id", local.vpc_id)
 
   dynamic "egress" {
     for_each = lookup(each.value, "egress", {})
@@ -301,7 +302,7 @@ resource "aws_security_group" "this" {
 
   tags = merge(
     {
-      Name = "${var.name}-${lookup(each.value, "name", "sg-${each.key}")}"
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
     },
     var.tags,
     lookup(each.value, "tags", null)
