@@ -12,7 +12,10 @@ module "east_data" {
   priv_key_path = var.priv_key_path
   instance_hostnames = [
     "hub_bastion1",
-    "hub1_spoke1"
+    "hub_private1",
+    "spoke1_intra1",
+    "spoke2_intra1",
+    "spoke3_intra1",
   ]
 
   depends_on = [
@@ -526,11 +529,6 @@ locals {
     network_interface_ids = { for k, v in module.east_ec2.network_interface_ids : k => v }
   }
 }
-locals {
-  east_ec2_instances_input = {
-
-  }
-}
 module "east_ec2" {
   source    = "../../modules/ec2"
   providers = { aws = aws.us_east_1 }
@@ -544,40 +542,39 @@ module "east_ec2" {
       subnet_id         = local.east_vpc_output.public_subnet_ids["hub1"][0]
       private_ips       = [cidrhost(local.east_vpc_output.public_subnet_cidr_blocks["hub1"][0], 10)]
       security_groups   = [local.east_vpc_output.security_group_ids["hub1"][0]]
-      description       = "Bastion 1 Public Interface"
+      description       = "Bastion 1 Public Interface 1"
       tags              = { Purpose = "Bastion 1 Public Interface" }
     }
-    hub_spoke1 = {
+    hub_private1 = {
       source_dest_check = true
       subnet_id         = local.east_vpc_output.private_subnet_ids["hub1"][0]
       private_ips       = [cidrhost(local.east_vpc_output.private_subnet_cidr_blocks["hub1"][0], 10)]
       security_groups   = [local.east_vpc_output.security_group_ids["hub1"][1]]
-      description       = "Spoke 1 Private Interface"
+      description       = "Hub 1 Private Interface 1"
     }
-  }
-
-  aws_instances = {
-    hub_bastion1 = {
-      ami              = local.east_data.amzn_ami
-      instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[0]
-      network_interface = [{
-        network_interface_id = local.east_ec2_output.network_interface_ids["hub_bastion1"]
-        device_index         = 0
-      }]
+    spoke1_intra1 = {
+      source_dest_check = true
+      subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke1"][0]
+      private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke1"][0], 10)]
+      security_groups   = [local.east_vpc_output.security_group_ids["spoke1"][0]]
+      description       = "Spoke 1 Intra Interface 1"
     }
-    hub_spoke1 = {
-      ami              = local.east_data.amzn_ami
-      instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[0]
-      network_interface = [{
-        network_interface_id = local.east_ec2_output.network_interface_ids["hub_spoke1"]
-        device_index         = 0
-      }]
+    spoke2_intra1 = {
+      source_dest_check = true
+      subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke2"][0]
+      private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke2"][0], 10)]
+      security_groups   = [local.east_vpc_output.security_group_ids["spoke2"][0]]
+      description       = "Spoke 2 Intra Interface 1"
+    }
+    spoke3_intra1 = {
+      source_dest_check = true
+      subnet_id         = local.east_vpc_output.intra_subnet_ids["spoke3"][0]
+      private_ips       = [cidrhost(local.east_vpc_output.intra_subnet_cidr_blocks["spoke3"][0], 10)]
+      security_groups   = [local.east_vpc_output.security_group_ids["spoke3"][0]]
+      description       = "Spoke 3 Intra Interface 1"
     }
   }
 }
-
 
 # locals {
 #   east_transit_gateways = {

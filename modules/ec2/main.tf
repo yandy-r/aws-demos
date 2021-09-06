@@ -59,7 +59,7 @@ resource "aws_instance" "this" {
   dynamic "network_interface" {
     for_each = lookup(each.value, "network_interface", {})
     content {
-      network_interface_id = network_interface.value["network_interface_id"]
+      network_interface_id = lookup(network_interface.value, "network_interface_id", element(concat([aws_network_interface.this[each.key].id], [""]), 0))
       device_index         = lookup(network_interface.value, "device_index", 0)
     }
   }
