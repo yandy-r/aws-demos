@@ -103,3 +103,13 @@ variable "flow_logs_role" {
   type    = any
   default = {}
 }
+
+variable "customer_gateway" {
+  type    = any
+  default = {}
+}
+
+variable "vpn_connection" {
+  type    = any
+  default = {}
+}

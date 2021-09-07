@@ -51,3 +51,13 @@ variable "bucket_name" {
   type    = string
   default = ""
 }
+
+variable "tunnel1_preshared_key" {
+  type    = string
+  default = ""
+}
+
+variable "tunnel2_preshared_key" {
+  type    = string
+  default = ""
+}

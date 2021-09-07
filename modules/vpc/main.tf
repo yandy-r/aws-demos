@@ -337,7 +337,7 @@ resource "aws_iam_role" "flow_logs" {
   force_detach_policies = lookup(each.value, "force_detach_policies", false)
   managed_policy_arns   = lookup(each.value, "managed_policy_arns", null)
   max_session_duration  = lookup(each.value, "max_session_duration", null)
-  path                  = lookup(each.value, "path", 1)
+  path                  = lookup(each.value, "path", null)
   permissions_boundary  = lookup(each.value, "permissions_boundary", null)
 
   assume_role_policy = lookup(each.value, "assume_role_policy",
@@ -428,14 +428,52 @@ resource "aws_flow_log" "this" {
 }
 
 # ### -------------------------------------------------------------------------------------------- ###
-# ### S3
+# ### SITE-TO-SITE VPN
 # ### -------------------------------------------------------------------------------------------- ###
 
-# resource "aws_s3_bucket" "lab_data" {
-#   bucket = var.bucket_name
-#   acl    = "private"
+resource "aws_customer_gateway" "this" {
+  for_each    = { for k, v in var.customer_gateway : k => v }
+  bgp_asn     = lookup(each.value, "bgp_asn", "65001")
+  device_name = lookup(each.value, "device_name", "cgw_01")
+  ip_address  = each.value["ip_address"]
+  type        = lookup(each.value, "type", "ipsec.1")
 
-#   tags = {
-#     Name = "Lab Data"
-#   }
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
+
+resource "aws_vpn_connection" "this" {
+  for_each                             = { for k, v in var.vpn_connection : k => v }
+  customer_gateway_id                  = lookup(each.value, "customer_gateway_id", aws_customer_gateway.this[each.key].id)
+  type                                 = lookup(each.value, "type", "ipsec.1")
+  transit_gateway_id                   = lookup(each.value, "transit_gateway_id", null)
+  vpn_gateway_id                       = lookup(each.value, "vpn_gateway_id", null)
+  static_routes_only                   = lookup(each.value, "static_routes_only", false)
+  enable_acceleration                  = lookup(each.value, "enable_acceleration", true)
+  tunnel1_inside_cidr                  = lookup(each.value, "tunnel1_inside_cidr", null)
+  tunnel2_inside_cidr                  = lookup(each.value, "tunnel2_inside_cidr", null)
+  tunnel_inside_ip_version             = lookup(each.value, "tunnel_inside_ip_verson", "ipv4")
+  tunnel1_preshared_key                = lookup(each.value, "tunnel1_preshared_key", null)
+  tunnel2_preshared_key                = lookup(each.value, "tunnel2_preshared_key", null)
+  local_ipv4_network_cidr              = lookup(each.value, "local_ipv4_network_cidr", null)
+  remote_ipv4_network_cidr             = lookup(each.value, "remote_ipv4_network_cidr", null)
+  tunnel1_ike_versions                 = lookup(each.value, "tunnel1_ike_versions", ["ikev1", "ikev2"])
+  tunnel2_ike_versions                 = lookup(each.value, "tunnel2_ike_versions", ["ikev1", "ikev2"])
+  tunnel1_phase1_dh_group_numbers      = lookup(each.value, "tunnel1_phase1_dh_group_numbers", ["2", "14", "15", "16", "17", "18", "19", "20"])
+  tunnel2_phase1_dh_group_numbers      = lookup(each.value, "tunnel2_phase2_dh_group_numbers", ["2", "14", "15", "16", "17", "18", "19", "20"])
+  tunnel1_phase1_integrity_algorithms  = lookup(each.value, "tunnel1_phase1_integrity_algorithms", ["SHA1", "SHA2-256", "SHA2-384", "SHA2-512"])
+  tunnel2_phase1_integrity_algorithms  = lookup(each.value, "tunnel2_phase1_integrity_algorithms", ["SHA1", "SHA2-256", "SHA2-384", "SHA2-512"])
+  tunnel1_phase1_encryption_algorithms = lookup(each.value, "tunnel1_phase1_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
+  tunnel2_phase1_encryption_algorithms = lookup(each.value, "tunnel2_phase1_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
+  tunnel1_phase2_dh_group_numbers      = lookup(each.value, "tunnel1_phase2_dh_group_numbers", ["2", "14", "15", "16", "17", "18", "19", "20"])
+  tunnel2_phase2_dh_group_numbers      = lookup(each.value, "tunnel2_phase2_dh_group_numbers", ["2", "14", "15", "16", "17", "18", "19", "20"])
+  tunnel1_phase2_integrity_algorithms  = lookup(each.value, "tunnel1_phase2_integrity_algorithms", ["SHA1", "SHA2-256", "SHA2-384", "SHA2-512"])
+  tunnel2_phase2_integrity_algorithms  = lookup(each.value, "tunnel2_phase2_integrity_algorithms", ["SHA1", "SHA2-256", "SHA2-384", "SHA2-512"])
+  tunnel1_phase2_encryption_algorithms = lookup(each.value, "tunnel1_phase2_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
+  tunnel2_phase2_encryption_algorithms = lookup(each.value, "tunnel2_phase2_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
+}
