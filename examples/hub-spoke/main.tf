@@ -128,40 +128,6 @@ module "east_hub" {
     intra1   = {},
   }
 
-  customer_gateway = {
-    east_vpn = {
-      bgp_asn     = "65101"
-      device_name = "east_vpn"
-      ip_address  = var.self_public_ip
-      type        = "ipsec.1"
-    }
-  }
-
-  vpn_connection = {
-    east_vpn = {
-      transit_gateway_id                   = module.east_transit_gateway.transit_gateway_id
-      static_routes_only                   = true
-      tunnel1_preshared_key                = var.tunnel1_preshared_key
-      tunnel2_preshared_key                = var.tunnel2_preshared_key
-      local_ipv4_network_cidr              = "10.7.0.0/16"
-      remote_ipv4_network_cidr             = "10.200.0.0/14"
-      tunnel1_ike_versions                 = ["ikev2"]
-      tunnel2_ike_versions                 = ["ikev2"]
-      tunnel1_phase1_dh_group_numbers      = ["14"]
-      tunnel2_phase1_dh_group_numbers      = ["14"]
-      tunnel1_phase1_integrity_algorithms  = ["SHA1"]
-      tunnel2_phase1_integrity_algorithms  = ["SHA1"]
-      tunnel1_phase1_encryption_algorithms = ["AES128"]
-      tunnel2_phase1_encryption_algorithms = ["AES128"]
-      tunnel1_phase2_dh_group_numbers      = ["14"]
-      tunnel2_phase2_dh_group_numbers      = ["14"]
-      tunnel1_phase2_integrity_algorithms  = ["SHA1"]
-      tunnel2_phase2_integrity_algorithms  = ["SHA1"]
-      tunnel1_phase2_encryption_algorithms = ["AES128"]
-      tunnel2_phase2_encryption_algorithms = ["AES128"]
-    }
-  }
-
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -226,7 +192,7 @@ module "east_hub" {
       from_port         = -1
       to_port           = -1
       protocol          = "icmp"
-      cidr_blocks       = ["${var.self_public_ip}/32"]
+      cidr_blocks       = ["${var.lab_public_ip}/32"]
       security_group_id = module.east_hub.security_group_ids["public1"]
     },
     {
@@ -235,7 +201,7 @@ module "east_hub" {
       from_port         = 22
       to_port           = 22
       protocol          = "tcp"
-      cidr_blocks       = ["${var.self_public_ip}/32"]
+      cidr_blocks       = ["${var.lab_public_ip}/32"]
       security_group_id = module.east_hub.security_group_ids["public1"]
     },
     {
@@ -862,8 +828,88 @@ module "east_transit_gateway" {
   ]
 }
 
+module "east_vpn" {
+  source    = "../../modules/vpc"
+  providers = { aws = aws.us_east_1 }
+  name      = "east_vpn"
+
+  customer_gateway = {
+    east_vpn = {
+      bgp_asn     = "65101"
+      device_name = "east_vpn"
+      ip_address  = var.lab_public_ip
+      type        = "ipsec.1"
+    }
+  }
+
+  vpn_connection = {
+    east_vpn = {
+      transit_gateway_id                   = module.east_transit_gateway.transit_gateway_id
+      static_routes_only                   = true
+      tunnel1_preshared_key                = var.tunnel1_preshared_key
+      tunnel2_preshared_key                = var.tunnel2_preshared_key
+      tunnel1_ike_versions                 = ["ikev2"]
+      tunnel2_ike_versions                 = ["ikev2"]
+      tunnel1_phase1_dh_group_numbers      = ["14"]
+      tunnel2_phase1_dh_group_numbers      = ["14"]
+      tunnel1_phase1_integrity_algorithms  = ["SHA1"]
+      tunnel2_phase1_integrity_algorithms  = ["SHA1"]
+      tunnel1_phase1_encryption_algorithms = ["AES128"]
+      tunnel2_phase1_encryption_algorithms = ["AES128"]
+      tunnel1_phase2_dh_group_numbers      = ["14"]
+      tunnel2_phase2_dh_group_numbers      = ["14"]
+      tunnel1_phase2_integrity_algorithms  = ["SHA1"]
+      tunnel2_phase2_integrity_algorithms  = ["SHA1"]
+      tunnel1_phase2_encryption_algorithms = ["AES128"]
+      tunnel2_phase2_encryption_algorithms = ["AES128"]
+    }
+  }
+
+  transit_gateway_route_tables = {
+    east_vpn = {
+      transit_gateway_id = module.east_transit_gateway.transit_gateway_id
+    }
+  }
+  transit_gateway_route_table_associations = {
+    east_vpn = {
+      transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
+      transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
+    }
+  }
+  transit_gateway_route_table_propagations = {
+    hub_to_east_vpn = {
+      transit_gateway_attachment_id  = module.east_transit_gateway.vpc_attachment_ids["hub1"]
+      transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
+    }
+    spoke1_to_east_vpn = {
+      transit_gateway_attachment_id  = module.east_transit_gateway.vpc_attachment_ids["spoke1"]
+      transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
+    }
+    spoke2_to_east_vpn = {
+      transit_gateway_attachment_id  = module.east_transit_gateway.vpc_attachment_ids["spoke2"]
+      transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
+    }
+    spoke3_to_east_vpn = {
+      transit_gateway_attachment_id  = module.east_transit_gateway.vpc_attachment_ids["spoke3"]
+      transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
+    }
+  }
+  vpn_transit_gateway_routes = [
+    {
+      destination                    = var.lab_local_cidr
+      transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
+      transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["hubs"]
+    },
+    {
+      destination                    = var.lab_local_cidr
+      transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
+      transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+  ]
+}
+
 ### -------------------------------------------------------------------------------------------- ###
-### EAST DATA
+### WEST DATA
 ### -------------------------------------------------------------------------------------------- ###
 
 module "west_data" {
@@ -1041,7 +1087,7 @@ module "west_hub" {
       from_port         = -1
       to_port           = -1
       protocol          = "icmp"
-      cidr_blocks       = ["${var.self_public_ip}/32"]
+      cidr_blocks       = ["${var.lab_public_ip}/32"]
       security_group_id = module.west_hub.security_group_ids["public1"]
     },
     {
@@ -1050,7 +1096,7 @@ module "west_hub" {
       from_port         = 22
       to_port           = 22
       protocol          = "tcp"
-      cidr_blocks       = ["${var.self_public_ip}/32"]
+      cidr_blocks       = ["${var.lab_public_ip}/32"]
       security_group_id = module.west_hub.security_group_ids["public1"]
     },
     {

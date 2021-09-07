@@ -10,7 +10,7 @@ Make sure you have `Terraform version 0.12.[x]` installed, at the time of this w
 domain_name = "YOUR-DOMAIN-NAME"
 ssh_key_name = "AWS-SSH-KEY" # this key needs to exist in the AWS console
 priv_ssh_key_path = "PATH-TO-YOUR-PRIVATE-KEY" -- must be the pair used to create the ssh_key_name in AWS
-self_public_ip = "your-public-ip" # this is used for the security group rule to allow SSH
+lab_public_ip = "your-public-ip" # this is used for the security group rule to allow SSH
 ```
 
 These variables can also be passed in at `apply` or `plan` time with the command `terraform apply -var 'domain_name=test.domain`.

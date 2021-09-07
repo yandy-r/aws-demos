@@ -39,22 +39,25 @@ resource "aws_vpc" "this" {
 }
 
 locals {
-  azs                        = data.aws_availability_zones.azs
-  vpc_id                     = one([for v in aws_vpc.this : v.id])
-  cidr_block                 = one([for v in aws_vpc.this : v.cidr_block])
-  internet_gateway_id        = one([for v in aws_internet_gateway.this : v.id])
-  nat_gateway_id             = [for v in aws_nat_gateway.this : v.id]
-  public_subnet_ids          = [for v in aws_subnet.public : v.id]
-  public_subnet_cidr_blocks  = [for v in aws_subnet.public : v.cidr_block]
-  private_subnet_ids         = [for v in aws_subnet.private : v.id]
-  private_subnet_cidr_blocks = [for v in aws_subnet.private : v.cidr_block]
-  intra_subnet_ids           = [for v in aws_subnet.intra : v.id]
-  intra_subnet_cidr_blocks   = [for v in aws_subnet.intra : v.cidr_block]
-  public_route_table_id      = one([for v in aws_route_table.public : v.id])
-  private_route_table_id     = one([for v in aws_route_table.private : v.id])
-  intra_route_table_id       = one([for v in aws_route_table.intra : v.id])
-  route_table_ids            = flatten([local.public_route_table_id[*], local.private_route_table_id[*], local.intra_route_table_id[*]])
-  security_group_ids         = { for k, v in aws_security_group.this : k => v.id }
+  azs                                = data.aws_availability_zones.azs
+  vpc_id                             = one([for v in aws_vpc.this : v.id])
+  cidr_block                         = one([for v in aws_vpc.this : v.cidr_block])
+  internet_gateway_id                = one([for v in aws_internet_gateway.this : v.id])
+  nat_gateway_id                     = [for v in aws_nat_gateway.this : v.id]
+  public_subnet_ids                  = [for v in aws_subnet.public : v.id]
+  public_subnet_cidr_blocks          = [for v in aws_subnet.public : v.cidr_block]
+  private_subnet_ids                 = [for v in aws_subnet.private : v.id]
+  private_subnet_cidr_blocks         = [for v in aws_subnet.private : v.cidr_block]
+  intra_subnet_ids                   = [for v in aws_subnet.intra : v.id]
+  intra_subnet_cidr_blocks           = [for v in aws_subnet.intra : v.cidr_block]
+  public_route_table_id              = one([for v in aws_route_table.public : v.id])
+  private_route_table_id             = one([for v in aws_route_table.private : v.id])
+  intra_route_table_id               = one([for v in aws_route_table.intra : v.id])
+  route_table_ids                    = flatten([local.public_route_table_id[*], local.private_route_table_id[*], local.intra_route_table_id[*]])
+  security_group_ids                 = { for k, v in aws_security_group.this : k => v.id }
+  vpn_connection_ids                 = { for k, v in aws_vpn_connection.this : k => v.id }
+  vpn_transit_gateway_attachment_ids = { for k, v in aws_vpn_connection.this : k => v.transit_gateway_attachment_id }
+  transit_gateway_route_table_ids    = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
 }
 
 resource "aws_internet_gateway" "this" {
@@ -454,7 +457,7 @@ resource "aws_vpn_connection" "this" {
   transit_gateway_id                   = lookup(each.value, "transit_gateway_id", null)
   vpn_gateway_id                       = lookup(each.value, "vpn_gateway_id", null)
   static_routes_only                   = lookup(each.value, "static_routes_only", false)
-  enable_acceleration                  = lookup(each.value, "enable_acceleration", true)
+  enable_acceleration                  = lookup(each.value, "enable_acceleration", false)
   tunnel1_inside_cidr                  = lookup(each.value, "tunnel1_inside_cidr", null)
   tunnel2_inside_cidr                  = lookup(each.value, "tunnel2_inside_cidr", null)
   tunnel_inside_ip_version             = lookup(each.value, "tunnel_inside_ip_verson", "ipv4")
@@ -476,4 +479,60 @@ resource "aws_vpn_connection" "this" {
   tunnel2_phase2_integrity_algorithms  = lookup(each.value, "tunnel2_phase2_integrity_algorithms", ["SHA1", "SHA2-256", "SHA2-384", "SHA2-512"])
   tunnel1_phase2_encryption_algorithms = lookup(each.value, "tunnel1_phase2_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
   tunnel2_phase2_encryption_algorithms = lookup(each.value, "tunnel2_phase2_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
+
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
+
+### -------------------------------------------------------------------------------------------- ###
+### ROUTE FOR USE WITH VPN GATEWAY
+### -------------------------------------------------------------------------------------------- ###
+
+resource "aws_vpn_connection_route" "this" {
+  for_each               = { for k, v in var.vpn_connection_routes : k => v }
+  destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
+  vpn_connection_id      = lookup(each.value, "vpn_connection_id", null)
+}
+
+
+### -------------------------------------------------------------------------------------------- ###
+### ROUTE FOR VPN CONNECTED TO TRANSIT GATEWAY
+### -------------------------------------------------------------------------------------------- ###
+
+resource "aws_ec2_transit_gateway_route_table" "this" {
+  for_each           = { for k, v in var.transit_gateway_route_tables : k => v }
+  transit_gateway_id = each.value["transit_gateway_id"]
+
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "this" {
+  for_each                       = { for k, v in var.transit_gateway_route_table_associations : k => v }
+  transit_gateway_attachment_id  = each.value["transit_gateway_attachment_id"]
+  transit_gateway_route_table_id = each.value["transit_gateway_route_table_id"]
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
+  for_each                       = { for k, v in var.transit_gateway_route_table_propagations : k => v }
+  transit_gateway_attachment_id  = lookup(each.value, "transit_gateway_attachment_id", null)
+  transit_gateway_route_table_id = each.value["transit_gateway_route_table_id"]
+}
+
+resource "aws_ec2_transit_gateway_route" "this" {
+  for_each                       = { for k, v in var.vpn_transit_gateway_routes : k => v }
+  blackhole                      = lookup(each.value, "blackhole", null)
+  destination_cidr_block         = each.value["destination"]
+  transit_gateway_attachment_id  = tobool(lookup(each.value, "blackhole", false)) == false ? each.value["transit_gateway_attachment_id"] : null
+  transit_gateway_route_table_id = each.value["transit_gateway_route_table_id"]
 }

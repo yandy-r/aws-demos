@@ -113,3 +113,28 @@ variable "vpn_connection" {
   type    = any
   default = {}
 }
+
+variable "vpn_connection_routes" {
+  type    = any
+  default = {}
+}
+
+variable "transit_gateway_route_tables" {
+  type    = any
+  default = {}
+}
+
+variable "transit_gateway_route_table_associations" {
+  type    = any
+  default = {}
+}
+
+variable "transit_gateway_route_table_propagations" {
+  type    = any
+  default = {}
+}
+
+variable "vpn_transit_gateway_routes" {
+  type    = any
+  default = {}
+}

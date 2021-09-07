@@ -15,7 +15,12 @@ variable "credentials_file" {
   type = string
 }
 
-variable "self_public_ip" {
+variable "lab_public_ip" {
+  type    = string
+  default = ""
+}
+
+variable "lab_local_cidr" {
   type    = string
   default = ""
 }
