@@ -942,8 +942,53 @@ module "east_vpn" {
       from_port         = 0
       to_port           = 0
       protocol          = "-1"
-      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 8, 0)]
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
       security_group_id = module.east_hub.security_group_ids["public1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.east_hub.security_group_ids["private1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.east_hub.security_group_ids["intra1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.east_spoke1.security_group_ids["intra1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.east_spoke2.security_group_ids["intra1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.east_spoke3.security_group_ids["intra1"]
     },
   ]
 }
@@ -1875,8 +1920,53 @@ module "west_vpn" {
       from_port         = 0
       to_port           = 0
       protocol          = "-1"
-      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 8, 0)]
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
       security_group_id = module.west_hub.security_group_ids["public1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.west_hub.security_group_ids["private1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.west_hub.security_group_ids["intra1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.west_spoke1.security_group_ids["intra1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.west_spoke2.security_group_ids["intra1"]
+    },
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 5, 0)]
+      security_group_id = module.west_spoke3.security_group_ids["intra1"]
     },
   ]
 }
