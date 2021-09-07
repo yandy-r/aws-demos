@@ -117,6 +117,21 @@ module "east_hub" {
     }
   }]
 
+  vpc_endpoint_route_table_association = {
+    public = {
+      route_table_id  = module.east_hub.public_route_table_id
+      vpc_endpoint_id = module.east_hub.vpc_endpoint_ids[0]
+    },
+    private = {
+      route_table_id  = module.east_hub.private_route_table_id
+      vpc_endpoint_id = module.east_hub.vpc_endpoint_ids[0]
+    },
+    intra = {
+      route_table_id  = module.east_hub.intra_route_table_id
+      vpc_endpoint_id = module.east_hub.vpc_endpoint_ids[0]
+    },
+  }
+
   flow_logs_role        = { east_hub1 = {} }
   flow_logs_role_policy = { east_hub1 = {} }
   cloudwatch_log_groups = { east_hub1 = {} }
@@ -335,6 +350,13 @@ module "east_spoke1" {
     }
   }]
 
+  vpc_endpoint_route_table_association = {
+    intra = {
+      route_table_id  = module.east_spoke1.intra_route_table_id
+      vpc_endpoint_id = module.east_spoke1.vpc_endpoint_ids[0]
+    },
+  }
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -411,6 +433,13 @@ module "east_spoke2" {
     }
   }]
 
+  vpc_endpoint_route_table_association = {
+    intra = {
+      route_table_id  = module.east_spoke2.intra_route_table_id
+      vpc_endpoint_id = module.east_spoke2.vpc_endpoint_ids[0]
+    },
+  }
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -482,6 +511,13 @@ module "east_spoke3" {
       Name = "east-spoke3-s3-endpoint"
     }
   }]
+
+  vpc_endpoint_route_table_association = {
+    intra = {
+      route_table_id  = module.east_spoke3.intra_route_table_id
+      vpc_endpoint_id = module.east_spoke3.vpc_endpoint_ids[0]
+    },
+  }
 
   security_group_rules = [
     {
@@ -1102,6 +1138,21 @@ module "west_hub" {
     }
   }]
 
+  vpc_endpoint_route_table_association = {
+    public = {
+      route_table_id  = module.west_hub.public_route_table_id
+      vpc_endpoint_id = module.west_hub.vpc_endpoint_ids[0]
+    },
+    private = {
+      route_table_id  = module.west_hub.private_route_table_id
+      vpc_endpoint_id = module.west_hub.vpc_endpoint_ids[0]
+    },
+    intra = {
+      route_table_id  = module.west_hub.intra_route_table_id
+      vpc_endpoint_id = module.west_hub.vpc_endpoint_ids[0]
+    },
+  }
+
   security_groups = {
     public1  = {},
     private1 = {},
@@ -1315,6 +1366,13 @@ module "west_spoke1" {
     }
   }]
 
+  vpc_endpoint_route_table_association = {
+    intra = {
+      vpc_endpoint_id = module.west_spoke1.vpc_endpoint_ids[0]
+      route_table_id  = module.west_spoke1.intra_route_table_id
+    },
+  }
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -1391,6 +1449,13 @@ module "west_spoke2" {
     }
   }]
 
+  vpc_endpoint_route_table_association = {
+    intra = {
+      route_table_id  = module.west_spoke2.intra_route_table_id
+      vpc_endpoint_id = module.west_spoke2.vpc_endpoint_ids[0]
+    },
+  }
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -1462,6 +1527,13 @@ module "west_spoke3" {
       Name = "west-spoke3-s3-endpoint"
     }
   }]
+
+  vpc_endpoint_route_table_association = {
+    intra = {
+      route_table_id  = module.west_spoke3.intra_route_table_id
+      vpc_endpoint_id = module.west_spoke3.vpc_endpoint_ids[0]
+    },
+  }
 
   security_group_rules = [
     {

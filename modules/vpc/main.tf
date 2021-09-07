@@ -58,6 +58,7 @@ locals {
   vpn_connection_ids                 = { for k, v in aws_vpn_connection.this : k => v.id }
   vpn_transit_gateway_attachment_ids = { for k, v in aws_vpn_connection.this : k => v.transit_gateway_attachment_id }
   transit_gateway_route_table_ids    = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
+  vpc_endpoint_ids                   = { for k, v in aws_vpc_endpoint.this : k => v.id }
 }
 
 resource "aws_internet_gateway" "this" {
@@ -257,7 +258,7 @@ resource "aws_vpc_endpoint" "this" {
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
   service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.this.name}.${each.value["service_type"]}")
   policy            = lookup(each.value, "policy", null)
-  route_table_ids   = lookup(each.value, "route_table_ids", local.route_table_ids)
+  route_table_ids   = lookup(each.value, "route_table_ids", null)
 
   tags = merge(
     {
@@ -266,6 +267,12 @@ resource "aws_vpc_endpoint" "this" {
     var.tags,
     lookup(each.value, "tags", null)
   )
+}
+
+resource "aws_vpc_endpoint_route_table_association" "this" {
+  for_each        = { for k, v in var.vpc_endpoint_route_table_association : k => v }
+  route_table_id  = each.value["route_table_id"]
+  vpc_endpoint_id = each.value["vpc_endpoint_id"]
 }
 
 # ### -------------------------------------------------------------------------------------------- ###

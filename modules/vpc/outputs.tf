@@ -58,6 +58,10 @@ output "route_table_ids" {
   value = local.route_table_ids
 }
 
+output "vpc_endpoint_ids" {
+  value = local.vpc_endpoint_ids
+}
+
 output "security_group_ids" {
   value = local.security_group_ids
 }

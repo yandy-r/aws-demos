@@ -71,7 +71,13 @@ variable "routes" {
 
 variable "vpc_endpoints" {
   type    = any
-  default = []
+  default = {}
+}
+
+
+variable "vpc_endpoint_route_table_association" {
+  type    = any
+  default = {}
 }
 
 variable "security_groups" {
