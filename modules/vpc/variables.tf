@@ -83,3 +83,23 @@ variable "security_group_rules" {
   type    = any
   default = []
 }
+
+variable "flow_logs" {
+  type    = any
+  default = {}
+}
+
+variable "cloudwatch_log_groups" {
+  type    = any
+  default = {}
+}
+
+variable "flow_logs_role_policy" {
+  type    = any
+  default = {}
+}
+
+variable "flow_logs_role" {
+  type    = any
+  default = {}
+}

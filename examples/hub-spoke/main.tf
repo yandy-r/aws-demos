@@ -117,6 +117,11 @@ module "east_hub" {
     }
   }]
 
+  flow_logs_role        = { east_hub1 = {} }
+  flow_logs_role_policy = { east_hub1 = {} }
+  cloudwatch_log_groups = { east_hub1 = {} }
+  flow_logs             = { east_hub1 = {} }
+
   security_groups = {
     public1  = {},
     private1 = {},

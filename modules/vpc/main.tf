@@ -247,12 +247,12 @@ resource "aws_route" "this" {
 # ### VPC ENDPOINTS
 # ### -------------------------------------------------------------------------------------------- ###
 
-data "aws_region" "current" {}
+data "aws_region" "this" {}
 resource "aws_vpc_endpoint" "this" {
   for_each          = { for k, v in var.vpc_endpoints : k => v }
   vpc_id            = lookup(each.value, "vpc_id", local.vpc_id)
   vpc_endpoint_type = lookup(each.value, "endpoint_type", "Gateway")
-  service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.current.name}.${each.value["service_type"]}")
+  service_name      = lookup(each.value, "service_name", "com.amazonaws.${data.aws_region.this.name}.${each.value["service_type"]}")
   policy            = lookup(each.value, "policy", null)
   route_table_ids   = lookup(each.value, "route_table_ids", local.route_table_ids)
 
@@ -329,39 +329,103 @@ resource "aws_security_group_rule" "security_group_rules" {
 # ### FLOW LOGS
 # ### -------------------------------------------------------------------------------------------- ###
 
-# resource "aws_iam_role" "flow_logs" {
-#   count              = var.create_flow_logs ? 1 : 0
-#   name               = "${data.aws_region.current.name}-flow_logs"
-#   assume_role_policy = file("${path.module}/templates/flow_logs_role.json")
+resource "aws_iam_role" "flow_logs" {
+  for_each              = { for k, v in var.flow_logs_role : k => v }
+  description           = lookup(each.value, "description", null)
+  name                  = lookup(each.value, "name", "${data.aws_region.this.name}-${each.key}")
+  name_prefix           = lookup(each.value, "name_prefix", null)
+  force_detach_policies = lookup(each.value, "force_detach_policies", false)
+  managed_policy_arns   = lookup(each.value, "managed_policy_arns", null)
+  max_session_duration  = lookup(each.value, "max_session_duration", null)
+  path                  = lookup(each.value, "path", 1)
+  permissions_boundary  = lookup(each.value, "permissions_boundary", null)
 
-#   tags = {
-#     Name = "Flow Logs"
-#   }
-# }
+  assume_role_policy = lookup(each.value, "assume_role_policy",
+    jsonencode({
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Sid" : "",
+          "Effect" : "Allow",
+          "Principal" : {
+            "Service" : "vpc-flow-logs.amazonaws.com"
+          },
+          "Action" : "sts:AssumeRole"
+        }
+      ]
+  }))
 
-# resource "aws_iam_role_policy" "flow_logs" {
-#   count  = var.create_flow_logs ? 1 : 0
-#   name   = "${data.aws_region.current.name}-flow_logs"
-#   role   = aws_iam_role.flow_logs[0].id
-#   policy = file("${path.module}/templates/flow_logs_role_policy.json")
-# }
+  dynamic "inline_policy" {
+    for_each = lookup(each.value, "inline_policy", {})
 
-# resource "aws_cloudwatch_log_group" "flow_logs" {
-#   count = var.create_flow_logs ? 1 : 0
-#   name  = "${data.aws_region.current.name}-flow_logs"
+    content {
+      name   = inline_policy["name"]
+      policy = inline_policy["policy"]
+    }
+  }
 
-#   tags = {
-#     Name = "Flow logs"
-#   }
-# }
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
 
-# resource "aws_flow_log" "flow_logs" {
-#   count           = var.create_flow_logs ? length(aws_vpc.vpcs) : 0
-#   iam_role_arn    = aws_iam_role.flow_logs[0].arn
-#   log_destination = aws_cloudwatch_log_group.flow_logs[0].arn
-#   traffic_type    = "ALL"
-#   vpc_id          = aws_vpc.vpcs[count.index].id
-# }
+resource "aws_iam_role_policy" "flow_logs" {
+  for_each    = { for k, v in var.flow_logs_role_policy : k => v }
+  name        = lookup(each.value, "name", "${data.aws_region.this.name}-${each.key}")
+  name_prefix = lookup(each.value, "name_prefix", null)
+  role        = lookup(each.value, "role", aws_iam_role.flow_logs[each.key].id)
+
+  policy = lookup(each.value, "policy",
+    jsonencode({
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Action" : [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogGroups",
+            "logs:DescribeLogStreams"
+          ],
+          "Effect" : "Allow",
+          "Resource" : "*"
+        }
+      ]
+  }))
+}
+
+resource "aws_cloudwatch_log_group" "flow_logs" {
+  for_each          = { for k, v in var.cloudwatch_log_groups : k => v }
+  name              = lookup(each.value, "name", "${data.aws_region.this.name}-${each.key}")
+  name_prefix       = lookup(each.value, "name_prefix", null)
+  retention_in_days = lookup(each.value, "retention_in_days", 5)
+  kms_key_id        = lookup(each.value, "kms_key_id", null)
+
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
+
+resource "aws_flow_log" "this" {
+  for_each                 = { for k, v in var.flow_logs : k => v }
+  iam_role_arn             = lookup(each.value, "iam_role_arn", aws_iam_role.flow_logs[each.key].arn)
+  log_destination_type     = lookup(each.value, "log_destination_type", "cloud-watch-logs")
+  log_destination          = lookup(each.value, "log_destination", aws_cloudwatch_log_group.flow_logs[each.key].arn)
+  traffic_type             = lookup(each.value, "traffic_type", "ALL")
+  vpc_id                   = lookup(each.value, "vpc_id", aws_vpc.this[0].id)
+  eni_id                   = lookup(each.value, "eni_id", null)
+  subnet_id                = lookup(each.value, "subnet_id", null)
+  log_format               = lookup(each.value, "log_format", null)
+  max_aggregation_interval = lookup(each.value, "max_aggregation_interval", 60)
+}
 
 # ### -------------------------------------------------------------------------------------------- ###
 # ### S3
