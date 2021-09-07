@@ -116,6 +116,7 @@ module "east_hub" {
       Name = "east-hub-s3-endpoint"
     }
   }]
+
   security_groups = {
     public1  = {},
     private1 = {},
@@ -319,6 +320,16 @@ module "east_spoke1" {
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
 
+  vpc_endpoints = [{
+    endpoint_type   = "Gateway"
+    service_type    = "s3"
+    policy          = local.east_data.s3_endpoint_policy
+    route_table_ids = module.east_spoke1.route_table_ids
+    tags = {
+      Name = "east-spoke1-s3-endpoint"
+    }
+  }]
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -385,6 +396,16 @@ module "east_spoke2" {
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
 
+  vpc_endpoints = [{
+    endpoint_type   = "Gateway"
+    service_type    = "s3"
+    policy          = local.east_data.s3_endpoint_policy
+    route_table_ids = module.east_spoke2.route_table_ids
+    tags = {
+      Name = "east-spoke2-s3-endpoint"
+    }
+  }]
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -446,6 +467,16 @@ module "east_spoke3" {
   ]
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
+
+  vpc_endpoints = [{
+    endpoint_type   = "Gateway"
+    service_type    = "s3"
+    policy          = local.east_data.s3_endpoint_policy
+    route_table_ids = module.east_spoke3.route_table_ids
+    tags = {
+      Name = "east-spoke3-s3-endpoint"
+    }
+  }]
 
   security_group_rules = [
     {
@@ -900,6 +931,7 @@ module "west_hub" {
       Name = "west-hub-s3-endpoint"
     }
   }]
+
   security_groups = {
     public1  = {},
     private1 = {},
@@ -1103,6 +1135,16 @@ module "west_spoke1" {
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
 
+  vpc_endpoints = [{
+    endpoint_type   = "Gateway"
+    service_type    = "s3"
+    policy          = local.west_data.s3_endpoint_policy
+    route_table_ids = module.west_spoke1.route_table_ids
+    tags = {
+      Name = "west-spoke1-s3-endpoint"
+    }
+  }]
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -1169,6 +1211,16 @@ module "west_spoke2" {
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
 
+  vpc_endpoints = [{
+    endpoint_type   = "Gateway"
+    service_type    = "s3"
+    policy          = local.west_data.s3_endpoint_policy
+    route_table_ids = module.west_spoke2.route_table_ids
+    tags = {
+      Name = "west-spoke2-s3-endpoint"
+    }
+  }]
+
   security_group_rules = [
     {
       description       = "Allow all out"
@@ -1230,6 +1282,16 @@ module "west_spoke3" {
   ]
   intra_route_table = [{}]
   security_groups   = { intra1 = {} }
+
+  vpc_endpoints = [{
+    endpoint_type   = "Gateway"
+    service_type    = "s3"
+    policy          = local.west_data.s3_endpoint_policy
+    route_table_ids = module.west_spoke3.route_table_ids
+    tags = {
+      Name = "west-spoke3-s3-endpoint"
+    }
+  }]
 
   security_group_rules = [
     {
@@ -1573,424 +1635,3 @@ module "west_transit_gateway" {
     },
   ]
 }
-
-### -------------------------------------------------------------------------------------------- ###
-### US-EAST-1 TO USE-WEST-2 COMMUNICATION
-### -------------------------------------------------------------------------------------------- ###
-
-# resource "aws_ec2_transit_gateway_route_table_association" "east_to_west" {
-#   provider                       = aws.us_east_1
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.east_west.id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
-# }
-
-# resource "aws_ec2_transit_gateway_route" "east_to_west" {
-#   provider                       = aws.us_east_1
-#   for_each                       = { for k, v in local.all_east_tgw_rts : k => v }
-#   destination_cidr_block         = "10.220.0.0/14"
-#   transit_gateway_route_table_id = each.value.id
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.east_west.id
-# }
-
-# resource "aws_ec2_transit_gateway_route" "east_peering_to_hub_vpc" {
-#   provider                       = aws.us_east_1
-#   destination_cidr_block         = "10.200.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
-#   transit_gateway_attachment_id  = local.east_tgw_attach_id[0]
-# }
-
-# resource "aws_ec2_transit_gateway_route" "east_peering_to_spoke_1_vpc" {
-#   provider                       = aws.us_east_1
-#   destination_cidr_block         = "10.201.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
-#   transit_gateway_attachment_id  = local.east_tgw_attach_id[1]
-# }
-
-# resource "aws_ec2_transit_gateway_route" "east_peering_to_spoke_2_vpc" {
-#   provider                       = aws.us_east_1
-#   destination_cidr_block         = "10.202.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
-#   transit_gateway_attachment_id  = local.east_tgw_attach_id[2]
-# }
-
-# resource "aws_ec2_transit_gateway_route" "east_peering_to_spoke_3_vpc" {
-#   provider                       = aws.us_east_1
-#   destination_cidr_block         = "10.203.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east_to_west.id
-#   transit_gateway_attachment_id  = local.east_tgw_attach_id[3]
-# }
-
-# resource "aws_route" "east_peering_routes_private" {
-#   provider               = aws.us_east_1
-#   for_each               = { for k, v in local.east_private_rts : k => v }
-#   route_table_id         = each.value.id
-#   destination_cidr_block = "10.220.0.0/14"
-#   transit_gateway_id     = local.east_tgw.id
-# }
-
-# resource "aws_route" "east_peering_routes_public" {
-#   provider               = aws.us_east_1
-#   for_each               = { for k, v in local.east_public_rts : k => v }
-#   route_table_id         = each.value.id
-#   destination_cidr_block = "10.220.0.0/14"
-#   transit_gateway_id     = local.east_tgw.id
-# }
-
-# resource "aws_ec2_transit_gateway_route_table" "west_to_east" {
-#   provider           = aws.us_west_2
-#   transit_gateway_id = local.west_tgw.id
-
-#   tags = {
-#     Name = "WEST->EAST"
-#   }
-# }
-
-# resource "aws_ec2_transit_gateway_route_table_association" "west_to_east" {
-#   provider                       = aws.us_west_2
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.east_west.id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
-# }
-
-# resource "aws_ec2_transit_gateway_route" "west_to_east" {
-#   provider                       = aws.us_west_2
-#   for_each                       = { for k, v in local.all_west_tgw_rts : k => v }
-#   destination_cidr_block         = "10.200.0.0/14"
-#   transit_gateway_route_table_id = each.value.id
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.east_west.id
-# }
-
-# resource "aws_ec2_transit_gateway_route" "west_peering_to_hub_vpc" {
-#   provider                       = aws.us_west_2
-#   destination_cidr_block         = "10.220.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
-#   transit_gateway_attachment_id  = local.west_tgw_attach_id[0]
-# }
-
-# resource "aws_ec2_transit_gateway_route" "west_peering_to_spoke_1_vpc" {
-#   provider                       = aws.us_west_2
-#   destination_cidr_block         = "10.221.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
-#   transit_gateway_attachment_id  = local.west_tgw_attach_id[1]
-# }
-
-# resource "aws_ec2_transit_gateway_route" "west_peering_to_spoke_2_vpc" {
-#   provider                       = aws.us_west_2
-#   destination_cidr_block         = "10.222.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
-#   transit_gateway_attachment_id  = local.west_tgw_attach_id[2]
-# }
-
-# resource "aws_ec2_transit_gateway_route" "west_peering_to_spoke_3_vpc" {
-#   provider                       = aws.us_west_2
-#   destination_cidr_block         = "10.223.0.0/16"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west_to_east.id
-#   transit_gateway_attachment_id  = local.west_tgw_attach_id[3]
-# }
-
-# resource "aws_route" "west_peering_routes_private" {
-#   provider               = aws.us_west_2
-#   for_each               = { for k, v in local.west_private_rts : k => v }
-#   route_table_id         = each.value.id
-#   destination_cidr_block = "10.200.0.0/14"
-#   transit_gateway_id     = local.west_tgw.id
-# }
-
-# resource "aws_route" "west_peering_routes_public" {
-#   provider               = aws.us_west_2
-#   for_each               = { for k, v in local.west_public_rts : k => v }
-#   route_table_id         = each.value.id
-#   destination_cidr_block = "10.200.0.0/14"
-#   transit_gateway_id     = local.west_tgw.id
-# }
-
-# locals {
-#   east_hub_rules = {
-
-#     from_west_to_east_hub = {
-#       description              = "Allow all from West hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.220.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_hub_sgs.public.id
-#     }
-
-#     from_west_to_east_private = {
-#       description              = "Allow all from West"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.220.0.0/14"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_hub_sgs.private.id
-#     }
-#   }
-# }
-
-# resource "aws_security_group_rule" "east_hub_rules" {
-#   provider                 = aws.us_east_1
-#   for_each                 = local.east_hub_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }
-
-# locals {
-#   west_hub_rules = {
-
-#     from_east_to_west_public = {
-#       description              = "Allow all from East hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.200.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_hub_sgs.public.id
-#     }
-
-#     from_east_to_west_private = {
-#       description              = "Allow all from West"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.200.0.0/14"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_hub_sgs.private.id
-#     }
-#   }
-# }
-
-# resource "aws_security_group_rule" "west_hub_rules" {
-#   provider                 = aws.us_west_2
-#   for_each                 = local.west_hub_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }
-
-# locals {
-#   east_spoke_rules = {
-
-#     from_west_to_east_1 = {
-#       description              = "Allow all from West hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.220.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[0].id
-#     }
-
-#     from_west_to_east_2 = {
-#       description              = "Allow all from West spoke 1"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.221.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[0].id
-#     }
-
-#     from_west_to_east_3 = {
-#       description              = "Allow all from West spoke 2"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.222.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[0].id
-#     }
-
-#     from_west_to_east_4 = {
-#       description              = "Allow all from West hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.220.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[1].id
-#     }
-
-#     from_west_to_east_5 = {
-#       description              = "Allow all from West spoke 1"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.221.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[1].id
-#     }
-
-#     from_west_to_east_6 = {
-#       description              = "Allow all from West spoke 2"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.222.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[1].id
-#     }
-
-#     from_west_to_east_7 = {
-#       description              = "Allow all from West hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.220.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[2].id
-#     }
-
-#     from_west_to_east_8 = {
-#       description              = "Allow all from West spoke 3"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.223.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.east_spoke_sgs[2].id
-#     }
-#   }
-# }
-
-# resource "aws_security_group_rule" "east_spoke_rules" {
-#   provider                 = aws.us_east_1
-#   for_each                 = local.east_spoke_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }
-
-# locals {
-#   west_spoke_rules = {
-
-#     from_east_to_west_1 = {
-#       description              = "Allow all from East hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.200.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[0].id
-#     }
-
-#     from_east_to_west_2 = {
-#       description              = "Allow all from East spoke 1"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.201.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[0].id
-#     }
-
-#     from_east_to_west_3 = {
-#       description              = "Allow all from East spoke 2"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.202.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[0].id
-#     }
-
-#     from_east_to_west_4 = {
-#       description              = "Allow all from East hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.200.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[1].id
-#     }
-
-#     from_east_to_west_5 = {
-#       description              = "Allow all from East spoke 1"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.201.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[1].id
-#     }
-
-#     from_east_to_west_6 = {
-#       description              = "Allow all from East spoke 2"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.202.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[1].id
-#     }
-
-#     from_east_to_west_7 = {
-#       description              = "Allow all from East hub"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.200.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[2].id
-#     }
-
-#     from_east_to_west_8 = {
-#       description              = "Allow all from East spoke 3"
-#       type                     = "ingress"
-#       from_port                = 0
-#       to_port                  = 0
-#       protocol                 = "-1"
-#       cidr_blocks              = ["10.203.0.0/16"]
-#       source_security_group_id = null
-#       security_group_id        = local.west_spoke_sgs[2].id
-#     }
-#   }
-# }
-
-# resource "aws_security_group_rule" "west_spoke_rules" {
-#   provider                 = aws.us_west_2
-#   for_each                 = local.west_spoke_rules
-#   description              = each.value.description
-#   type                     = each.value.type
-#   from_port                = each.value.from_port
-#   to_port                  = each.value.to_port
-#   protocol                 = each.value.protocol
-#   cidr_blocks              = each.value.cidr_blocks
-#   source_security_group_id = each.value.source_security_group_id
-#   security_group_id        = each.value.security_group_id
-# }

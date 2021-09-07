@@ -243,6 +243,10 @@ resource "aws_route" "this" {
   vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
 }
 
+# ### -------------------------------------------------------------------------------------------- ###
+# ### VPC ENDPOINTS
+# ### -------------------------------------------------------------------------------------------- ###
+
 data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "this" {
   for_each          = { for k, v in var.vpc_endpoints : k => v }
