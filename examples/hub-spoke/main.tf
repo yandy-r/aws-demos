@@ -244,6 +244,17 @@ module "east_hub" {
       security_group_id        = module.east_hub.security_group_ids["intra1"]
     },
     {
+      description = "Allow all sourced from west hub to east hub"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        module.west_hub.cidr_block,
+      ]
+      security_group_id = module.east_hub.security_group_ids["public1"]
+    },
+    {
       description = "Allow all sourced from spokes to private"
       type        = "ingress"
       from_port   = 0
@@ -253,6 +264,10 @@ module "east_hub" {
         module.east_spoke1.cidr_block,
         module.east_spoke2.cidr_block,
         module.east_spoke3.cidr_block,
+        module.west_hub.cidr_block,
+        module.west_spoke1.cidr_block,
+        module.west_spoke2.cidr_block,
+        module.west_spoke3.cidr_block,
       ]
       security_group_id = module.east_hub.security_group_ids["private1"]
     },
@@ -266,6 +281,10 @@ module "east_hub" {
         module.east_spoke1.cidr_block,
         module.east_spoke2.cidr_block,
         module.east_spoke3.cidr_block,
+        module.west_hub.cidr_block,
+        module.west_spoke1.cidr_block,
+        module.west_spoke2.cidr_block,
+        module.west_spoke3.cidr_block,
       ]
       security_group_id = module.east_hub.security_group_ids["intra1"]
     },
@@ -321,7 +340,7 @@ module "east_spoke1" {
       security_group_id        = module.east_spoke1.security_group_ids["intra1"]
     },
     {
-      description = "Allow all sourced from hub and spoke2 to intra"
+      description = "Allow all sourced from hub and spoke2 east spoke 1-2 west to intra"
       type        = "ingress"
       from_port   = 0
       to_port     = 0
@@ -329,6 +348,9 @@ module "east_spoke1" {
       cidr_blocks = [
         module.east_hub.cidr_block,
         module.east_spoke2.cidr_block,
+        module.west_hub.cidr_block,
+        module.west_spoke1.cidr_block,
+        module.west_spoke2.cidr_block,
       ]
       security_group_id = module.east_spoke1.security_group_ids["intra1"]
     },
@@ -384,7 +406,7 @@ module "east_spoke2" {
       security_group_id        = module.east_spoke2.security_group_ids["intra1"]
     },
     {
-      description = "Allow all sourced from hub and spoke1 to intra"
+      description = "Allow all sourced from hub and spoke2 east spoke 1-2 west to intra"
       type        = "ingress"
       from_port   = 0
       to_port     = 0
@@ -392,6 +414,9 @@ module "east_spoke2" {
       cidr_blocks = [
         module.east_hub.cidr_block,
         module.east_spoke1.cidr_block,
+        module.west_hub.cidr_block,
+        module.west_spoke1.cidr_block,
+        module.west_spoke2.cidr_block,
       ]
       security_group_id = module.east_spoke2.security_group_ids["intra1"]
     },
@@ -443,13 +468,15 @@ module "east_spoke3" {
       security_group_id        = module.east_spoke3.security_group_ids["intra1"]
     },
     {
-      description = "Allow all sourced from hub intra"
+      description = "Allow all sourced from hub, hub and spoke3 west to intra"
       type        = "ingress"
       from_port   = 0
       to_port     = 0
       protocol    = "-1"
       cidr_blocks = [
         module.east_hub.cidr_block,
+        module.west_hub.cidr_block,
+        module.west_spoke3.cidr_block,
       ]
       security_group_id = module.east_spoke3.security_group_ids["intra1"]
     },
@@ -1001,6 +1028,17 @@ module "west_hub" {
       security_group_id        = module.west_hub.security_group_ids["intra1"]
     },
     {
+      description = "Allow all sourced from east hub to west hub"
+      type        = "ingress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [
+        module.east_hub.cidr_block,
+      ]
+      security_group_id = module.west_hub.security_group_ids["public1"]
+    },
+    {
       description = "Allow all sourced from spokes to private"
       type        = "ingress"
       from_port   = 0
@@ -1010,6 +1048,10 @@ module "west_hub" {
         module.west_spoke1.cidr_block,
         module.west_spoke2.cidr_block,
         module.west_spoke3.cidr_block,
+        module.east_hub.cidr_block,
+        module.east_spoke1.cidr_block,
+        module.east_spoke2.cidr_block,
+        module.east_spoke3.cidr_block,
       ]
       security_group_id = module.west_hub.security_group_ids["private1"]
     },
@@ -1023,6 +1065,10 @@ module "west_hub" {
         module.west_spoke1.cidr_block,
         module.west_spoke2.cidr_block,
         module.west_spoke3.cidr_block,
+        module.east_hub.cidr_block,
+        module.east_spoke1.cidr_block,
+        module.east_spoke2.cidr_block,
+        module.east_spoke3.cidr_block,
       ]
       security_group_id = module.west_hub.security_group_ids["intra1"]
     },
@@ -1078,7 +1124,7 @@ module "west_spoke1" {
       security_group_id        = module.west_spoke1.security_group_ids["intra1"]
     },
     {
-      description = "Allow all sourced from hub and spoke2 to intra"
+      description = "Allow all sourced from hub and spoke2 and east to intra"
       type        = "ingress"
       from_port   = 0
       to_port     = 0
@@ -1086,6 +1132,9 @@ module "west_spoke1" {
       cidr_blocks = [
         module.west_hub.cidr_block,
         module.west_spoke2.cidr_block,
+        module.east_hub.cidr_block,
+        module.east_spoke1.cidr_block,
+        module.east_spoke2.cidr_block,
       ]
       security_group_id = module.west_spoke1.security_group_ids["intra1"]
     },
@@ -1141,7 +1190,7 @@ module "west_spoke2" {
       security_group_id        = module.west_spoke2.security_group_ids["intra1"]
     },
     {
-      description = "Allow all sourced from hub and spoke1 to intra"
+      description = "Allow all sourced from hub and spoke1 and east to intra"
       type        = "ingress"
       from_port   = 0
       to_port     = 0
@@ -1149,6 +1198,9 @@ module "west_spoke2" {
       cidr_blocks = [
         module.west_hub.cidr_block,
         module.west_spoke1.cidr_block,
+        module.east_hub.cidr_block,
+        module.east_spoke1.cidr_block,
+        module.east_spoke2.cidr_block,
       ]
       security_group_id = module.west_spoke2.security_group_ids["intra1"]
     },
@@ -1207,6 +1259,8 @@ module "west_spoke3" {
       protocol    = "-1"
       cidr_blocks = [
         module.west_hub.cidr_block,
+        module.east_hub.cidr_block,
+        module.east_spoke3.cidr_block,
       ]
       security_group_id = module.west_spoke3.security_group_ids["intra1"]
     },
