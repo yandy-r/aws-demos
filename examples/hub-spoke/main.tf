@@ -906,6 +906,36 @@ module "east_vpn" {
       transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["spokes"]
     }
   ]
+
+  routes = [
+    {
+      destination_cidr_block = var.lab_local_cidr
+      route_table_id         = module.east_hub.public_route_table_id
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+    },
+    {
+      destination_cidr_block = var.lab_local_cidr
+      route_table_id         = module.east_hub.private_route_table_id
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+    },
+    {
+      destination_cidr_block = var.lab_local_cidr
+      route_table_id         = module.east_hub.intra_route_table_id
+      transit_gateway_id     = module.east_transit_gateway.transit_gateway_id
+    }
+  ]
+
+  security_group_rules = [
+    {
+      description       = "Allow ALL sourced from home lab"
+      type              = "ingress"
+      from_port         = 0
+      to_port           = 0
+      protocol          = "-1"
+      cidr_blocks       = [cidrsubnet(var.lab_local_cidr, 8, 0)]
+      security_group_id = module.east_hub.security_group_ids["public1"]
+    },
+  ]
 }
 
 ### -------------------------------------------------------------------------------------------- ###
