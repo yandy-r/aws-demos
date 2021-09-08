@@ -59,6 +59,9 @@ locals {
   vpn_transit_gateway_attachment_ids = { for k, v in aws_vpn_connection.this : k => v.transit_gateway_attachment_id }
   transit_gateway_route_table_ids    = { for k, v in aws_ec2_transit_gateway_route_table.this : k => v.id }
   vpc_endpoint_ids                   = { for k, v in aws_vpc_endpoint.this : k => v.id }
+  vpn_gateway_ids                    = { for k, v in aws_vpn_gateway.this : k => v.id }
+  vpn_gateway_attachment_ids         = { for k, v in aws_vpn_gateway_attachment.this : k => v.id }
+  customer_gateway_ids               = { for k, v in aws_customer_gateway.this : k => v.id }
 }
 
 resource "aws_internet_gateway" "this" {
@@ -464,7 +467,7 @@ resource "aws_vpn_connection" "this" {
   transit_gateway_id                   = lookup(each.value, "transit_gateway_id", null)
   vpn_gateway_id                       = lookup(each.value, "vpn_gateway_id", null)
   static_routes_only                   = lookup(each.value, "static_routes_only", false)
-  enable_acceleration                  = lookup(each.value, "enable_acceleration", false)
+  enable_acceleration                  = lookup(each.value, "enable_acceleration", null)
   tunnel1_inside_cidr                  = lookup(each.value, "tunnel1_inside_cidr", null)
   tunnel2_inside_cidr                  = lookup(each.value, "tunnel2_inside_cidr", null)
   tunnel_inside_ip_version             = lookup(each.value, "tunnel_inside_ip_verson", "ipv4")
@@ -510,12 +513,38 @@ resource "aws_vpn_connection" "this" {
 ### ROUTE FOR USE WITH VPN GATEWAY
 ### -------------------------------------------------------------------------------------------- ###
 
+resource "aws_vpn_gateway" "this" {
+  for_each          = { for k, v in var.vpn_gateway : k => v }
+  vpc_id            = lookup(each.value, "vpc_id", local.vpc_id)
+  availability_zone = lookup(each.value, "availability_zone", true) != true ? each.value["availability_zone"] : random_shuffle.subnet_azs.result[random_integer.this.result]
+  amazon_side_asn   = lookup(each.value, "amazon_side_asn", "64512")
+
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
+
+resource "aws_vpn_gateway_attachment" "this" {
+  for_each       = { for k, v in var.vpn_gateway_attachment : k => v }
+  vpc_id         = lookup(each.value, "vpc_id", local.vpc_id)
+  vpn_gateway_id = lookup(each.value, "vpn_gateway_id", aws_vpn_gateway.this[each.key].id)
+}
+
+resource "aws_vpn_gateway_route_propagation" "this" {
+  for_each       = { for k, v in var.vpn_gateway_route_propagation : k => v }
+  vpn_gateway_id = each.value["vpn_gateway_id"]
+  route_table_id = each.value["route_table_id"]
+}
+
 resource "aws_vpn_connection_route" "this" {
   for_each               = { for k, v in var.vpn_connection_routes : k => v }
   destination_cidr_block = lookup(each.value, "destination_cidr_block", null)
   vpn_connection_id      = lookup(each.value, "vpn_connection_id", null)
 }
-
 
 ### -------------------------------------------------------------------------------------------- ###
 ### ROUTE FOR VPN CONNECTED TO TRANSIT GATEWAY

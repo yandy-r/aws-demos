@@ -77,3 +77,15 @@ output "vpn_transit_gateway_attachment_ids" {
 output "transit_gateway_route_table_ids" {
   value = local.transit_gateway_route_table_ids
 }
+
+output "vpn_gateway_ids" {
+  value = local.vpn_gateway_ids
+}
+
+output "vpn_gateway_attachment_ids" {
+  value = local.vpn_gateway_attachment_ids
+}
+
+output "customer_gateway_ids" {
+  value = local.customer_gateway_ids
+}

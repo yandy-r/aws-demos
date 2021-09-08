@@ -120,6 +120,21 @@ variable "vpn_connection" {
   default = {}
 }
 
+variable "vpn_gateway" {
+  type    = any
+  default = {}
+}
+
+variable "vpn_gateway_attachment" {
+  type    = any
+  default = {}
+}
+
+variable "vpn_gateway_route_propagation" {
+  type    = any
+  default = {}
+}
+
 variable "vpn_connection_routes" {
   type    = any
   default = {}
