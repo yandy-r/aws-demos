@@ -930,7 +930,7 @@ module "east_vpn" {
     }
   }
 
-  routes = [
+  vpc_routes = [
     {
       destination_cidr_block = var.lab_local_cidr
       route_table_id         = module.east_hub.public_route_table_id
@@ -1921,7 +1921,7 @@ module "west_vpn" {
     }
   }
 
-  routes = [
+  vpc_routes = [
     {
       destination_cidr_block = var.lab_local_cidr
       route_table_id         = module.west_hub.public_route_table_id

@@ -64,7 +64,7 @@ variable "intra_route_table" {
   default = []
 }
 
-variable "routes" {
+variable "vpc_routes" {
   type    = any
   default = {}
 }
