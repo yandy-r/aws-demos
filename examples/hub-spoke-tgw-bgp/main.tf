@@ -654,7 +654,7 @@ module "east_transit_gateway" {
   transit_gateway = [{
     dns_support                     = "enable"
     description                     = "US East Transit Gateway"
-    amazon_side_asn                 = 65000
+    amazon_side_asn                 = var.amzn_side_asn
     vpn_ecmp_support                = "enable"
     auto_accept_shared_attachments  = "disable"
     default_route_table_association = "disable"
@@ -856,7 +856,7 @@ module "east_vpn" {
 
   customer_gateway = {
     east_vpn = {
-      bgp_asn     = "65101"
+      bgp_asn     = var.customer_side_asn
       device_name = "east_vpn"
       ip_address  = var.lab_public_ip
       type        = "ipsec.1"
@@ -1647,7 +1647,7 @@ module "west_transit_gateway" {
   transit_gateway = [{
     dns_support                     = "enable"
     description                     = "US East Transit Gateway"
-    amazon_side_asn                 = 65000
+    amazon_side_asn                 = var.amzn_side_asn
     vpn_ecmp_support                = "enable"
     auto_accept_shared_attachments  = "disable"
     default_route_table_association = "disable"
@@ -1847,7 +1847,7 @@ module "west_vpn" {
 
   customer_gateway = {
     west_vpn = {
-      bgp_asn     = "65101"
+      bgp_asn     = var.customer_side_asn
       device_name = "west_vpn"
       ip_address  = var.lab_public_ip
       type        = "ipsec.1"

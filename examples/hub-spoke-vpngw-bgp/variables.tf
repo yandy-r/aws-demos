@@ -68,3 +68,13 @@ variable "tunnel2_preshared_key" {
   type    = string
   default = ""
 }
+
+variable "amzn_side_asn" {
+  type    = string
+  default = "65000"
+}
+
+variable "customer_side_asn" {
+  type    = string
+  default = "65101"
+}

@@ -116,11 +116,11 @@ set protocols bgp 65101 parameters graceful-restart
 set protocols bgp 65101 parameters log-neighbor-changes
 set protocols bgp 65101 redistribute connected route-map CONNECTED-TO-BGP
 set protocols bgp 65101 redistribute static route-map STATIC-TO-BGP
-set protocols bgp 65101 neighbor 169.254.200.1 remote-as 65000
+set protocols bgp 65101 neighbor 169.254.200.1 remote-as var.amzn_side_asn
 set protocols bgp 65101 neighbor 169.254.200.1 route-map export BGP-AWS-EXPORT
 set protocols bgp 65101 neighbor 169.254.200.1 route-map import BGP-AWS-IMPORT
 set protocols bgp 65101 neighbor 169.254.200.1 soft-reconfiguration inbound
-set protocols bgp 65101 neighbor 169.254.220.1 remote-as 65000
+set protocols bgp 65101 neighbor 169.254.220.1 remote-as var.amzn_side_asn
 set protocols bgp 65101 neighbor 169.254.220.1 route-map export BGP-AWS-EXPORT
 set protocols bgp 65101 neighbor 169.254.220.1 route-map import BGP-AWS-IMPORT
 set protocols bgp 65101 neighbor 169.254.220.1 soft-reconfiguration inbound
