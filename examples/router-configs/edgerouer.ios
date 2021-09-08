@@ -25,6 +25,10 @@ set policy prefix-list BGP-AWS-EXPORT rule 100 action permit
 set policy prefix-list BGP-AWS-EXPORT rule 100 description permit-localsubnet
 set policy prefix-list BGP-AWS-EXPORT rule 100 prefix 10.7.0.0/16
 set policy prefix-list BGP-AWS-EXPORT rule 100 le 24
+set policy prefix-list BGP-AWS-EXPORT rule 101 action permit
+set policy prefix-list BGP-AWS-EXPORT rule 101 description permit-localsubnet
+set policy prefix-list BGP-AWS-EXPORT rule 101 prefix 10.255.255.0/24
+set policy prefix-list BGP-AWS-EXPORT rule 101 le 30
 set policy prefix-list BGP-AWS-EXPORT rule 1000 action deny
 set policy prefix-list BGP-AWS-EXPORT rule 1000 description deny-anything-else
 set policy prefix-list BGP-AWS-EXPORT rule 1000 prefix 0.0.0.0/0
@@ -34,6 +38,35 @@ set policy prefix-list BGP-AWS-EXPORT rule 1000 le 32
 set policy route-map BGP-AWS-EXPORT rule 100 action permit
 set policy route-map BGP-AWS-EXPORT rule 100 match ip address prefix-list BGP-AWS-EXPORT
 set policy route-map BGP-AWS-EXPORT rule 1000 action deny
+
+! Static and Connected to BGP
+set policy prefix-list STATIC-TO-BGP rule 100 action permit
+set policy prefix-list STATIC-TO-BGP rule 100 prefix 10.7.0.0/16
+set policy prefix-list STATIC-TO-BGP rule 100 le 24
+set policy prefix-list STATIC-TO-BGP rule 110 action permit
+set policy prefix-list STATIC-TO-BGP rule 110 prefix 10.255.255.0/24
+set policy prefix-list STATIC-TO-BGP rule 110 le 30
+set policy prefix-list STATIC-TO-BGP rule 1000 action deny
+set policy prefix-list STATIC-TO-BGP rule 1000 prefix 0.0.0.0/0
+set policy prefix-list STATIC-TO-BGP rule 1000 le 32
+
+set policy route-map STATIC-TO-BGP rule 100 action permit
+set policy route-map STATIC-TO-BGP rule 100 match ip address prefix-list STATIC-TO-BGP
+set policy route-map STATIC-TO-BGP rule 1000 action deny
+
+set policy prefix-list CONNECTED-TO-BGP rule 100 action permit
+set policy prefix-list CONNECTED-TO-BGP rule 100 prefix 10.7.0.0/16
+set policy prefix-list CONNECTED-TO-BGP rule 100 le 24
+set policy prefix-list CONNECTED-TO-BGP rule 110 action permit
+set policy prefix-list CONNECTED-TO-BGP rule 110 prefix 10.255.255.0/24
+set policy prefix-list CONNECTED-TO-BGP rule 110 le 30
+set policy prefix-list CONNECTED-TO-BGP rule 1000 action deny
+set policy prefix-list CONNECTED-TO-BGP rule 1000 prefix 0.0.0.0/0
+set policy prefix-list CONNECTED-TO-BGP rule 1000 le 32
+
+set policy route-map CONNECTED-TO-BGP rule 100 action permit
+set policy route-map CONNECTED-TO-BGP rule 100 match ip address prefix-list CONNECTED-TO-BGP
+set policy route-map CONNECTED-TO-BGP rule 1000 action deny
 
 ! Create IKE/Phase 1 and Phase 2
 set vpn ipsec ike-group AWS-01 key-exchange ikev2
@@ -52,7 +85,7 @@ set vpn ipsec esp-group AWS-01 proposal 1 hash sha1
 
 ! Create First AWS Peer (Must be repeated for second peer)
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP authentication mode pre-shared-secret
-set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP authentication pre-shared-secret PRE-SHARED-KEY
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP authentication pre-shared-secret PRESHARED-KEY
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP connection-type initiate
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP description ipsec-aws
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP local-address 10.255.255.2
@@ -63,7 +96,7 @@ set interfaces vti vti0 address 169.254.200.2/30
 
 ! For Second Peer
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP authentication mode pre-shared-secret
-set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP authentication pre-shared-secret PRE-SHARED-KEY
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP authentication pre-shared-secret PRESHARED-KEY
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP connection-type initiate
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP description ipsec-aws
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP local-address 10.255.255.2
@@ -71,3 +104,23 @@ set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP ike-group AWS-01
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP vti bind vti1
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP vti esp-group AWS-01
 set interfaces vti vti1 address 169.254.220.2/30
+
+! Configure BGP
+set protocols bgp 65101 parameters router-id 10.255.255.6
+set protocols bgp 65101 timers holdtime 30
+set protocols bgp 65101 timers keepalive 10
+set protocols bgp 65101 parameters always-compare-med
+set protocols bgp 65101 parameters bestpath med missing-as-worst
+set protocols bgp 65101 parameters deterministic-med
+set protocols bgp 65101 parameters graceful-restart
+set protocols bgp 65101 parameters log-neighbor-changes
+set protocols bgp 65101 redistribute connected route-map CONNECTED-TO-BGP
+set protocols bgp 65101 redistribute static route-map STATIC-TO-BGP
+set protocols bgp 65101 neighbor 169.254.200.1 remote-as 65000
+set protocols bgp 65101 neighbor 169.254.200.1 route-map export BGP-AWS-EXPORT
+set protocols bgp 65101 neighbor 169.254.200.1 route-map import BGP-AWS-IMPORT
+set protocols bgp 65101 neighbor 169.254.200.1 soft-reconfiguration inbound
+set protocols bgp 65101 neighbor 169.254.220.1 remote-as 65000
+set protocols bgp 65101 neighbor 169.254.220.1 route-map export BGP-AWS-EXPORT
+set protocols bgp 65101 neighbor 169.254.220.1 route-map import BGP-AWS-IMPORT
+set protocols bgp 65101 neighbor 169.254.220.1 soft-reconfiguration inbound
