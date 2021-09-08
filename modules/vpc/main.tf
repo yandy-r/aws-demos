@@ -486,6 +486,16 @@ resource "aws_vpn_connection" "this" {
   tunnel2_phase2_integrity_algorithms  = lookup(each.value, "tunnel2_phase2_integrity_algorithms", ["SHA1", "SHA2-256", "SHA2-384", "SHA2-512"])
   tunnel1_phase2_encryption_algorithms = lookup(each.value, "tunnel1_phase2_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
   tunnel2_phase2_encryption_algorithms = lookup(each.value, "tunnel2_phase2_encryption_algorithms", ["AES128", "AES256", "AES128-GCM-16", "AES256-GCM-16"])
+  tunnel1_dpd_timeout_action           = lookup(each.value, "tunnel1_dpd_timeout_action", "restart")
+  tunnel2_dpd_timeout_action           = lookup(each.value, "tunnel1_dpd_timeout_action", "restart")
+  tunnel1_dpd_timeout_seconds          = lookup(each.value, "tunnel1_dpd_timeout_seconds", "30")
+  tunnel2_dpd_timeout_seconds          = lookup(each.value, "tunnel1_dpd_timeout_seconds", "30")
+  tunnel1_phase1_lifetime_seconds      = lookup(each.value, "tunnel1_phase1_lifetime_seconds", "28800")
+  tunnel2_phase1_lifetime_seconds      = lookup(each.value, "tunnel1_phase1_lifetime_seconds", "28800")
+  tunnel1_phase2_lifetime_seconds      = lookup(each.value, "tunnel1_phase2_lifetime_seconds", "3600")
+  tunnel2_phase2_lifetime_seconds      = lookup(each.value, "tunnel1_phase2_lifetime_seconds", "3600")
+  tunnel1_startup_action               = lookup(each.value, "tunnel2_startup_action", "add")
+  tunnel2_startup_action               = lookup(each.value, "tunnel2_startup_action", "add")
 
   tags = merge(
     {
