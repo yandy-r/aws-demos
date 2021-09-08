@@ -869,6 +869,8 @@ module "east_vpn" {
       static_routes_only                   = false
       tunnel1_preshared_key                = var.tunnel1_preshared_key
       tunnel2_preshared_key                = var.tunnel2_preshared_key
+      tunnel1_inside_cidr                  = "169.254.200.0/30"
+      tunnel2_inside_cidr                  = "169.254.200.4/30"
       tunnel1_ike_versions                 = ["ikev2"]
       tunnel2_ike_versions                 = ["ikev2"]
       tunnel1_phase1_dh_group_numbers      = ["14"]
@@ -1868,6 +1870,8 @@ module "west_vpn" {
       static_routes_only                   = false
       tunnel1_preshared_key                = var.tunnel1_preshared_key
       tunnel2_preshared_key                = var.tunnel2_preshared_key
+      tunnel1_inside_cidr                  = "169.254.220.0/30"
+      tunnel2_inside_cidr                  = "169.254.220.4/30"
       tunnel1_ike_versions                 = ["ikev2"]
       tunnel2_ike_versions                 = ["ikev2"]
       tunnel1_phase1_dh_group_numbers      = ["14"]
