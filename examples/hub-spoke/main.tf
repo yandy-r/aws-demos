@@ -900,6 +900,18 @@ module "east_vpn" {
     }
   }
   transit_gateway_route_table_propagations = {
+    vpn_to_hubs = {
+      transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
+      transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["hubs"]
+    }
+    vpn_to_spokes = {
+      transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
+      transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["spokes"]
+    }
+    vpn_to_east_west = {
+      transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
+      transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["east_to_west"]
+    }
     hub_to_east_vpn = {
       transit_gateway_attachment_id  = module.east_transit_gateway.vpc_attachment_ids["hub1"]
       transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
@@ -917,28 +929,6 @@ module "east_vpn" {
       transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
     }
   }
-  # vpn_transit_gateway_routes = [
-  #   {
-  #     destination                    = var.lab_local_cidr
-  #     transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
-  #     transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["hubs"]
-  #   },
-  #   {
-  #     destination                    = var.lab_local_cidr
-  #     transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
-  #     transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["spokes"]
-  #   },
-  #   {
-  #     destination                    = var.lab_local_cidr
-  #     transit_gateway_attachment_id  = module.east_vpn.vpn_transit_gateway_attachment_ids["east_vpn"]
-  #     transit_gateway_route_table_id = module.east_transit_gateway.route_table_ids["east_to_west"]
-  #   },
-  #   {
-  #     destination                    = var.cidr_blocks.west["supernet"]
-  #     transit_gateway_attachment_id  = module.east_transit_gateway.transit_gateway_peering_attachment_ids["east_to_west"]
-  #     transit_gateway_route_table_id = module.east_vpn.transit_gateway_route_table_ids["east_vpn"]
-  #   },
-  # ]
 
   routes = [
     {
@@ -1901,6 +1891,18 @@ module "west_vpn" {
     }
   }
   transit_gateway_route_table_propagations = {
+    vpn_to_hubs = {
+      transit_gateway_attachment_id  = module.west_vpn.vpn_transit_gateway_attachment_ids["west_vpn"]
+      transit_gateway_route_table_id = module.west_transit_gateway.route_table_ids["hubs"]
+    }
+    vpn_to_spokes = {
+      transit_gateway_attachment_id  = module.west_vpn.vpn_transit_gateway_attachment_ids["west_vpn"]
+      transit_gateway_route_table_id = module.west_transit_gateway.route_table_ids["spokes"]
+    }
+    vpn_to_east_west = {
+      transit_gateway_attachment_id  = module.west_vpn.vpn_transit_gateway_attachment_ids["west_vpn"]
+      transit_gateway_route_table_id = module.west_transit_gateway.route_table_ids["east_to_west"]
+    }
     hub_to_west_vpn = {
       transit_gateway_attachment_id  = module.west_transit_gateway.vpc_attachment_ids["hub1"]
       transit_gateway_route_table_id = module.west_vpn.transit_gateway_route_table_ids["west_vpn"]
@@ -1918,28 +1920,6 @@ module "west_vpn" {
       transit_gateway_route_table_id = module.west_vpn.transit_gateway_route_table_ids["west_vpn"]
     }
   }
-  # vpn_transit_gateway_routes = [
-  #   {
-  #     destination                    = var.lab_local_cidr
-  #     transit_gateway_attachment_id  = module.west_vpn.vpn_transit_gateway_attachment_ids["west_vpn"]
-  #     transit_gateway_route_table_id = module.west_transit_gateway.route_table_ids["hubs"]
-  #   },
-  #   {
-  #     destination                    = var.lab_local_cidr
-  #     transit_gateway_attachment_id  = module.west_vpn.vpn_transit_gateway_attachment_ids["west_vpn"]
-  #     transit_gateway_route_table_id = module.west_transit_gateway.route_table_ids["spokes"]
-  #   },
-  #   {
-  #     destination                    = var.lab_local_cidr
-  #     transit_gateway_attachment_id  = module.west_vpn.vpn_transit_gateway_attachment_ids["west_vpn"]
-  #     transit_gateway_route_table_id = module.west_transit_gateway.route_table_ids["east_to_west"]
-  #   },
-  #   {
-  #     destination                    = var.cidr_blocks.east["supernet"]
-  #     transit_gateway_attachment_id  = module.west_transit_gateway.transit_gateway_peering_attachment_accepter_ids["east_to_west"]
-  #     transit_gateway_route_table_id = module.west_vpn.transit_gateway_route_table_ids["west_vpn"]
-  #   },
-  # ]
 
   routes = [
     {
