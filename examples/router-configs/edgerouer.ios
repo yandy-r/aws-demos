@@ -1,0 +1,73 @@
+! Auto create NAT rules
+set vpn ipsec auto-firewall-nat-exclude enable
+
+! Lower MSS
+set firewall options mss-clamp interface-type vti
+set firewall options mss-clamp mss 1379
+
+! Configure Prefix-List Import
+set policy prefix-list BGP-AWS-IMPORT rule 100 action permit
+set policy prefix-list BGP-AWS-IMPORT rule 100 description permit-remotesubnet
+set policy prefix-list BGP-AWS-IMPORT rule 100 prefix 10.192.0.0/11
+set policy prefix-list BGP-AWS-IMPORT rule 100 le 24
+set policy prefix-list BGP-AWS-IMPORT rule 1000 action deny
+set policy prefix-list BGP-AWS-IMPORT rule 1000 description-deny-anything else
+set policy prefix-list BGP-AWS-IMPORT rule 1000 prefix 0.0.0.0/0
+set policy prefix-list BGP-AWS-IMPORT rule 1000 le 32
+
+! Import Route Map
+set policy route-map BGP-AWS-IMPORT rule 100 action permit
+set policy route-map BGP-AWS-IMPORT rule 100 match ip address prefix-list BGP-AWS-IMPORT
+set policy route-map BGP-AWS-IMPORT rule 1000 action deny
+
+! Configure Prefix-List Export
+set policy prefix-list BGP-AWS-EXPORT rule 100 action permit
+set policy prefix-list BGP-AWS-EXPORT rule 100 description permit-localsubnet
+set policy prefix-list BGP-AWS-EXPORT rule 100 prefix 10.7.0.0/16
+set policy prefix-list BGP-AWS-EXPORT rule 100 le 24
+set policy prefix-list BGP-AWS-EXPORT rule 1000 action deny
+set policy prefix-list BGP-AWS-EXPORT rule 1000 description deny-anything-else
+set policy prefix-list BGP-AWS-EXPORT rule 1000 prefix 0.0.0.0/0
+set policy prefix-list BGP-AWS-EXPORT rule 1000 le 32
+
+! Export Route Map
+set policy route-map BGP-AWS-EXPORT rule 100 action permit
+set policy route-map BGP-AWS-EXPORT rule 100 match ip address prefix-list BGP-AWS-EXPORT
+set policy route-map BGP-AWS-EXPORT rule 1000 action deny
+
+! Create IKE/Phase 1 and Phase 2
+set vpn ipsec ike-group AWS-01 key-exchange ikev2
+set vpn ipsec ike-group AWS-01 lifetime 28800
+set vpn ipsec ike-group AWS-01 proposal 1 dh-group 14
+set vpn ipsec ike-group AWS-01 proposal 1 encryption aes128
+set vpn ipsec ike-group AWS-01 proposal 1 hash sha1
+set vpn ipsec ike-group AWS-01 dead-peer-detection action restart
+set vpn ipsec ike-group AWS-01 dead-peer-detection interval 15
+set vpn ipsec ike-group AWS-01 dead-peer-detection timeout 30
+
+set vpn ipsec esp-group AWS-01 lifetime 3600
+set vpn ipsec esp-group AWS-01 pfs enable
+set vpn ipsec esp-group AWS-01 proposal 1 encryption aes128
+set vpn ipsec esp-group AWS-01 proposal 1 hash sha1
+
+! Create First AWS Peer (Must be repeated for second peer)
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP authentication mode pre-shared-secret
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP authentication pre-shared-secret PRE-SHARED-KEY
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP connection-type initiate
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP description ipsec-aws
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP local-address 10.255.255.2
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP ike-group AWS-01
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP vti bind vti0
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP vti esp-group AWS-01
+set interfaces vti vti0 address 169.254.141.82/30
+
+! For Second Peer
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP authentication mode pre-shared-secret
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP authentication pre-shared-secret PRE-SHARED-KEY
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP connection-type initiate
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP description ipsec-aws
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP local-address 10.255.255.2
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP ike-group AWS-01
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP vti bind vti0
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP vti esp-group AWS-01
+set interfaces vti vti1 address 169.254.160.14/30
