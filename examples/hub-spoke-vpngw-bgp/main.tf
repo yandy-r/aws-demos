@@ -1943,119 +1943,140 @@ module "west_vpn" {
 ### ROUTE53
 ### -------------------------------------------------------------------------------------------- ###
 
-module "global_dns" {
-  source = "../../modules/route53"
-  name   = "global_dns"
+module "east_dns" {
+  source    = "../../modules/route53"
+  providers = { aws = aws.us_east_1 }
+  name      = "east_dns"
 
   route53_zone = {
     east = {
       name = var.zone_names["east"]
       vpc = {
-        hub1 = {
-          vpc_id = module.east_hub.vpc_id
-        }
-        spoke1 = {
-          vpc_id = module.east_hub.vpc_id
-        }
-        spoke2 = {
-          vpc_id = module.east_hub.vpc_id
-        }
-        spoke3 = {
+        east_hub = {
           vpc_id = module.east_hub.vpc_id
         }
       }
     }
-    west = {
-      name = var.zone_names["west"]
+  }
+
+  route53_zone_association = {
+    spoke1 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      vpc_id  = module.east_spoke1.vpc_id
+    }
+    spoke2 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      vpc_id  = module.east_spoke2.vpc_id
+    }
+    spoke3 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      vpc_id  = module.east_spoke3.vpc_id
     }
   }
 
-  route53_zone_association = [
-    {
-      zone_id = module.global_dns.zone_ids["west"]
-      vpc_id  = module.west_hub.vpc_id
-    },
-    {
-      zone_id = module.global_dns.zone_ids["west"]
-      vpc_id  = module.west_spoke1.vpc_id
-    },
-    {
-      zone_id = module.global_dns.zone_ids["west"]
-      vpc_id  = module.west_spoke2.vpc_id
-    },
-    {
-      zone_id = module.global_dns.zone_ids["west"]
-      vpc_id  = module.west_spoke3.vpc_id
-    }
-  ]
-
   route53_record = {
-    east_hub1 = {
-      zone_id = module.global_dns.zone_ids["east"]
-      name    = "hub_public1.${module.global_dns.zone_names["east"]}"
+    hub1 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      name    = "hub_public1.${module.east_dns.zone_names["east"]}"
       records = [module.east_ec2.instance_private_ips["hub_public1"]]
       type    = "A"
       ttl     = "300"
     }
-    east_hub_private1 = {
-      zone_id = module.global_dns.zone_ids["east"]
-      name    = "hub_public1.${module.global_dns.zone_names["east"]}"
+    hub_private1 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      name    = "hub_private1.${module.east_dns.zone_names["east"]}"
       records = [module.east_ec2.instance_private_ips["hub_private1"]]
       type    = "A"
       ttl     = "300"
     }
-    east_spoke1 = {
-      zone_id = module.global_dns.zone_ids["east"]
-      name    = "spoke1.${module.global_dns.zone_names["east"]}"
+    spoke1 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      name    = "spoke1.${module.east_dns.zone_names["east"]}"
       records = [module.east_ec2.instance_private_ips["spoke1"]]
       type    = "A"
       ttl     = "300"
     }
-    east_spoke2 = {
-      zone_id = module.global_dns.zone_ids["east"]
-      name    = "spoke1.${module.global_dns.zone_names["east"]}"
+    spoke2 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      name    = "spoke2.${module.east_dns.zone_names["east"]}"
       records = [module.east_ec2.instance_private_ips["spoke2"]]
       type    = "A"
       ttl     = "300"
     }
-    east_spoke3 = {
-      zone_id = module.global_dns.zone_ids["east"]
-      name    = "spoke1.${module.global_dns.zone_names["east"]}"
+    spoke3 = {
+      zone_id = module.east_dns.zone_ids["east"]
+      name    = "spoke3.${module.east_dns.zone_names["east"]}"
       records = [module.east_ec2.instance_private_ips["spoke3"]]
       type    = "A"
       ttl     = "300"
     }
-    west_hub1 = {
-      zone_id = module.global_dns.zone_ids["west"]
-      name    = "hub_public1.${module.global_dns.zone_names["west"]}"
+  }
+}
+
+
+module "west_dns" {
+  source    = "../../modules/route53"
+  providers = { aws = aws.us_west_2 }
+  name      = "west_dns"
+
+  route53_zone = {
+    west = {
+      name = var.zone_names["west"]
+      vpc = {
+        hub = {
+          vpc_id = module.west_hub.vpc_id
+        }
+      }
+    }
+  }
+
+  route53_zone_association = {
+    spoke1 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      vpc_id  = module.west_spoke1.vpc_id
+    }
+    spoke2 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      vpc_id  = module.west_spoke2.vpc_id
+    }
+    spoke3 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      vpc_id  = module.west_spoke3.vpc_id
+    }
+  }
+
+  route53_record = {
+    hub1 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      name    = "hub_public1.${module.west_dns.zone_names["west"]}"
       records = [module.west_ec2.instance_private_ips["hub_public1"]]
       type    = "A"
       ttl     = "300"
     }
-    west_hub_private1 = {
-      zone_id = module.global_dns.zone_ids["west"]
-      name    = "hub_public1.${module.global_dns.zone_names["west"]}"
+    hub_private1 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      name    = "hub_private1.${module.west_dns.zone_names["west"]}"
       records = [module.west_ec2.instance_private_ips["hub_private1"]]
       type    = "A"
       ttl     = "300"
     }
-    west_spoke1 = {
-      zone_id = module.global_dns.zone_ids["west"]
-      name    = "spoke1.${module.global_dns.zone_names["west"]}"
+    spoke1 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      name    = "spoke1.${module.west_dns.zone_names["west"]}"
       records = [module.west_ec2.instance_private_ips["spoke1"]]
       type    = "A"
       ttl     = "300"
     }
-    west_spoke2 = {
-      zone_id = module.global_dns.zone_ids["west"]
-      name    = "spoke1.${module.global_dns.zone_names["west"]}"
+    spoke2 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      name    = "spoke2.${module.west_dns.zone_names["west"]}"
       records = [module.west_ec2.instance_private_ips["spoke2"]]
       type    = "A"
       ttl     = "300"
     }
-    west_spoke3 = {
-      zone_id = module.global_dns.zone_ids["west"]
-      name    = "spoke1.${module.global_dns.zone_names["west"]}"
+    spoke3 = {
+      zone_id = module.west_dns.zone_ids["west"]
+      name    = "spoke3.${module.west_dns.zone_names["west"]}"
       records = [module.west_ec2.instance_private_ips["spoke3"]]
       type    = "A"
       ttl     = "300"
