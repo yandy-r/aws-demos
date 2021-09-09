@@ -19,11 +19,11 @@ module "east_data" {
   key_name      = var.key_name
   priv_key_path = var.priv_key_path
   instance_hostnames = [
-    "hub_bastion1",
+    "hub_public1",
     "hub_private1",
-    "spoke1_intra1",
-    "spoke2_intra1",
-    "spoke3_intra1",
+    "spoke1",
+    "spoke2",
+    "spoke3",
   ]
 
   depends_on = [
@@ -563,7 +563,7 @@ module "east_ec2" {
   priv_key  = module.ssh_key.priv_key
 
   network_interfaces = {
-    hub_bastion1 = {
+    hub_public1 = {
       source_dest_check = true
       subnet_id         = module.east_hub.public_subnet_ids[0]
       private_ips       = [cidrhost(module.east_hub.public_subnet_cidr_blocks[0], 10)]
@@ -578,21 +578,21 @@ module "east_ec2" {
       security_groups   = [module.east_hub.security_group_ids["private1"]]
       description       = "Hub 1 Private Interface 1"
     }
-    spoke1_intra1 = {
+    spoke1 = {
       source_dest_check = true
       subnet_id         = module.east_spoke1.intra_subnet_ids[0]
       private_ips       = [cidrhost(module.east_spoke1.intra_subnet_cidr_blocks[0], 10)]
       security_groups   = [module.east_spoke1.security_group_ids["intra1"]]
       description       = "Spoke 1 Intra Interface 1"
     }
-    spoke2_intra1 = {
+    spoke2 = {
       source_dest_check = true
       subnet_id         = module.east_spoke2.intra_subnet_ids[0]
       private_ips       = [cidrhost(module.east_spoke2.intra_subnet_cidr_blocks[0], 10)]
       security_groups   = [module.east_spoke2.security_group_ids["intra1"]]
       description       = "Spoke 2 Intra Interface 1"
     }
-    spoke3_intra1 = {
+    spoke3 = {
       source_dest_check = true
       subnet_id         = module.east_spoke3.intra_subnet_ids[0]
       private_ips       = [cidrhost(module.east_spoke3.intra_subnet_cidr_blocks[0], 10)]
@@ -602,12 +602,12 @@ module "east_ec2" {
   }
 
   aws_instances = {
-    hub_bastion1 = {
+    hub_public1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.amzn_cloud_config[0]
       network_interface = [{
-        network_interface_id = module.east_ec2.network_interface_ids["hub_bastion1"]
+        network_interface_id = module.east_ec2.network_interface_ids["hub_public1"]
         device_index         = 0
       }]
     }
@@ -619,7 +619,7 @@ module "east_ec2" {
         device_index = 0
       }]
     }
-    spoke1_intra1 = {
+    spoke1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.amzn_cloud_config[2]
@@ -627,7 +627,7 @@ module "east_ec2" {
         device_index = 0
       }]
     }
-    spoke2_intra1 = {
+    spoke2 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.amzn_cloud_config[3]
@@ -635,7 +635,7 @@ module "east_ec2" {
         device_index = 0
       }]
     }
-    spoke3_intra1 = {
+    spoke3 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.amzn_cloud_config[4]
@@ -1017,11 +1017,11 @@ module "west_data" {
   key_name      = var.key_name
   priv_key_path = var.priv_key_path
   instance_hostnames = [
-    "hub_bastion1",
+    "hub_public1",
     "hub_private1",
-    "spoke1_intra1",
-    "spoke2_intra1",
-    "spoke3_intra1",
+    "spoke1",
+    "spoke2",
+    "spoke3",
   ]
 
   depends_on = [
@@ -1556,7 +1556,7 @@ module "west_ec2" {
   priv_key  = module.ssh_key.priv_key
 
   network_interfaces = {
-    hub_bastion1 = {
+    hub_public1 = {
       source_dest_check = true
       subnet_id         = module.west_hub.public_subnet_ids[0]
       private_ips       = [cidrhost(module.west_hub.public_subnet_cidr_blocks[0], 10)]
@@ -1571,21 +1571,21 @@ module "west_ec2" {
       security_groups   = [module.west_hub.security_group_ids["private1"]]
       description       = "Hub 1 Private Interface 1"
     }
-    spoke1_intra1 = {
+    spoke1 = {
       source_dest_check = true
       subnet_id         = module.west_spoke1.intra_subnet_ids[0]
       private_ips       = [cidrhost(module.west_spoke1.intra_subnet_cidr_blocks[0], 10)]
       security_groups   = [module.west_spoke1.security_group_ids["intra1"]]
       description       = "Spoke 1 Intra Interface 1"
     }
-    spoke2_intra1 = {
+    spoke2 = {
       source_dest_check = true
       subnet_id         = module.west_spoke2.intra_subnet_ids[0]
       private_ips       = [cidrhost(module.west_spoke2.intra_subnet_cidr_blocks[0], 10)]
       security_groups   = [module.west_spoke2.security_group_ids["intra1"]]
       description       = "Spoke 2 Intra Interface 1"
     }
-    spoke3_intra1 = {
+    spoke3 = {
       source_dest_check = true
       subnet_id         = module.west_spoke3.intra_subnet_ids[0]
       private_ips       = [cidrhost(module.west_spoke3.intra_subnet_cidr_blocks[0], 10)]
@@ -1595,12 +1595,12 @@ module "west_ec2" {
   }
 
   aws_instances = {
-    hub_bastion1 = {
+    hub_public1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.amzn_cloud_config[0]
       network_interface = [{
-        network_interface_id = module.west_ec2.network_interface_ids["hub_bastion1"]
+        network_interface_id = module.west_ec2.network_interface_ids["hub_public1"]
         device_index         = 0
       }]
     }
@@ -1612,7 +1612,7 @@ module "west_ec2" {
         device_index = 0
       }]
     }
-    spoke1_intra1 = {
+    spoke1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.amzn_cloud_config[2]
@@ -1620,7 +1620,7 @@ module "west_ec2" {
         device_index = 0
       }]
     }
-    spoke2_intra1 = {
+    spoke2 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.amzn_cloud_config[3]
@@ -1628,7 +1628,7 @@ module "west_ec2" {
         device_index = 0
       }]
     }
-    spoke3_intra1 = {
+    spoke3 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.amzn_cloud_config[4]
@@ -2023,20 +2023,98 @@ module "global_dns" {
         }
       }
     }
+    west = {
+      name = var.zone_names["west"]
+    }
   }
+
+  route53_zone_association = [
+    {
+      zone_id = module.global_dns.zone_ids["west"]
+      vpc_id  = module.west_hub.vpc_id
+    },
+    {
+      zone_id = module.global_dns.zone_ids["west"]
+      vpc_id  = module.west_spoke1.vpc_id
+    },
+    {
+      zone_id = module.global_dns.zone_ids["west"]
+      vpc_id  = module.west_spoke2.vpc_id
+    },
+    {
+      zone_id = module.global_dns.zone_ids["west"]
+      vpc_id  = module.west_spoke3.vpc_id
+    }
+  ]
 
   route53_record = {
     east_hub1 = {
       zone_id = module.global_dns.zone_ids["east"]
-      name    = "hub_bastion1.${module.global_dns.zone_names["east"]}"
-      records = [module.east_ec2.instance_private_ips["hub_bastion1"]]
+      name    = "hub_public1.${module.global_dns.zone_names["east"]}"
+      records = [module.east_ec2.instance_private_ips["hub_public1"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    east_hub_private1 = {
+      zone_id = module.global_dns.zone_ids["east"]
+      name    = "hub_public1.${module.global_dns.zone_names["east"]}"
+      records = [module.east_ec2.instance_private_ips["hub_private1"]]
       type    = "A"
       ttl     = "300"
     }
     east_spoke1 = {
       zone_id = module.global_dns.zone_ids["east"]
-      name    = "spoke1_intra1.${module.global_dns.zone_names["east"]}"
-      records = [module.east_ec2.instance_private_ips["spoke1_intra1"]]
+      name    = "spoke1.${module.global_dns.zone_names["east"]}"
+      records = [module.east_ec2.instance_private_ips["spoke1"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    east_spoke2 = {
+      zone_id = module.global_dns.zone_ids["east"]
+      name    = "spoke1.${module.global_dns.zone_names["east"]}"
+      records = [module.east_ec2.instance_private_ips["spoke2"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    east_spoke3 = {
+      zone_id = module.global_dns.zone_ids["east"]
+      name    = "spoke1.${module.global_dns.zone_names["east"]}"
+      records = [module.east_ec2.instance_private_ips["spoke3"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    west_hub1 = {
+      zone_id = module.global_dns.zone_ids["west"]
+      name    = "hub_public1.${module.global_dns.zone_names["west"]}"
+      records = [module.west_ec2.instance_private_ips["hub_public1"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    west_hub_private1 = {
+      zone_id = module.global_dns.zone_ids["west"]
+      name    = "hub_public1.${module.global_dns.zone_names["west"]}"
+      records = [module.west_ec2.instance_private_ips["hub_private1"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    west_spoke1 = {
+      zone_id = module.global_dns.zone_ids["west"]
+      name    = "spoke1.${module.global_dns.zone_names["west"]}"
+      records = [module.west_ec2.instance_private_ips["spoke1"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    west_spoke2 = {
+      zone_id = module.global_dns.zone_ids["west"]
+      name    = "spoke1.${module.global_dns.zone_names["west"]}"
+      records = [module.west_ec2.instance_private_ips["spoke2"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    west_spoke3 = {
+      zone_id = module.global_dns.zone_ids["west"]
+      name    = "spoke1.${module.global_dns.zone_names["west"]}"
+      records = [module.west_ec2.instance_private_ips["spoke3"]]
       type    = "A"
       ttl     = "300"
     }
