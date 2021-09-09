@@ -33,11 +33,10 @@ module "east_data" {
 
 locals {
   east_data = {
-    s3_endpoint_policy  = module.east_data.s3_endpoint_policy
-    amzn_ami            = module.east_data.amzn_ami
-    amzn_cloud_config   = module.east_data.amzn_cloud_config
-    ubuntu_ami          = module.east_data.ubuntu_ami
-    ubuntu_cloud_config = module.east_data.ubuntu_cloud_config
+    s3_endpoint_policy = module.east_data.s3_endpoint_policy
+    amzn_ami           = module.east_data.amzn_ami
+    cloud_config       = module.east_data.cloud_config
+    ubuntu_ami         = module.east_data.ubuntu_ami
   }
 }
 
@@ -605,7 +604,7 @@ module "east_ec2" {
     hub_public1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[0]
+      user_data_base64 = base64encode(local.east_data.cloud_config[0])
       network_interface = [{
         network_interface_id = module.east_ec2.network_interface_ids["hub_public1"]
         device_index         = 0
@@ -614,7 +613,7 @@ module "east_ec2" {
     hub_private1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[1]
+      user_data_base64 = base64encode(local.east_data.cloud_config[1])
       network_interface = [{
         device_index = 0
       }]
@@ -622,7 +621,7 @@ module "east_ec2" {
     spoke1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[2]
+      user_data_base64 = base64encode(local.east_data.cloud_config[2])
       network_interface = [{
         device_index = 0
       }]
@@ -630,7 +629,7 @@ module "east_ec2" {
     spoke2 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[3]
+      user_data_base64 = base64encode(local.east_data.cloud_config[3])
       network_interface = [{
         device_index = 0
       }]
@@ -638,7 +637,7 @@ module "east_ec2" {
     spoke3 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.east_data.amzn_cloud_config[4]
+      user_data_base64 = base64encode(local.east_data.cloud_config[4])
       network_interface = [{
         device_index = 0
       }]
@@ -1031,11 +1030,10 @@ module "west_data" {
 
 locals {
   west_data = {
-    s3_endpoint_policy  = module.west_data.s3_endpoint_policy
-    amzn_ami            = module.west_data.amzn_ami
-    amzn_cloud_config   = module.west_data.amzn_cloud_config
-    ubuntu_ami          = module.west_data.ubuntu_ami
-    ubuntu_cloud_config = module.west_data.ubuntu_cloud_config
+    s3_endpoint_policy = module.west_data.s3_endpoint_policy
+    amzn_ami           = module.west_data.amzn_ami
+    cloud_config       = module.west_data.cloud_config
+    ubuntu_ami         = module.west_data.ubuntu_ami
   }
 }
 
@@ -1598,7 +1596,7 @@ module "west_ec2" {
     hub_public1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.west_data.amzn_cloud_config[0]
+      user_data_base64 = base64encode(local.west_data.cloud_config[0])
       network_interface = [{
         network_interface_id = module.west_ec2.network_interface_ids["hub_public1"]
         device_index         = 0
@@ -1607,7 +1605,7 @@ module "west_ec2" {
     hub_private1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.west_data.amzn_cloud_config[1]
+      user_data_base64 = base64encode(local.west_data.cloud_config[1])
       network_interface = [{
         device_index = 0
       }]
@@ -1615,7 +1613,7 @@ module "west_ec2" {
     spoke1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.west_data.amzn_cloud_config[2]
+      user_data_base64 = base64encode(local.west_data.cloud_config[2])
       network_interface = [{
         device_index = 0
       }]
@@ -1623,7 +1621,7 @@ module "west_ec2" {
     spoke2 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.west_data.amzn_cloud_config[3]
+      user_data_base64 = base64encode(local.west_data.cloud_config[3])
       network_interface = [{
         device_index = 0
       }]
@@ -1631,7 +1629,7 @@ module "west_ec2" {
     spoke3 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = local.west_data.amzn_cloud_config[4]
+      user_data_base64 = base64encode(local.west_data.cloud_config[4])
       network_interface = [{
         device_index = 0
       }]

@@ -56,7 +56,8 @@ resource "aws_instance" "this" {
   ami              = each.value["ami"]
   instance_type    = lookup(each.value, "instance_type", "t3.micro")
   key_name         = aws_key_pair.this.key_name
-  user_data_base64 = lookup(each.value, "user_data", null)
+  user_data        = lookup(each.value, "user_data", null)
+  user_data_base64 = lookup(each.value, "user_data_base64", null)
 
   dynamic "network_interface" {
     for_each = lookup(each.value, "network_interface", {})

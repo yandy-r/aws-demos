@@ -10,10 +10,6 @@ output "ubuntu_ami" {
   value = local.ubuntu_ami
 }
 
-output "amzn_cloud_config" {
-  value = local.amzn_cloud_config[*]
-}
-
-output "ubuntu_cloud_config" {
-  value = local.ubuntu_cloud_config[*]
+output "cloud_config" {
+  value = local.cloud_config[*]
 }
