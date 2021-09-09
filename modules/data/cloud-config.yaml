@@ -1,0 +1,19 @@
+groups:
+  - cloud-users: [root]
+
+users:
+  - default
+  - name: cloud-user
+    gecos: cloud-user
+    shell: /bin/bash
+    primary_group: cloud-users
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ${public_ssh_key}
+
+preserve_hostname: false
+hostname: ${hostname}
+fqdn: ${hostname}.local
+manage_etc_hosts: true

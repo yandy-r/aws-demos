@@ -13,7 +13,7 @@ module "ssh_key" {
 ### -------------------------------------------------------------------------------------------- ###
 
 module "east_data" {
-  source        = "./data"
+  source        = "../../modules/data"
   providers     = { aws = aws.us_east_1 }
   get_amzn_ami  = true
   key_name      = var.key_name
@@ -80,12 +80,12 @@ module "east_hub" {
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 64)
       availability_zone       = "us-east-1a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 65)
       availability_zone       = "us-east-1b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 
@@ -93,12 +93,12 @@ module "east_hub" {
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 128)
       availability_zone       = "us-east-1a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 129)
       availability_zone       = "us-east-1b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 
@@ -1019,7 +1019,7 @@ module "east_vpn" {
 ### -------------------------------------------------------------------------------------------- ###
 
 module "west_data" {
-  source        = "./data"
+  source        = "../../modules/data"
   providers     = { aws = aws.us_west_2 }
   get_amzn_ami  = true
   key_name      = var.key_name
@@ -1086,12 +1086,12 @@ module "west_hub" {
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 64)
       availability_zone       = "us-west-2a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 65)
       availability_zone       = "us-west-2b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 
@@ -1099,12 +1099,12 @@ module "west_hub" {
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 128)
       availability_zone       = "us-west-2a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 129)
       availability_zone       = "us-west-2b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 

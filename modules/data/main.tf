@@ -69,32 +69,31 @@ data "aws_ami" "ubuntu" {
 }
 
 locals {
-  amzn_ami            = one(data.aws_ami.amzn_linux[*].id)
-  ubuntu_ami          = one(data.aws_ami.ubuntu[*].id)
-  amzn_cloud_config   = [for v in data.template_file.amzn_cloud_config : base64encode(v.rendered)]
-  ubuntu_cloud_config = [for v in data.template_file.ubuntu_cloud_config : base64encode(v.rendered)]
+  amzn_ami     = one(data.aws_ami.amzn_linux[*].id)
+  ubuntu_ami   = one(data.aws_ami.ubuntu[*].id)
+  cloud_config = [for v in data.template_cloudinit_config.cloud_config : v.rendered]
 }
 
-data "template_file" "amzn_cloud_config" {
-  count    = length(var.instance_hostnames) > 0 && var.get_amzn_ami ? length(var.instance_hostnames) : 0
-  template = file("${path.module}/amzn-cloud-config.tpl")
+data "template_file" "cloud_config" {
+  count    = length(var.instance_hostnames) > 0 ? length(var.instance_hostnames) : 0
+  template = file("${path.module}/cloud-config.yaml")
 
   vars = {
-    hostname = var.instance_hostnames[count.index]
-    ssh_key  = data.local_file.ssh_key.content
+    hostname        = var.instance_hostnames[count.index]
+    ssh_key_name    = var.key_name
+    public_ssh_key  = file("${var.priv_key_path}/${var.key_name}.pub")
+    private_ssh_key = file("${var.priv_key_path}/${var.key_name}")
   }
 }
 
-data "template_file" "ubuntu_cloud_config" {
-  count    = length(var.instance_hostnames) > 0 && var.get_ubuntu_ami ? length(var.instance_hostnames) : 0
-  template = file("${path.module}/ubuntu-cloud-config.tpl")
+data "template_cloudinit_config" "cloud_config" {
+  count         = length(data.template_file.cloud_config) > 0 ? length(data.template_file.cloud_config) : 0
+  gzip          = true
+  base64_encode = true
 
-  vars = {
-    hostname = var.instance_hostnames[count.index]
-    ssh_key  = data.local_file.ssh_key.content
+  part {
+    filename     = "init.cfg"
+    content_type = "text/cloud-config"
+    content      = data.template_file.cloud_config[count.index].rendered
   }
-}
-
-data "local_file" "ssh_key" {
-  filename = pathexpand("${var.priv_key_path}/${var.key_name}")
 }

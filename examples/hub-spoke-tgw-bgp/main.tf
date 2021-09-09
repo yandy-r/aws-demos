@@ -13,7 +13,7 @@ module "ssh_key" {
 ### -------------------------------------------------------------------------------------------- ###
 
 module "east_data" {
-  source        = "./data"
+  source        = "../../modules/data"
   providers     = { aws = aws.us_east_1 }
   get_amzn_ami  = true
   key_name      = var.key_name
@@ -79,12 +79,12 @@ module "east_hub" {
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 64)
       availability_zone       = "us-east-1a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 65)
       availability_zone       = "us-east-1b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 
@@ -92,12 +92,12 @@ module "east_hub" {
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 128)
       availability_zone       = "us-east-1a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.east_hub.cidr_block, 8, 129)
       availability_zone       = "us-east-1b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 
@@ -604,7 +604,7 @@ module "east_ec2" {
     hub_public1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.east_data.cloud_config[0])
+      user_data_base64 = local.east_data.cloud_config[0]
       network_interface = [{
         network_interface_id = module.east_ec2.network_interface_ids["hub_public1"]
         device_index         = 0
@@ -613,7 +613,7 @@ module "east_ec2" {
     hub_private1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.east_data.cloud_config[1])
+      user_data_base64 = local.east_data.cloud_config[1]
       network_interface = [{
         device_index = 0
       }]
@@ -621,7 +621,7 @@ module "east_ec2" {
     spoke1 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.east_data.cloud_config[2])
+      user_data_base64 = local.east_data.cloud_config[2]
       network_interface = [{
         device_index = 0
       }]
@@ -629,7 +629,7 @@ module "east_ec2" {
     spoke2 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.east_data.cloud_config[3])
+      user_data_base64 = local.east_data.cloud_config[3]
       network_interface = [{
         device_index = 0
       }]
@@ -637,7 +637,7 @@ module "east_ec2" {
     spoke3 = {
       ami              = local.east_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.east_data.cloud_config[4])
+      user_data_base64 = local.east_data.cloud_config[4]
       network_interface = [{
         device_index = 0
       }]
@@ -1010,7 +1010,7 @@ module "east_vpn" {
 ### -------------------------------------------------------------------------------------------- ###
 
 module "west_data" {
-  source        = "./data"
+  source        = "../../modules/data"
   providers     = { aws = aws.us_west_2 }
   get_amzn_ami  = true
   key_name      = var.key_name
@@ -1076,12 +1076,12 @@ module "west_hub" {
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 64)
       availability_zone       = "us-west-2a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 65)
       availability_zone       = "us-west-2b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 
@@ -1089,12 +1089,12 @@ module "west_hub" {
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 128)
       availability_zone       = "us-west-2a"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     },
     {
       cidr_block              = cidrsubnet(module.west_hub.cidr_block, 8, 129)
       availability_zone       = "us-west-2b"
-      map_public_ip_on_launch = true
+      map_public_ip_on_launch = false
     }
   ]
 
@@ -1596,7 +1596,7 @@ module "west_ec2" {
     hub_public1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.west_data.cloud_config[0])
+      user_data_base64 = local.west_data.cloud_config[0]
       network_interface = [{
         network_interface_id = module.west_ec2.network_interface_ids["hub_public1"]
         device_index         = 0
@@ -1605,7 +1605,7 @@ module "west_ec2" {
     hub_private1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.west_data.cloud_config[1])
+      user_data_base64 = local.west_data.cloud_config[1]
       network_interface = [{
         device_index = 0
       }]
@@ -1613,7 +1613,7 @@ module "west_ec2" {
     spoke1 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.west_data.cloud_config[2])
+      user_data_base64 = local.west_data.cloud_config[2]
       network_interface = [{
         device_index = 0
       }]
@@ -1621,7 +1621,7 @@ module "west_ec2" {
     spoke2 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.west_data.cloud_config[3])
+      user_data_base64 = local.west_data.cloud_config[3]
       network_interface = [{
         device_index = 0
       }]
@@ -1629,7 +1629,7 @@ module "west_ec2" {
     spoke3 = {
       ami              = local.west_data.amzn_ami
       instance_type    = "t3.medium"
-      user_data_base64 = base64encode(local.west_data.cloud_config[4])
+      user_data_base64 = local.west_data.cloud_config[4]
       network_interface = [{
         device_index = 0
       }]
