@@ -1938,3 +1938,50 @@ module "west_vpn" {
     },
   ]
 }
+
+### -------------------------------------------------------------------------------------------- ###
+### ROUTE53
+### -------------------------------------------------------------------------------------------- ###
+
+module "global_dns" {
+  source = "../../modules/route53"
+  name   = "global_dns"
+
+  route53_zone = {
+    east = {
+      name = var.zone_names["east"]
+      vpc = {
+        hub1 = {
+          vpc_id = module.east_hub.vpc_id
+        }
+        spoke1 = {
+          vpc_id = module.east_hub.vpc_id
+        }
+        spoke2 = {
+          vpc_id = module.east_hub.vpc_id
+        }
+        spoke3 = {
+          vpc_id = module.east_hub.vpc_id
+        }
+      }
+    }
+  }
+
+  route53_record = {
+    east_hub1 = {
+      zone_id = module.global_dns.zone_ids["east"]
+      name    = "hub_bastion1.${module.global_dns.zone_names["east"]}"
+      records = [module.east_ec2.instance_private_ips["hub_bastion1"]]
+      type    = "A"
+      ttl     = "300"
+    }
+    east_spoke1 = {
+      zone_id = module.global_dns.zone_ids["east"]
+      name    = "spoke1_intra1.${module.global_dns.zone_names["east"]}"
+      records = [module.east_ec2.instance_private_ips["spoke1_intra1"]]
+      type    = "A"
+      ttl     = "300"
+    }
+  }
+}
+

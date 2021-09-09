@@ -13,6 +13,8 @@ terraform {
 
 locals {
   network_interface_ids = { for k, v in aws_network_interface.this : k => v.id }
+  instance_private_dns  = { for k, v in aws_instance.this : k => v.private_dns }
+  instance_private_ips  = { for k, v in aws_instance.this : k => v.private_ip }
 }
 
 resource "aws_key_pair" "this" {
