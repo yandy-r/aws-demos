@@ -18,8 +18,18 @@ locals {
 }
 
 resource "aws_key_pair" "this" {
-  key_name   = var.key_name
-  public_key = var.priv_key.public_key_openssh
+  for_each        = { for k, v in var.ssh_key : k => v }
+  key_name        = lookup(each.value, "key_name", null)
+  key_name_prefix = lookup(each.value, "key_name_prefix", null)
+  public_key      = each.value["public_key"]
+
+  tags = merge(
+    {
+      Name = "${var.name}-${each.key}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
 }
 
 resource "aws_network_interface" "this" {
@@ -55,7 +65,7 @@ resource "aws_instance" "this" {
   for_each         = var.aws_instances
   ami              = each.value["ami"]
   instance_type    = lookup(each.value, "instance_type", "t3.micro")
-  key_name         = aws_key_pair.this.key_name
+  key_name         = lookup(each.value, "key_name", null)
   user_data        = lookup(each.value, "user_data", null)
   user_data_base64 = lookup(each.value, "user_data_base64", null)
 

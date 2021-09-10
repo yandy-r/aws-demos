@@ -10,24 +10,14 @@ variable "tags" {
   default     = {}
 }
 
-variable "priv_key_path" {
-  type    = string
-  default = ""
-}
-
-variable "priv_key" {
-  type    = map(string)
+variable "ssh_key" {
+  type    = any
   default = {}
 }
 
 variable "hostnames" {
   type    = list(string)
   default = ["test"]
-}
-
-variable "key_name" {
-  type    = string
-  default = ""
 }
 
 variable "network_interfaces" {

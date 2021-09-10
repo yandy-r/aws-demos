@@ -561,8 +561,13 @@ module "east_ec2" {
   source    = "../../modules/ec2"
   providers = { aws = aws.us_east_1 }
   name      = "east-ec2"
-  key_name  = var.key_name
-  priv_key  = module.ssh_key.priv_key
+
+  ssh_key = {
+    test_key = {
+      key_name   = var.key_name
+      public_key = module.ssh_key.ssh_public_key
+    }
+  }
 
   network_interfaces = {
     hub_public1 = {
@@ -605,6 +610,7 @@ module "east_ec2" {
 
   aws_instances = {
     hub_public1 = {
+      key_name         = var.key_name
       ami              = local.east_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.cloud_config[0]
@@ -614,6 +620,7 @@ module "east_ec2" {
       }]
     }
     hub_private1 = {
+      key_name         = var.key_name
       ami              = local.east_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.cloud_config[1]
@@ -622,6 +629,7 @@ module "east_ec2" {
       }]
     }
     spoke1 = {
+      key_name         = var.key_name
       ami              = local.east_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.cloud_config[2]
@@ -630,6 +638,7 @@ module "east_ec2" {
       }]
     }
     spoke2 = {
+      key_name         = var.key_name
       ami              = local.east_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.cloud_config[3]
@@ -638,6 +647,7 @@ module "east_ec2" {
       }]
     }
     spoke3 = {
+      key_name         = var.key_name
       ami              = local.east_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.east_data.cloud_config[4]
@@ -1553,8 +1563,13 @@ module "west_ec2" {
   source    = "../../modules/ec2"
   providers = { aws = aws.us_west_2 }
   name      = "west-ec2"
-  key_name  = var.key_name
-  priv_key  = module.ssh_key.priv_key
+
+  ssh_key = {
+    test_key = {
+      key_name   = var.key_name
+      public_key = module.ssh_key.ssh_public_key
+    }
+  }
 
   network_interfaces = {
     hub_public1 = {
@@ -1597,6 +1612,7 @@ module "west_ec2" {
 
   aws_instances = {
     hub_public1 = {
+      key_name         = var.key_name
       ami              = local.west_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.cloud_config[0]
@@ -1606,6 +1622,7 @@ module "west_ec2" {
       }]
     }
     hub_private1 = {
+      key_name         = var.key_name
       ami              = local.west_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.cloud_config[1]
@@ -1614,6 +1631,7 @@ module "west_ec2" {
       }]
     }
     spoke1 = {
+      key_name         = var.key_name
       ami              = local.west_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.cloud_config[2]
@@ -1622,6 +1640,7 @@ module "west_ec2" {
       }]
     }
     spoke2 = {
+      key_name         = var.key_name
       ami              = local.west_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.cloud_config[3]
@@ -1630,6 +1649,7 @@ module "west_ec2" {
       }]
     }
     spoke3 = {
+      key_name         = var.key_name
       ami              = local.west_data.ubuntu_ami
       instance_type    = "t3.medium"
       user_data_base64 = local.west_data.cloud_config[4]
