@@ -78,7 +78,7 @@ set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP authentication mode pre-shared-
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP authentication pre-shared-secret PRESHARED-KEY
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP connection-type initiate
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP description ipsec-aws
-set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP local-address 10.255.255.2
+set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP local-address LOCAL-PUBLIC-IP
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP ike-group AWS-01
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP vti bind vti0
 set vpn ipsec site-to-site peer PEER-1-PUBLIC-IP vti esp-group AWS-01
@@ -89,7 +89,7 @@ set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP authentication mode pre-shared-
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP authentication pre-shared-secret PRESHARED-KEY
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP connection-type initiate
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP description ipsec-aws
-set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP local-address 10.255.255.2
+set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP local-address LOCAL-PUBLIC-IP
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP ike-group AWS-01
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP vti bind vti1
 set vpn ipsec site-to-site peer PEER-2-PUBLIC-IP vti esp-group AWS-01
