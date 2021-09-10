@@ -19,25 +19,6 @@ data "aws_availability_zones" "azs" {
   state = "available"
 }
 
-resource "aws_vpc" "this" {
-  for_each                         = { for k, v in var.vpc : k => v }
-  cidr_block                       = each.value["cidr_block"]
-  instance_tenancy                 = lookup(each.value, "instance_tenancy", "default")
-  enable_dns_hostnames             = lookup(each.value, "enable_dns_hostnames", true)
-  enable_dns_support               = lookup(each.value, "enable_dns_support", true)
-  enable_classiclink               = lookup(each.value, "enable_classiclink", false)
-  enable_classiclink_dns_support   = lookup(each.value, "enable_classiclink_dns_support", false)
-  assign_generated_ipv6_cidr_block = lookup(each.value, "assign_generated_ipv6_cidr_block", false)
-
-  tags = merge(
-    {
-      Name = "${var.name}-${lookup(each.value, "name", "${each.key + 1}")}"
-    },
-    var.tags,
-    lookup(each.value, "tags", null)
-  )
-}
-
 locals {
   azs                                = data.aws_availability_zones.azs
   vpc_id                             = one([for v in aws_vpc.this : v.id])
@@ -62,6 +43,48 @@ locals {
   vpn_gateway_ids                    = { for k, v in aws_vpn_gateway.this : k => v.id }
   vpn_gateway_attachment_ids         = { for k, v in aws_vpn_gateway_attachment.this : k => v.id }
   customer_gateway_ids               = { for k, v in aws_customer_gateway.this : k => v.id }
+}
+
+resource "aws_vpc_dhcp_options" "this" {
+  for_each             = { for k, v in var.vpc_dhcp_optons : k => v }
+  domain_name          = lookup(each.value, "domain_name", null)
+  domain_name_servers  = lookup(each.value, "domain_name_servers", ["AmazonProvidedDNS"])
+  ntp_servers          = lookup(each.value, "ntp_servers", null)
+  netbios_name_servers = lookup(each.value, "netbios_name_servers", null)
+  netbios_node_type    = lookup(each.value, "netbios_node_type", 2)
+
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key + 1}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
+}
+
+resource "aws_vpc_dhcp_options_association" "this" {
+  for_each        = aws_vpc_dhcp_options.this
+  vpc_id          = local.vpc_id
+  dhcp_options_id = each.value.id
+}
+
+resource "aws_vpc" "this" {
+  for_each                         = { for k, v in var.vpc : k => v }
+  cidr_block                       = each.value["cidr_block"]
+  instance_tenancy                 = lookup(each.value, "instance_tenancy", "default")
+  enable_dns_hostnames             = lookup(each.value, "enable_dns_hostnames", true)
+  enable_dns_support               = lookup(each.value, "enable_dns_support", true)
+  enable_classiclink               = lookup(each.value, "enable_classiclink", false)
+  enable_classiclink_dns_support   = lookup(each.value, "enable_classiclink_dns_support", false)
+  assign_generated_ipv6_cidr_block = lookup(each.value, "assign_generated_ipv6_cidr_block", false)
+
+  tags = merge(
+    {
+      Name = "${var.name}-${lookup(each.value, "name", "${each.key + 1}")}"
+    },
+    var.tags,
+    lookup(each.value, "tags", null)
+  )
 }
 
 resource "aws_internet_gateway" "this" {

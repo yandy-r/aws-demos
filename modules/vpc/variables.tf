@@ -19,6 +19,11 @@ variable "vpc" {
   default = []
 }
 
+variable "vpc_dhcp_optons" {
+  type    = any
+  default = []
+}
+
 variable "internet_gateway" {
   type    = any
   default = []

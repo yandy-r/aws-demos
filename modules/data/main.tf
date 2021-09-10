@@ -37,7 +37,6 @@ locals {
 ### -------------------------------------------------------------------------------------------- ###
 
 data "aws_ami" "amzn_linux" {
-  count       = var.get_amzn_ami ? 1 : 0
   most_recent = true
   owners      = ["amazon"]
 
@@ -58,7 +57,6 @@ data "aws_ami" "amzn_linux" {
 }
 
 data "aws_ami" "ubuntu" {
-  count       = var.get_ubuntu_ami ? 1 : 0
   most_recent = true
   owners      = ["099720109477"]
 
@@ -69,8 +67,8 @@ data "aws_ami" "ubuntu" {
 }
 
 locals {
-  amzn_ami     = one(data.aws_ami.amzn_linux[*].id)
-  ubuntu_ami   = one(data.aws_ami.ubuntu[*].id)
+  amzn_ami     = data.aws_ami.amzn_linux.id
+  ubuntu_ami   = data.aws_ami.ubuntu.id
   cloud_config = [for v in data.template_cloudinit_config.cloud_config : v.rendered]
 }
 
