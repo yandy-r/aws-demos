@@ -349,7 +349,7 @@ resource "aws_security_group" "this" {
   )
 }
 
-resource "aws_security_group_rule" "security_group_rules" {
+resource "aws_security_group_rule" "this" {
   for_each                 = { for k, v in var.security_group_rules : k => v }
   description              = lookup(each.value, "description", null)
   type                     = lookup(each.value, "type", null)

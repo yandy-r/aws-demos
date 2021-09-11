@@ -24,3 +24,23 @@ variable "route53_record" {
   type    = any
   default = {}
 }
+
+variable "security_groups" {
+  type    = any
+  default = {}
+}
+
+variable "security_group_rules" {
+  type    = any
+  default = {}
+}
+
+variable "route53_resolver_endpoint" {
+  type    = any
+  default = {}
+}
+
+variable "route53_resolver_rule" {
+  type    = any
+  default = {}
+}

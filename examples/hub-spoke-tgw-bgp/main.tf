@@ -2090,6 +2090,70 @@ module "east_dns" {
       ttl     = "300"
     }
   }
+
+  security_groups = {
+    inbound = {
+      vpc_id      = module.east_hub.vpc_id
+      description = "Attached to inbound resolver"
+
+      egress = [{
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+      }]
+
+      ingress = [{
+        from_port = 0
+        to_port   = 0
+        protocol  = "-1"
+        cidr_blocks = [
+          var.cidr_blocks.east["supernet"],
+          var.cidr_blocks.west["supernet"],
+          var.lab_local_cidr
+        ]
+      }]
+    }
+  }
+
+  route53_resolver_endpoint = {
+    inbound = {
+      name               = "east_inbound"
+      direction          = "INBOUND"
+      security_group_ids = [module.east_dns.security_group_ids["inbound"]]
+
+      ip_address = [
+        {
+          subnet_id = module.east_hub.private_subnet_ids[0]
+          ip        = cidrhost(module.east_hub.private_subnet_cidr_blocks[0], 4)
+        },
+        {
+          subnet_id = module.east_hub.private_subnet_ids[1]
+          ip        = cidrhost(module.east_hub.private_subnet_cidr_blocks[1], 4)
+        }
+      ]
+    }
+  }
+
+  # route53_resolver_rule = {
+  #   inbound = {
+  #     name                 = "east_inbound"
+  #     domain_name          = module.east_dns.zone_names["east"]
+  #     rule_type            = "FORWARD"
+  #     resolver_endpoint_id = module.east_dns.resolver_endpoint_ids["inbound"]
+
+  #     target_ip = [
+  #       {
+  #         ip   = cidrhost(module.east_hub.public_subnet_cidr_blocks[0], 4)
+  #         port = "53"
+  #       },
+  #       {
+  #         ip   = cidrhost(module.east_hub.public_subnet_cidr_blocks[1], 4)
+  #         port = "53"
+  #       }
+  #     ]
+  #   }
+  # }
 }
 
 
@@ -2159,6 +2223,50 @@ module "west_dns" {
       records = [module.west_ec2.instance_private_ips["spoke3"]]
       type    = "A"
       ttl     = "300"
+    }
+  }
+
+  security_groups = {
+    inbound = {
+      vpc_id      = module.west_hub.vpc_id
+      description = "Attached to inbound resolver"
+
+      egress = [{
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+      }]
+
+      ingress = [{
+        from_port = 0
+        to_port   = 0
+        protocol  = "-1"
+        cidr_blocks = [
+          var.cidr_blocks.east["supernet"],
+          var.cidr_blocks.west["supernet"],
+          var.lab_local_cidr
+        ]
+      }]
+    }
+  }
+
+  route53_resolver_endpoint = {
+    inbound = {
+      name               = "west_inbound"
+      direction          = "INBOUND"
+      security_group_ids = [module.west_dns.security_group_ids["inbound"]]
+
+      ip_address = [
+        {
+          subnet_id = module.west_hub.private_subnet_ids[0]
+          ip        = cidrhost(module.west_hub.private_subnet_cidr_blocks[0], 4)
+        },
+        {
+          subnet_id = module.west_hub.private_subnet_ids[1]
+          ip        = cidrhost(module.west_hub.private_subnet_cidr_blocks[1], 4)
+        }
+      ]
     }
   }
 }
