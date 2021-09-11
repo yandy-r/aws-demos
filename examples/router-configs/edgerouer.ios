@@ -74,25 +74,25 @@ set vpn ipsec esp-group AWS-01 proposal 1 encryption aes128
 set vpn ipsec esp-group AWS-01 proposal 1 hash sha1
 
 ! Create First AWS Peer (Must be repeated for second peer)
-set vpn ipsec site-to-site peer 3.230.56.17 authentication mode pre-shared-secret
-set vpn ipsec site-to-site peer 3.230.56.17 authentication pre-shared-secret tqe.BVQ4tpg4eaj7dje
-set vpn ipsec site-to-site peer 3.230.56.17 connection-type initiate
-set vpn ipsec site-to-site peer 3.230.56.17 description ipsec-aws
-set vpn ipsec site-to-site peer 3.230.56.17 local-address 216.189.162.27
-set vpn ipsec site-to-site peer 3.230.56.17 ike-group AWS-01
-set vpn ipsec site-to-site peer 3.230.56.17 vti bind vti0
-set vpn ipsec site-to-site peer 3.230.56.17 vti esp-group AWS-01
+set vpn ipsec site-to-site peer PEER-1 authentication mode pre-shared-secret
+set vpn ipsec site-to-site peer PEER-1 authentication pre-shared-secret PRE-SHARED-KEY
+set vpn ipsec site-to-site peer PEER-1 connection-type initiate
+set vpn ipsec site-to-site peer PEER-1 description ipsec-aws
+set vpn ipsec site-to-site peer PEER-1 local-address PUBLIC-IP
+set vpn ipsec site-to-site peer PEER-1 ike-group AWS-01
+set vpn ipsec site-to-site peer PEER-1 vti bind vti0
+set vpn ipsec site-to-site peer PEER-1 vti esp-group AWS-01
 set interfaces vti vti0 address 169.254.200.2/30
 
 ! For Second Peer
-set vpn ipsec site-to-site peer 35.82.76.123 authentication mode pre-shared-secret
-set vpn ipsec site-to-site peer 35.82.76.123 authentication pre-shared-secret tqe.BVQ4tpg4eaj7dje
-set vpn ipsec site-to-site peer 35.82.76.123 connection-type initiate
-set vpn ipsec site-to-site peer 35.82.76.123 description ipsec-aws
-set vpn ipsec site-to-site peer 35.82.76.123 local-address 216.189.162.27
-set vpn ipsec site-to-site peer 35.82.76.123 ike-group AWS-01
-set vpn ipsec site-to-site peer 35.82.76.123 vti bind vti1
-set vpn ipsec site-to-site peer 35.82.76.123 vti esp-group AWS-01
+set vpn ipsec site-to-site peer PEER-2 authentication mode pre-shared-secret
+set vpn ipsec site-to-site peer PEER-2 authentication pre-shared-secret PRE-SHARED-KEY
+set vpn ipsec site-to-site peer PEER-2 connection-type initiate
+set vpn ipsec site-to-site peer PEER-2 description ipsec-aws
+set vpn ipsec site-to-site peer PEER-2 local-address PUBLIC-IP
+set vpn ipsec site-to-site peer PEER-2 ike-group AWS-01
+set vpn ipsec site-to-site peer PEER-2 vti bind vti1
+set vpn ipsec site-to-site peer PEER-2 vti esp-group AWS-01
 set interfaces vti vti1 address 169.254.220.2/30
 
 ! Configure BGP
