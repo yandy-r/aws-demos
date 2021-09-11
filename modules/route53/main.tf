@@ -21,6 +21,7 @@ locals {
   zone_arns             = { for k, v in aws_route53_zone.this : k => v.arn }
   name_servers          = { for k, v in aws_route53_zone.this : k => v.name_servers }
   resolver_endpoint_ids = { for k, v in aws_route53_resolver_endpoint.this : k => v.id }
+  resolver_rule_ids     = { for k, v in aws_route53_resolver_rule.this : k => v.id }
   security_group_ids    = { for k, v in aws_security_group.this : k => v.id }
 }
 
@@ -143,7 +144,7 @@ resource "aws_security_group_rule" "this" {
 # ### -------------------------------------------------------------------------------------------- ###
 
 resource "aws_route53_resolver_endpoint" "this" {
-  for_each           = { for k, v in var.route53_resolver_endpoint : k => v }
+  for_each           = { for k, v in var.resolver_endpoint : k => v }
   name               = lookup(each.value, "name", null)
   direction          = lookup(each.value, "direction", "INBOUND")
   security_group_ids = each.value["security_group_ids"]
@@ -166,7 +167,7 @@ resource "aws_route53_resolver_endpoint" "this" {
 }
 
 resource "aws_route53_resolver_rule" "this" {
-  for_each             = { for k, v in var.route53_resolver_rule : k => v }
+  for_each             = { for k, v in var.resolver_rule : k => v }
   domain_name          = each.value["domain_name"]
   name                 = lookup(each.value, "name", null)
   rule_type            = lookup(each.value, "rule_type", "FORWARD")
@@ -187,4 +188,11 @@ resource "aws_route53_resolver_rule" "this" {
     var.tags,
     lookup(each.value, "tags", null)
   )
+}
+
+resource "aws_route53_resolver_rule_association" "this" {
+  for_each         = { for k, v in var.resolver_rule_association : k => v }
+  resolver_rule_id = each.value["resolver_rule_id"]
+  vpc_id           = each.value["vpc_id"]
+  name             = lookup(each.value, "name", null)
 }

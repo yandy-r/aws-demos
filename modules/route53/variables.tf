@@ -35,12 +35,17 @@ variable "security_group_rules" {
   default = {}
 }
 
-variable "route53_resolver_endpoint" {
+variable "resolver_endpoint" {
   type    = any
   default = {}
 }
 
-variable "route53_resolver_rule" {
+variable "resolver_rule" {
   type    = any
   default = {}
+}
+
+variable "resolver_rule_association" {
+  type    = any
+  default = []
 }

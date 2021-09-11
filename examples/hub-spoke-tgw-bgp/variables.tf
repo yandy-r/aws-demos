@@ -89,3 +89,13 @@ variable "zone_names" {
     west = "west.werock.vpc"
   }
 }
+
+variable "lab_domain_name" {
+  type    = string
+  default = ""
+}
+
+variable "lab_dns_server" {
+  type    = string
+  default = ""
+}

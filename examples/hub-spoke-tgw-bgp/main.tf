@@ -2092,7 +2092,7 @@ module "east_dns" {
   }
 
   security_groups = {
-    inbound = {
+    endpoints = {
       vpc_id      = module.east_hub.vpc_id
       description = "Attached to inbound resolver"
 
@@ -2116,11 +2116,11 @@ module "east_dns" {
     }
   }
 
-  route53_resolver_endpoint = {
+  resolver_endpoint = {
     inbound = {
       name               = "east_inbound"
       direction          = "INBOUND"
-      security_group_ids = [module.east_dns.security_group_ids["inbound"]]
+      security_group_ids = [module.east_dns.security_group_ids["endpoints"]]
 
       ip_address = [
         {
@@ -2133,27 +2133,56 @@ module "east_dns" {
         }
       ]
     }
+    outbound = {
+      name               = "east_outbound"
+      direction          = "OUTBOUND"
+      security_group_ids = [module.east_dns.security_group_ids["endpoints"]]
+
+      ip_address = [
+        {
+          subnet_id = module.east_hub.private_subnet_ids[0]
+          ip        = cidrhost(module.east_hub.private_subnet_cidr_blocks[0], 5)
+        },
+        {
+          subnet_id = module.east_hub.private_subnet_ids[1]
+          ip        = cidrhost(module.east_hub.private_subnet_cidr_blocks[1], 5)
+        }
+      ]
+    }
   }
 
-  # route53_resolver_rule = {
-  #   inbound = {
-  #     name                 = "east_inbound"
-  #     domain_name          = module.east_dns.zone_names["east"]
-  #     rule_type            = "FORWARD"
-  #     resolver_endpoint_id = module.east_dns.resolver_endpoint_ids["inbound"]
+  resolver_rule = {
+    outbound = {
+      name                 = "east_outbound"
+      domain_name          = var.lab_domain_name
+      rule_type            = "FORWARD"
+      resolver_endpoint_id = module.east_dns.resolver_endpoint_ids["outbound"]
 
-  #     target_ip = [
-  #       {
-  #         ip   = cidrhost(module.east_hub.public_subnet_cidr_blocks[0], 4)
-  #         port = "53"
-  #       },
-  #       {
-  #         ip   = cidrhost(module.east_hub.public_subnet_cidr_blocks[1], 4)
-  #         port = "53"
-  #       }
-  #     ]
-  #   }
-  # }
+      target_ip = [{
+        ip   = var.lab_dns_server
+        port = "53"
+        }
+      ]
+    }
+  }
+  resolver_rule_association = [
+    {
+      resolver_rule_id = module.east_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.east_hub.vpc_id
+    },
+    {
+      resolver_rule_id = module.east_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.east_spoke1.vpc_id
+    },
+    {
+      resolver_rule_id = module.east_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.east_spoke2.vpc_id
+    },
+    {
+      resolver_rule_id = module.east_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.east_spoke3.vpc_id
+    },
+  ]
 }
 
 
@@ -2227,7 +2256,7 @@ module "west_dns" {
   }
 
   security_groups = {
-    inbound = {
+    endpoints = {
       vpc_id      = module.west_hub.vpc_id
       description = "Attached to inbound resolver"
 
@@ -2251,11 +2280,11 @@ module "west_dns" {
     }
   }
 
-  route53_resolver_endpoint = {
+  resolver_endpoint = {
     inbound = {
       name               = "west_inbound"
       direction          = "INBOUND"
-      security_group_ids = [module.west_dns.security_group_ids["inbound"]]
+      security_group_ids = [module.west_dns.security_group_ids["endpoints"]]
 
       ip_address = [
         {
@@ -2268,5 +2297,54 @@ module "west_dns" {
         }
       ]
     }
+    outbound = {
+      name               = "west_outbound"
+      direction          = "OUTBOUND"
+      security_group_ids = [module.west_dns.security_group_ids["endpoints"]]
+
+      ip_address = [
+        {
+          subnet_id = module.west_hub.private_subnet_ids[0]
+          ip        = cidrhost(module.west_hub.private_subnet_cidr_blocks[0], 5)
+        },
+        {
+          subnet_id = module.west_hub.private_subnet_ids[1]
+          ip        = cidrhost(module.west_hub.private_subnet_cidr_blocks[1], 5)
+        }
+      ]
+    }
   }
+
+  resolver_rule = {
+    outbound = {
+      name                 = "west_outbound"
+      domain_name          = var.lab_domain_name
+      rule_type            = "FORWARD"
+      resolver_endpoint_id = module.west_dns.resolver_endpoint_ids["outbound"]
+
+      target_ip = [{
+        ip   = var.lab_dns_server
+        port = "53"
+        }
+      ]
+    }
+  }
+  resolver_rule_association = [
+    {
+      resolver_rule_id = module.west_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.west_hub.vpc_id
+    },
+    {
+      resolver_rule_id = module.west_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.west_spoke1.vpc_id
+    },
+    {
+      resolver_rule_id = module.west_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.west_spoke2.vpc_id
+    },
+    {
+      resolver_rule_id = module.west_dns.resolver_rule_ids["outbound"]
+      vpc_id           = module.west_spoke3.vpc_id
+    },
+  ]
 }

@@ -10,6 +10,10 @@ output "resolver_endpoint_ids" {
   value = local.resolver_endpoint_ids
 }
 
+output "resolver_rule_ids" {
+  value = local.resolver_rule_ids
+}
+
 output "security_group_ids" {
   value = local.security_group_ids
 }
