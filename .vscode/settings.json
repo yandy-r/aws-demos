@@ -5,5 +5,11 @@
     "hashicorp",
     "mkdir",
     "NOPASSWD"
-  ]
+  ],
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#3224cd",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#2d3c63",
+    "titleBar.inactiveForeground": "#ffffff"
+  }
 }
